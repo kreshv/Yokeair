@@ -6,6 +6,14 @@ const apartmentSchema = new mongoose.Schema({
         ref: 'Building',
         required: true
     },
+    borough: {
+        type: String,
+        required: true
+    },
+    neighborhood: {
+        type: String,
+        required: true
+    },
     unitNumber: {
         type: String,
         required: true
@@ -37,7 +45,8 @@ const apartmentSchema = new mongoose.Schema({
         required: true
     },
     features: [{
-        type: String
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Amenity'
     }],
     images: [{
         type: String

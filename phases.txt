@@ -14,8 +14,7 @@ Middleware for Authentication & Authorization: Integrate middleware to secure en
 
 Phase 4: Frontend Development - Core Components
 UI Components: Start with building the general UI elements: Navigation bars, forms for login/register, and modals for apartment details.
-Client-Side Features: Implement search, filter functionality, and display for apartment listings. Add features like favorites/watchlist for users.
-
+Client-Side Features: Implement search, filter functionality, and display for apartment listings. Add features like favorites/watchlist for 
 Phase 5: Application System for Rentals or Purchases
 Application Process: Design and build the application submission form for rental/purchase. Let users upload necessary documents (ID, bank statements, etc.) and track the status of their application.
 

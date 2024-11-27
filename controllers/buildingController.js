@@ -1,11 +1,12 @@
 const Building = require('../models/Building');
-const Apartment = require('../models/Apartment');
+const Amenity = require('../models/Amenity');
 
 // Get all buildings
 exports.getBuildings = async (req, res) => {
     try {
         const buildings = await Building.find()
             .populate('broker', 'name email')
+            .populate('amenities')
             .sort({ createdAt: -1 });
         res.json(buildings);
     } catch (err) {
@@ -18,19 +19,14 @@ exports.getBuildings = async (req, res) => {
 exports.getBuilding = async (req, res) => {
     try {
         const building = await Building.findById(req.params.id)
-            .populate('broker', 'name email');
+            .populate('broker', 'name email')
+            .populate('amenities');
         
         if (!building) {
             return res.status(404).json({ message: 'Building not found' });
         }
 
-        // Get apartments for this building
-        const apartments = await Apartment.find({ building: req.params.id });
-        
-        res.json({
-            building,
-            apartments
-        });
+        res.json(building);
     } catch (err) {
         console.error(err.message);
         if (err.kind === 'ObjectId') {
@@ -45,16 +41,37 @@ exports.createBuilding = async (req, res) => {
     try {
         const { name, address, description, amenities } = req.body;
 
+        // Validate amenities if provided
+        if (amenities && amenities.length > 0) {
+            // Verify all amenities exist and are of type 'building'
+            const validAmenities = await Amenity.find({
+                _id: { $in: amenities },
+                type: 'building'
+            });
+
+            if (validAmenities.length !== amenities.length) {
+                return res.status(400).json({ 
+                    message: 'One or more amenities are invalid or not of type building' 
+                });
+            }
+        }
+
         const building = new Building({
             name,
             address,
             description,
             amenities,
-            broker: req.user.id
+            broker: req.user.id // From auth middleware
         });
 
         await building.save();
-        res.json(building);
+
+        // Populate the response with amenities and broker info
+        const populatedBuilding = await Building.findById(building._id)
+            .populate('broker', 'name email')
+            .populate('amenities');
+
+        res.status(201).json(populatedBuilding);
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
@@ -75,11 +92,26 @@ exports.updateBuilding = async (req, res) => {
             return res.status(401).json({ message: 'Not authorized' });
         }
 
+        // Validate amenities if they're being updated
+        if (req.body.amenities) {
+            const validAmenities = await Amenity.find({
+                _id: { $in: req.body.amenities },
+                type: 'building'
+            });
+
+            if (validAmenities.length !== req.body.amenities.length) {
+                return res.status(400).json({ 
+                    message: 'One or more amenities are invalid or not of type building' 
+                });
+            }
+        }
+
         const updatedBuilding = await Building.findByIdAndUpdate(
             req.params.id,
             { $set: req.body },
             { new: true }
-        );
+        ).populate('broker', 'name email')
+         .populate('amenities');
 
         res.json(updatedBuilding);
     } catch (err) {

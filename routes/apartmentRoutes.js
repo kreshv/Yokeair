@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const Apartment = require('../models/Apartment');
 const { body, validationResult } = require('express-validator');
+const {
+    getApartments,
+    searchApartments,
+} = require('../controllers/apartmentController');
 
 // Sample route for getting all apartments
 router.get('/', (req, res) => {
@@ -96,6 +100,9 @@ router.delete('/:id', async (req, res) => {
         res.status(500).send('Server Error');
     }
 });
+
+// Search apartments
+router.get('/search', searchApartments);
 
 // ... add more routes as needed
 

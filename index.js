@@ -15,6 +15,8 @@ app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/buildings', require('./routes/buildingRoutes'));
 app.use('/api/apartments', require('./routes/apartmentRoutes'));
 app.use('/api/applications', require('./routes/applicationRoutes'));
+app.use('/api/locations', require('./routes/locationRoutes'));
+app.use('/api/amenities', require('./routes/amenityRoutes'));
 
 // Basic test route
 app.get('/', (req, res) => {

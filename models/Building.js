@@ -28,7 +28,8 @@ const buildingSchema = new mongoose.Schema({
         required: true
     },
     amenities: [{
-        type: String
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Amenity'
     }],
     broker: {
         type: mongoose.Schema.Types.ObjectId,
