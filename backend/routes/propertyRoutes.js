@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { createProperty, updateProperty, getBrokerProperties, searchProperties } = require('../controllers/propertyController');
+const { createProperty, updateProperty, getBrokerProperties, searchProperties, updatePropertyStatus } = require('../controllers/propertyController');
 const auth = require('../middleware/auth');
 const { validateProperty, checkValidation } = require('../middleware/validation');
 
@@ -44,5 +44,8 @@ router.get('/broker',
 
 // Add this route for searching properties
 router.get('/search', searchProperties);
+
+// Update property status - Private (Broker only)
+router.patch('/:id/status', auth, updatePropertyStatus);
 
 module.exports = router; 

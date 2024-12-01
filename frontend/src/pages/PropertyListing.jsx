@@ -164,6 +164,13 @@ const PropertyListing = () => {
     }));
   };
 
+  const textFieldStyle = {
+    '& .MuiOutlinedInput-root': {
+      backgroundColor: 'rgba(255, 255, 255, 0.7)',
+      backdropFilter: 'blur(10px)'
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -232,6 +239,7 @@ const PropertyListing = () => {
               variant="outlined"
               error={!!errors.address}
               helperText={errors.address}
+              sx={textFieldStyle}
             />
 
             <TextField
@@ -244,6 +252,7 @@ const PropertyListing = () => {
               variant="outlined"
               error={!!errors.borough}
               helperText={errors.borough}
+              sx={textFieldStyle}
             >
               {boroughs.map((borough) => (
                 <MenuItem key={borough} value={borough}>
@@ -263,6 +272,7 @@ const PropertyListing = () => {
               disabled={!formData.borough}
               error={!!errors.neighborhood}
               helperText={errors.neighborhood}
+              sx={textFieldStyle}
             >
               {neighborhoods.map((neighborhood) => (
                 <MenuItem key={neighborhood} value={neighborhood}>
@@ -280,6 +290,7 @@ const PropertyListing = () => {
               variant="outlined"
               error={!!errors.unitNumber}
               helperText={errors.unitNumber}
+              sx={textFieldStyle}
             />
 
             <TextField
@@ -292,6 +303,7 @@ const PropertyListing = () => {
               variant="outlined"
               error={!!errors.bedrooms}
               helperText={errors.bedrooms}
+              sx={textFieldStyle}
             >
               {bedroomOptions.map((option) => (
                 <MenuItem key={option.value} value={option.value}>
@@ -310,6 +322,7 @@ const PropertyListing = () => {
               variant="outlined"
               error={!!errors.bathrooms}
               helperText={errors.bathrooms}
+              sx={textFieldStyle}
             >
               {bathroomOptions.map((option) => (
                 <MenuItem key={option} value={option}>
@@ -332,6 +345,7 @@ const PropertyListing = () => {
                 inputMode: 'numeric',
                 pattern: '[0-9]*'
               }}
+              sx={textFieldStyle}
             />
           </Box>
         </Paper>

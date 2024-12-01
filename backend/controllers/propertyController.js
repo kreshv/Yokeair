@@ -265,4 +265,28 @@ exports.searchProperties = async (req, res) => {
         console.error('Search error:', error);
         res.status(500).json({ message: 'Error searching properties' });
     }
+};
+
+exports.updatePropertyStatus = async (req, res) => {
+    try {
+        const { status } = req.body;
+        const propertyId = req.params.id;
+
+        const property = await Property.findById(propertyId);
+        if (!property) {
+            return res.status(404).json({ message: 'Property not found' });
+        }
+
+        if (property.broker.toString() !== req.user.id) {
+            return res.status(403).json({ message: 'Not authorized to update this property' });
+        }
+
+        property.status = status;
+        await property.save();
+
+        res.json(property);
+    } catch (error) {
+        console.error('Error updating property status:', error);
+        res.status(500).json({ message: 'Error updating property status' });
+    }
 }; 

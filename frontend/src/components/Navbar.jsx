@@ -45,8 +45,17 @@ const Navbar = () => {
               height: '45px',
               objectFit: 'contain',
               borderRadius: '15px',
-              boxShadow: '0 2px 12px rgba(75, 0, 130, 0.15)'
-            }} 
+              boxShadow: '0 2px 12px rgba(75, 0, 130, 0.15)',
+              transition: 'all 0.2s ease-in-out'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.boxShadow = '0 4px 15px rgba(75, 0, 130, 0.25)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '0 2px 12px rgba(75, 0, 130, 0.15)';
+            }}
           />
         </RouterLink>
 

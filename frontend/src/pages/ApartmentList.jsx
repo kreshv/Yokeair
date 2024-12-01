@@ -64,27 +64,25 @@ const ApartmentList = () => {
             sx={{
                 minHeight: '100vh',
                 width: '100%',
-                background: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("/design3.jpg")`,
+                background: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("/design1.png")`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundAttachment: 'fixed',
-                py: 4
+                py: 4,
+                mt: 0
             }}
         >
-            <Container>
+            <Container sx={{ mt: 10 }}>
                 {apartments.length > 0 ? (
                     <>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-                            <Typography variant="h4" component="h1" sx={{ color: 'white' }}>
-                                Available Apartments
-                            </Typography>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 4 }}>
                             <Button
                                 variant="contained"
                                 onClick={handleRefineSearch}
                                 sx={{
-                                    px: 3,
-                                    py: 1.5,
-                                    fontSize: '1rem',
+                                    px: 2.5,
+                                    py: 1.2,
+                                    fontSize: '0.9rem',
                                     fontWeight: 400,
                                     color: '#000',
                                     textTransform: 'uppercase',
@@ -98,7 +96,8 @@ const ApartmentList = () => {
                                         transform: 'translateY(-2px)',
                                         transition: 'all 0.2s ease-in-out',
                                         boxShadow: '0 6px 8px rgba(0, 0, 0, 0.2)'
-                                    }
+                                    },
+                                    ml: 2
                                 }}
                             >
                                 Refine Search
@@ -129,9 +128,9 @@ const ApartmentList = () => {
                             variant="contained"
                             onClick={handleRefineSearch}
                             sx={{
-                                px: 3,
-                                py: 1.5,
-                                fontSize: '1rem',
+                                px: 2.5,
+                                py: 1.2,
+                                fontSize: '0.9rem',
                                 fontWeight: 400,
                                 color: '#000',
                                 textTransform: 'uppercase',
@@ -145,7 +144,8 @@ const ApartmentList = () => {
                                     transform: 'translateY(-2px)',
                                     transition: 'all 0.2s ease-in-out',
                                     boxShadow: '0 6px 8px rgba(0, 0, 0, 0.2)'
-                                }
+                                },
+                                ml: 2
                             }}
                         >
                             Refine Search

@@ -112,6 +112,17 @@ const SearchFilters = () => {
         });
     };
 
+    const textFieldStyle = {
+        '& .MuiOutlinedInput-root': {
+            backgroundColor: 'rgba(255, 255, 255, 0.7)',
+            backdropFilter: 'blur(10px)'
+        },
+        '& .MuiSelect-select': {
+            backgroundColor: 'rgba(255, 255, 255, 0.7)',
+            backdropFilter: 'blur(10px)'
+        }
+    };
+
     return (
         <Box
             sx={{
@@ -162,6 +173,7 @@ const SearchFilters = () => {
                                 value={bedrooms}
                                 onChange={(e) => setBedrooms(e.target.value)}
                                 label="Bedrooms"
+                                sx={textFieldStyle}
                             >
                                 <MenuItem value="">Any</MenuItem>
                                 <MenuItem value={0}>Studio</MenuItem>
@@ -178,6 +190,7 @@ const SearchFilters = () => {
                                 value={bathrooms}
                                 onChange={(e) => setBathrooms(e.target.value)}
                                 label="Bathrooms"
+                                sx={textFieldStyle}
                             >
                                 <MenuItem value="">Any</MenuItem>
                                 <MenuItem value={1}>1</MenuItem>

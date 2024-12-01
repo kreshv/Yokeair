@@ -47,6 +47,8 @@ const ApartmentCard = ({ apartment }) => {
         display: 'flex', 
         flexDirection: 'column',
         transition: 'transform 0.2s ease-in-out',
+        borderRadius: '20px',
+        overflow: 'hidden',
         '&:hover': {
           transform: 'translateY(-4px)',
           boxShadow: 4

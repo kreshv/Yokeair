@@ -15,6 +15,49 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getAmenities, updateProperty } from '../utils/api';
 
+const AmenityButton = ({ name, selected, onClick }) => (
+  <Button
+    variant="text"
+    onClick={onClick}
+    sx={{
+      px: 3,
+      py: 1,
+      fontSize: '0.9rem',
+      fontWeight: 500,
+      color: 'black',
+      textTransform: 'none',
+      letterSpacing: '0.5px',
+      borderRadius: '20px',
+      position: 'relative',
+      justifyContent: 'flex-start',
+      textAlign: 'left',
+      whiteSpace: 'nowrap',
+      width: '80%',
+      '&::after': {
+        content: '""',
+        position: 'absolute',
+        bottom: 0,
+        left: '7%',
+        right: '40%',
+        height: '2px',
+        backgroundColor: '#00008B',
+        transform: selected ? 'scaleX(1)' : 'scaleX(0)',
+        transition: 'transform 0.3s ease-in-out',
+        transformOrigin: 'left',
+      },
+      '&:hover': {
+        backgroundColor: 'rgba(0, 0, 0, 0.1)',
+        backdropFilter: 'blur(4px)',
+        '&::after': {
+          transform: 'scaleX(1)',
+        }
+      }
+    }}
+  >
+    {name}
+  </Button>
+);
+
 const PropertyAmenities = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -152,40 +195,32 @@ const PropertyAmenities = () => {
           <Typography variant="h6" sx={{ mb: 2, color: '#00008B' }}>
             Building Amenities
           </Typography>
-          <FormGroup sx={{ mb: 4 }}>
+          <Box sx={{ pl: 2, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
             {amenities.building.map((amenity) => (
-              <FormControlLabel
+              <AmenityButton
                 key={amenity._id}
-                control={
-                  <Checkbox
-                    checked={selectedAmenities.building.includes(amenity._id)}
-                    onChange={() => handleAmenityChange('building', amenity._id)}
-                  />
-                }
-                label={amenity.name}
+                name={amenity.name}
+                selected={selectedAmenities.building.includes(amenity._id)}
+                onClick={() => handleAmenityChange('building', amenity._id)}
               />
             ))}
-          </FormGroup>
+          </Box>
 
           <Divider sx={{ my: 3 }} />
 
           <Typography variant="h6" sx={{ mb: 2, mt: 3, color: '#00008B' }}>
             Unit Features
           </Typography>
-          <FormGroup sx={{ mb: 4 }}>
+          <Box sx={{ pl: 2, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
             {amenities.unit.map((amenity) => (
-              <FormControlLabel
+              <AmenityButton
                 key={amenity._id}
-                control={
-                  <Checkbox
-                    checked={selectedAmenities.unit.includes(amenity._id)}
-                    onChange={() => handleAmenityChange('unit', amenity._id)}
-                  />
-                }
-                label={amenity.name}
+                name={amenity.name}
+                selected={selectedAmenities.unit.includes(amenity._id)}
+                onClick={() => handleAmenityChange('unit', amenity._id)}
               />
             ))}
-          </FormGroup>
+          </Box>
         </Paper>
       </Container>
 

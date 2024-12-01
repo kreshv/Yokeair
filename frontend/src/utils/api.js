@@ -42,5 +42,7 @@ export const updateProperty = (propertyId, data) =>
 export const getBrokerProperties = () => api.get('/properties/broker');
 export const searchProperties = (params) => 
   api.get('/properties/search', { params });
+export const updatePropertyStatus = (propertyId, status) => 
+  api.patch(`/properties/${propertyId}/status`, { status });
 
 export default api; 
