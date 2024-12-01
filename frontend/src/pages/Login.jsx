@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Container, 
   Paper, 
@@ -9,12 +9,15 @@ import {
   Box,
   Alert 
 } from '@mui/material';
-import { login } from '../utils/api';
+import { login, createProperty } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login: authLogin } = useAuth();
+  const propertyData = location.state?.propertyData;
+  
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -34,8 +37,36 @@ const Login = () => {
     
     try {
       const response = await login(formData);
-      authLogin(response.data.token);
-      navigate('/');
+      const { token, user } = response.data;
+      authLogin(token);
+      
+      // If we have property data, create the property
+      if (propertyData) {
+        try {
+          console.log('Property data being sent:', {
+            ...propertyData,
+            broker: user.id
+          });
+
+          const propertyResponse = await createProperty({
+            ...propertyData,
+            broker: user.id
+          });
+          
+          navigate('/property-amenities', { 
+            state: { 
+              propertyId: propertyResponse.data._id,
+              userId: user.id 
+            },
+            replace: true
+          });
+        } catch (propertyError) {
+          console.error('Property Error Details:', propertyError.response?.data);
+          setError('Failed to create property. Please try again.');
+        }
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'An error occurred during login');
     }

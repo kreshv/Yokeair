@@ -12,6 +12,10 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ApartmentList from './pages/ApartmentList';
 import ApartmentDetail from './pages/ApartmentDetail';
+import LocationSelector from './pages/LocationSelector';
+import PropertyListing from './pages/PropertyListing';
+import PropertyAmenities from './pages/PropertyAmenities';
+import Dashboard from './pages/Dashboard';
 
 // Context
 import { AuthProvider } from './context/AuthContext';
@@ -42,8 +46,12 @@ function App() {
           <Routes>
             <Route path="/" element={<MainLayout />}>
               <Route index element={<Home />} />
+              <Route path="/location-selector" element={<LocationSelector />} />
+              <Route path="/property-listing" element={<PropertyListing />} />
+              <Route path="/property-amenities" element={<PropertyAmenities />} />
               <Route path="/apartments" element={<ApartmentList />} />
               <Route path="/apartments/:id" element={<ApartmentDetail />} />
+              <Route path="/dashboard" element={<Dashboard />} />
             </Route>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />

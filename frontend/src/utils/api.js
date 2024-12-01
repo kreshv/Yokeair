@@ -30,5 +30,15 @@ export const register = (userData) => api.post('/users/register', userData);
 export const getApartments = (filters) => api.get('/apartments', { params: filters });
 export const getApartment = (id) => api.get(`/apartments/${id}`);
 export const createApplication = (data) => api.post('/applications', data);
+export const getLocations = () => api.get('/locations/boroughs');
+export const getAmenities = () => api.get('/amenities');
+export const createProperty = (propertyData) => api.post('/properties', propertyData);
+export const checkUnitAvailability = (address, borough, unitNumber) => 
+  api.get('/properties/check-unit', { params: { address, borough, unitNumber } });
+export const checkEmailAvailability = (email) => 
+  api.get('/users/check-email', { params: { email } });
+export const updateProperty = (propertyId, data) => 
+  api.patch(`/properties/${propertyId}`, data);
+export const getBrokerProperties = () => api.get('/properties/broker');
 
 export default api; 

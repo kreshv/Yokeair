@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 // Register user
 exports.registerUser = async (req, res) => {
     try {
-        const { name, email, password, role } = req.body;
+        const { firstName, lastName, email, password, phone, isBroker } = req.body;
 
         // Check if user already exists
         let user = await User.findOne({ email });
@@ -13,22 +13,25 @@ exports.registerUser = async (req, res) => {
             return res.status(400).json({ message: 'User already exists' });
         }
 
+        // Combine firstName and lastName into name
+        const name = `${firstName} ${lastName}`.trim();
+
         // Create new user
         user = new User({
             name,
             email,
             password,
-            role
+            phone,
+            role: isBroker ? 'broker' : 'client'
         });
 
-        // Encrypt password
+        // Hash password
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(password, salt);
 
-        // Save user
         await user.save();
 
-        // Create JWT token
+        // Create token
         const payload = {
             user: {
                 id: user.id,
@@ -39,15 +42,24 @@ exports.registerUser = async (req, res) => {
         jwt.sign(
             payload,
             process.env.JWT_SECRET,
-            { expiresIn: '1h' },
+            { expiresIn: '5h' },
             (err, token) => {
                 if (err) throw err;
-                res.json({ token });
+                // Return both token and user data
+                res.json({ 
+                    token,
+                    user: {
+                        id: user.id,
+                        role: user.role,
+                        name: user.name,
+                        email: user.email
+                    }
+                });
             }
         );
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error');
+        console.error('Registration error:', err);
+        res.status(500).json({ message: err.message });
     }
 };
 
@@ -82,7 +94,16 @@ exports.loginUser = async (req, res) => {
             { expiresIn: '1h' },
             (err, token) => {
                 if (err) throw err;
-                res.json({ token });
+                // Return both token and user data
+                res.json({ 
+                    token,
+                    user: {
+                        id: user.id,
+                        role: user.role,
+                        name: user.name,
+                        email: user.email
+                    }
+                });
             }
         );
     } catch (err) {
