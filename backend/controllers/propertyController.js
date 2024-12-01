@@ -80,6 +80,8 @@ exports.createProperty = async (req, res) => {
 
         const property = await Property.create({
             building: building._id,
+            borough: borough,
+            neighborhood: neighborhood,
             unitNumber,
             type: parsedBedrooms === 0 ? 'studio' : `${parsedBedrooms}BR`,
             status: 'available',
@@ -151,5 +153,116 @@ exports.updateProperty = async (req, res) => {
             error: error.message,
             stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
+    }
+};
+
+exports.getBrokerProperties = async (req, res) => {
+    try {
+        const properties = await Property.find({ broker: req.user.id })
+            .populate({
+                path: 'building',
+                select: 'name address amenities'
+            })
+            .populate('features')
+            .sort('-createdAt');
+
+        res.json(properties);
+    } catch (error) {
+        console.error('Error fetching broker properties:', error);
+        res.status(500).json({
+            message: 'Error fetching properties',
+            error: error.message
+        });
+    }
+};
+
+exports.searchProperties = async (req, res) => {
+    try {
+        const {
+            neighborhoods,
+            boroughs,
+            minPrice,
+            maxPrice,
+            bedrooms,
+            bathrooms,
+            amenities,
+            features
+        } = req.query;
+
+        console.log('Received search params:', { 
+            neighborhoods, boroughs, bedrooms, bathrooms, amenities, features 
+        });
+
+        let query = { status: 'available' };
+
+        // Neighborhood filter
+        if (neighborhoods && neighborhoods.length > 0) {
+            const neighborhoodArray = Array.isArray(neighborhoods) ? neighborhoods : [neighborhoods];
+            query.neighborhood = { $in: neighborhoodArray };
+        }
+
+        // Borough filter
+        if (boroughs && boroughs.length > 0) {
+            const boroughArray = Array.isArray(boroughs) ? boroughs : [boroughs];
+            query.borough = { $in: boroughArray };
+        }
+
+        // Bedrooms filter
+        if (bedrooms && bedrooms !== 'any') {
+            query.bedrooms = parseInt(bedrooms);
+        }
+
+        // Bathrooms filter
+        if (bathrooms && bathrooms !== 'any') {
+            query.bathrooms = parseFloat(bathrooms);
+        }
+
+        // Price range filter
+        if (minPrice || maxPrice) {
+            query.price = {};
+            if (minPrice) query.price.$gte = parseInt(minPrice);
+            if (maxPrice) query.price.$lte = parseInt(maxPrice);
+        }
+
+        // Building amenities filter
+        if (amenities && amenities.length > 0) {
+            const amenityArray = Array.isArray(amenities) ? amenities : [amenities];
+            // First, find buildings with these amenities
+            const buildingsWithAmenities = await Building.find({
+                amenities: { $all: amenityArray }
+            }).select('_id');
+            
+            // Add building filter to query
+            query.building = { 
+                $in: buildingsWithAmenities.map(b => b._id) 
+            };
+        }
+
+        // Unit features filter
+        if (features && features.length > 0) {
+            const featureArray = Array.isArray(features) ? features : [features];
+            query.features = { $all: featureArray };
+        }
+
+        console.log('Final query:', JSON.stringify(query, null, 2));
+
+        const properties = await Property.find(query)
+            .populate({
+                path: 'building',
+                select: 'name address amenities',
+                populate: {
+                    path: 'amenities',
+                    model: 'Amenity'
+                }
+            })
+            .populate('features')
+            .sort('-createdAt');
+
+        console.log(`Found ${properties.length} properties`);
+        
+        res.json(properties);
+    } catch (error) {
+        console.error('Search error:', error);
+        res.status(500).json({ message: 'Error searching properties' });
     }
 }; 

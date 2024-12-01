@@ -40,5 +40,7 @@ export const checkEmailAvailability = (email) =>
 export const updateProperty = (propertyId, data) => 
   api.patch(`/properties/${propertyId}`, data);
 export const getBrokerProperties = () => api.get('/properties/broker');
+export const searchProperties = (params) => 
+  api.get('/properties/search', { params });
 
 export default api; 

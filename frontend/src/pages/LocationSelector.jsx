@@ -122,8 +122,8 @@ const LocationSelector = () => {
     });
   };
 
-  const handleSearch = () => {
-    navigate('/apartments', {
+  const handleNext = () => {
+    navigate('/search-filters', {
       state: {
         neighborhoods: selectedNeighborhoods,
         boroughs: selectedBoroughs
@@ -239,7 +239,7 @@ const LocationSelector = () => {
       {/* Updated Search Button */}
       <Button
         variant="contained"
-        onClick={handleSearch}
+        onClick={handleNext}
         sx={{
           position: 'absolute',
           bottom: 32,
@@ -264,7 +264,7 @@ const LocationSelector = () => {
           }
         }}
       >
-        Search
+        Next
       </Button>
     </Box>
   );

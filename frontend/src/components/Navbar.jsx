@@ -1,7 +1,8 @@
-import { AppBar, Toolbar, Button, Box, Menu, MenuItem } from '@mui/material';
+import { AppBar, Toolbar, Button, Box, Menu, MenuItem, Tooltip } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState } from 'react';
+import MenuIcon from '@mui/icons-material/Menu';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -38,7 +39,7 @@ const Navbar = () => {
       <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 2, sm: 4 } }}>
         <RouterLink to="/">
           <img 
-            src="/logo.jpg" 
+            src="/logo.png" 
             alt="Yoke Logo" 
             style={{ 
               height: '45px',
@@ -52,22 +53,45 @@ const Navbar = () => {
         <Box sx={{ display: 'flex', gap: 2 }}>
           {user ? (
             <>
-              <Button
-                onClick={handleMenu}
-                sx={{
-                  color: '#fff',
-                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                  '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                  }
-                }}
-              >
-                {user.name}
-              </Button>
+              <Tooltip title="Menu" arrow>
+                <Button
+                  onClick={handleMenu}
+                  sx={{
+                    color: '#000',
+                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                    borderRadius: '12px',
+                    width: '100px',
+                    height: '40px',
+                    minWidth: '100px',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      transform: 'translateY(-2px)',
+                      transition: 'all 0.2s ease-in-out',
+                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                    }
+                  }}
+                >
+                  <MenuIcon />
+                </Button>
+              </Tooltip>
               <Menu
                 anchorEl={anchorEl}
                 open={Boolean(anchorEl)}
                 onClose={handleClose}
+                PaperProps={{
+                  sx: {
+                    mt: 1,
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    backdropFilter: 'blur(8px)',
+                    borderRadius: '12px',
+                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                    '& .MuiMenuItem-root': {
+                      fontSize: '0.95rem',
+                      py: 1,
+                      px: 2
+                    }
+                  }
+                }}
               >
                 <MenuItem onClick={() => { navigate('/dashboard'); handleClose(); }}>
                   Dashboard

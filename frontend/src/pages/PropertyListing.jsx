@@ -10,9 +10,11 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { getLocations, checkUnitAvailability, createProperty } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 
 const PropertyListing = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [selectedBorough, setSelectedBorough] = useState('');
   const [neighborhoods, setNeighborhoods] = useState([]);
   const [formData, setFormData] = useState({
@@ -95,27 +97,50 @@ const PropertyListing = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!validateForm()) {
-        return;
+      return;
     }
 
-    // Format the data before sending to registration
+    // Format the data
     const propertyData = {
-        ...formData,
-        bedrooms: parseInt(formData.bedrooms),
-        bathrooms: parseFloat(formData.bathrooms),
-        price: formData.price.replace(/[^0-9.]/g, ''), // Remove currency formatting
-        buildingAmenities: [],
-        unitFeatures: []
+      ...formData,
+      bedrooms: parseInt(formData.bedrooms),
+      bathrooms: parseFloat(formData.bathrooms),
+      price: formData.price.replace(/[^0-9.]/g, ''),
+      buildingAmenities: [],
+      unitFeatures: []
     };
 
-    // Navigate to registration with the property data
-    navigate('/register', { 
+    if (user) {
+      // If user is logged in, create property directly and go to amenities
+      try {
+        const propertyResponse = await createProperty({
+          ...propertyData,
+          broker: user.id
+        });
+        
+        navigate('/property-amenities', { 
+          state: { 
+            propertyId: propertyResponse.data._id,
+            userId: user.id 
+          }
+        });
+      } catch (error) {
+        console.error('Error creating property:', error);
+        setErrors(prev => ({
+          ...prev,
+          submit: 'Failed to create property. Please try again.'
+        }));
+      }
+    } else {
+      // If not logged in, go to register with property data
+      navigate('/register', { 
         state: { 
-            propertyData
+          propertyData
         } 
-    });
+      });
+    }
   };
 
   const formatPrice = (value) => {

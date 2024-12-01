@@ -104,6 +104,13 @@ const Register = () => {
     }
   };
 
+  const textFieldStyle = {
+    '& .MuiOutlinedInput-root': {
+      backgroundColor: 'rgba(255, 255, 255, 0.7)',
+      backdropFilter: 'blur(10px)'
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -169,6 +176,7 @@ const Register = () => {
                 value={formData.firstName}
                 onChange={handleChange}
                 required
+                sx={textFieldStyle}
               />
               <TextField
                 fullWidth
@@ -177,6 +185,7 @@ const Register = () => {
                 value={formData.lastName}
                 onChange={handleChange}
                 required
+                sx={textFieldStyle}
               />
             </Box>
 
@@ -191,6 +200,7 @@ const Register = () => {
               error={!!emailError}
               helperText={emailError}
               required
+              sx={textFieldStyle}
             />
 
             <TextField
@@ -201,6 +211,7 @@ const Register = () => {
               value={formData.phone}
               onChange={handleChange}
               required
+              sx={textFieldStyle}
             />
 
             <TextField
@@ -211,6 +222,7 @@ const Register = () => {
               value={formData.password}
               onChange={handleChange}
               required
+              sx={textFieldStyle}
             />
 
             <TextField
@@ -221,6 +233,7 @@ const Register = () => {
               value={formData.confirmPassword}
               onChange={handleChange}
               required
+              sx={textFieldStyle}
             />
 
             <FormControlLabel

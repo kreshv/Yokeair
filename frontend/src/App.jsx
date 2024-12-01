@@ -5,6 +5,7 @@ import { createTheme } from '@mui/material';
 
 // Layouts
 import MainLayout from './layouts/MainLayout';
+import AuthLayout from './layouts/AuthLayout';
 
 // Pages
 import Home from './pages/Home';
@@ -16,6 +17,7 @@ import LocationSelector from './pages/LocationSelector';
 import PropertyListing from './pages/PropertyListing';
 import PropertyAmenities from './pages/PropertyAmenities';
 import Dashboard from './pages/Dashboard';
+import SearchFilters from './pages/SearchFilters';
 
 // Context
 import { AuthProvider } from './context/AuthContext';
@@ -47,14 +49,17 @@ function App() {
             <Route path="/" element={<MainLayout />}>
               <Route index element={<Home />} />
               <Route path="/location-selector" element={<LocationSelector />} />
+              <Route path="/search-filters" element={<SearchFilters />} />
               <Route path="/property-listing" element={<PropertyListing />} />
               <Route path="/property-amenities" element={<PropertyAmenities />} />
               <Route path="/apartments" element={<ApartmentList />} />
               <Route path="/apartments/:id" element={<ApartmentDetail />} />
               <Route path="/dashboard" element={<Dashboard />} />
             </Route>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            <Route element={<AuthLayout />}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+            </Route>
           </Routes>
         </Router>
       </AuthProvider>

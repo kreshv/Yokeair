@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { 
   Container, 
   Paper, 
@@ -9,15 +9,12 @@ import {
   Box,
   Alert 
 } from '@mui/material';
-import { login, createProperty } from '../utils/api';
+import { login } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { login: authLogin } = useAuth();
-  const propertyData = location.state?.propertyData;
-  
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -39,87 +36,131 @@ const Login = () => {
       const response = await login(formData);
       const { token, user } = response.data;
       authLogin(token);
-      
-      // If we have property data, create the property
-      if (propertyData) {
-        try {
-          console.log('Property data being sent:', {
-            ...propertyData,
-            broker: user.id
-          });
-
-          const propertyResponse = await createProperty({
-            ...propertyData,
-            broker: user.id
-          });
-          
-          navigate('/property-amenities', { 
-            state: { 
-              propertyId: propertyResponse.data._id,
-              userId: user.id 
-            },
-            replace: true
-          });
-        } catch (propertyError) {
-          console.error('Property Error Details:', propertyError.response?.data);
-          setError('Failed to create property. Please try again.');
-        }
-      } else {
-        navigate('/');
-      }
+      navigate('/');
     } catch (err) {
       setError(err.response?.data?.message || 'An error occurred during login');
     }
   };
 
   return (
-    <Container maxWidth="sm">
-      <Paper elevation={3} sx={{ p: 4, mt: 8 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Login
-        </Typography>
-        
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-
-        <Box component="form" onSubmit={handleSubmit}>
-          <TextField
-            fullWidth
-            label="Email"
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-            margin="normal"
-            required
-          />
-          
-          <TextField
-            fullWidth
-            label="Password"
-            name="password"
-            type="password"
-            value={formData.password}
-            onChange={handleChange}
-            margin="normal"
-            required
-          />
-
-          <Button 
-            type="submit"
-            variant="contained"
-            fullWidth
-            size="large"
-            sx={{ mt: 3 }}
+    <Box
+      sx={{
+        height: '100vh',
+        width: '100%',
+        background: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("/design2.png")`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+        backgroundRepeat: 'no-repeat',
+        position: 'relative',
+        overflowY: 'auto',
+        display: 'flex',
+        alignItems: 'center'
+      }}
+    >
+      <Container maxWidth="sm">
+        <Paper 
+          elevation={5}
+          sx={{
+            p: 5,
+            borderRadius: '25px',
+            background: 'linear-gradient(145deg, rgba(245, 241, 237, 0.8), rgba(236, 229, 221, 0.7))',
+            backdropFilter: 'blur(15px)',
+            border: '1px solid rgba(211, 211, 211, 0.3)',
+            position: 'relative'
+          }}
+        >
+          <Typography 
+            variant="h4" 
+            component="h1" 
+            gutterBottom
+            sx={{ 
+              color: '#00008B',
+              fontWeight: 500,
+              textAlign: 'center',
+              mb: 4
+            }}
           >
             Login
-          </Button>
-        </Box>
-      </Paper>
-    </Container>
+          </Typography>
+          
+          {error && (
+            <Alert severity="error" sx={{ mb: 3 }}>
+              {error}
+            </Alert>
+          )}
+
+          <Box 
+            component="form" 
+            onSubmit={handleSubmit}
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2
+            }}
+          >
+            <TextField
+              fullWidth
+              label="Email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                  backdropFilter: 'blur(10px)'
+                }
+              }}
+            />
+            
+            <TextField
+              fullWidth
+              label="Password"
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                  backdropFilter: 'blur(10px)'
+                }
+              }}
+            />
+
+            <Button 
+              type="submit"
+              variant="contained"
+              size="large"
+              sx={{
+                mt: 2,
+                backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                color: '#000',
+                textTransform: 'uppercase',
+                letterSpacing: '1px',
+                py: 1.5,
+                fontSize: '1rem',
+                fontWeight: 400,
+                backdropFilter: 'blur(8px)',
+                borderRadius: '20px',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                  transform: 'translateY(-2px)',
+                  transition: 'all 0.2s ease-in-out',
+                  boxShadow: '0 6px 8px rgba(0, 0, 0, 0.2)'
+                }
+              }}
+            >
+              Login
+            </Button>
+          </Box>
+        </Paper>
+      </Container>
+    </Box>
   );
 };
 

@@ -6,6 +6,14 @@ const propertySchema = new mongoose.Schema({
         ref: 'Building',
         required: true
     },
+    borough: {
+        type: String,
+        required: true
+    },
+    neighborhood: {
+        type: String,
+        required: true
+    },
     unitNumber: {
         type: String,
         required: true
