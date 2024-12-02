@@ -13,7 +13,7 @@ import {
   CircularProgress
 } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { getAmenities, updateProperty } from '../utils/api';
+import { getAmenities, updateProperty, uploadPropertyImages } from '../utils/api';
 
 const AmenityButton = ({ name, selected, onClick }) => (
   <Button
@@ -110,21 +110,27 @@ const PropertyAmenities = () => {
 
   const handleSubmit = async () => {
     try {
-      setError(''); // Clear any existing errors
-      console.log('Updating property:', propertyId, {
-        buildingAmenities: selectedAmenities.building,
-        unitFeatures: selectedAmenities.unit
-      });
-
+      // First update the property with amenities
       await updateProperty(propertyId, {
         buildingAmenities: selectedAmenities.building,
         unitFeatures: selectedAmenities.unit
       });
-      
-      navigate('/dashboard'); // Or wherever you want to redirect after successful submission
-    } catch (err) {
-      console.error('Update error:', err.response?.data || err);
-      setError(err.response?.data?.message || 'Failed to update property amenities');
+
+      // If there are images, upload them
+      const images = location.state?.images;
+      if (images && images.length > 0) {
+        const formData = new FormData();
+        images.forEach(image => {
+          formData.append('images', image);
+        });
+        
+        await uploadPropertyImages(propertyId, formData);
+      }
+
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Error:', error);
+      setError('Failed to update property');
     }
   };
 

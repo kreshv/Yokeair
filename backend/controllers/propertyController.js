@@ -18,6 +18,26 @@ exports.createProperty = async (req, res) => {
             broker
         } = req.body;
 
+        // Check if unit already exists in the building
+        const existingProperty = await Property.findOne({
+            'building.address.street': address,
+            'building.address.borough': borough,
+            unitNumber: unitNumber
+        }).populate('broker', 'name');
+
+        if (existingProperty) {
+            // If the listing exists and belongs to the same broker
+            if (existingProperty.broker._id.toString() === broker) {
+                return res.status(400).json({
+                    message: 'You have already listed this property'
+                });
+            }
+            // If the listing exists but belongs to a different broker
+            return res.status(400).json({
+                message: 'This unit is already listed by another broker'
+            });
+        }
+
         // Validate required fields
         const requiredFields = {
             address,
@@ -288,5 +308,53 @@ exports.updatePropertyStatus = async (req, res) => {
     } catch (error) {
         console.error('Error updating property status:', error);
         res.status(500).json({ message: 'Error updating property status' });
+    }
+};
+
+exports.deleteProperty = async (req, res) => {
+    try {
+        const property = await Property.findById(req.params.id);
+        
+        if (!property) {
+            return res.status(404).json({ message: 'Property not found' });
+        }
+
+        // Check if user is the broker of this property
+        if (property.broker.toString() !== req.user.id) {
+            return res.status(403).json({ message: 'Not authorized to delete this property' });
+        }
+
+        await property.deleteOne();
+        res.json({ message: 'Property deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting property:', error);
+        res.status(500).json({ message: 'Error deleting property' });
+    }
+};
+
+exports.uploadImages = async (req, res) => {
+    try {
+        const property = await Property.findById(req.params.id);
+        
+        if (!property) {
+            return res.status(404).json({ message: 'Property not found' });
+        }
+
+        if (property.broker.toString() !== req.user.id) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        const images = req.files.map(file => ({
+            url: file.path,
+            public_id: file.filename
+        }));
+
+        property.images = property.images.concat(images);
+        await property.save();
+
+        res.json(property);
+    } catch (error) {
+        console.error('Error uploading images:', error);
+        res.status(500).json({ message: 'Error uploading images' });
     }
 }; 

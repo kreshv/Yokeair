@@ -25,7 +25,7 @@ const propertySchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['available', 'rented', 'maintenance'],
+        enum: ['available', 'in_contract', 'rented'],
         default: 'available'
     },
     price: {
@@ -52,7 +52,11 @@ const propertySchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now
-    }
+    },
+    images: [{
+        url: String,
+        public_id: String
+    }]
 });
 
 module.exports = mongoose.model('Property', propertySchema); 

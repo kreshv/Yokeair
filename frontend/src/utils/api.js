@@ -44,5 +44,14 @@ export const searchProperties = (params) =>
   api.get('/properties/search', { params });
 export const updatePropertyStatus = (propertyId, status) => 
   api.patch(`/properties/${propertyId}/status`, { status });
+export const deleteProperty = (propertyId) => api.delete(`/properties/${propertyId}`);
+export const uploadPropertyImages = (propertyId, formData) => 
+    api.post(`/properties/${propertyId}/images`, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+export const deletePropertyImage = (propertyId, imageId) =>
+    api.delete(`/properties/${propertyId}/images/${imageId}`);
 
 export default api; 

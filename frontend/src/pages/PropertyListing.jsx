@@ -6,11 +6,13 @@ import {
   TextField, 
   Button, 
   MenuItem,
-  Typography 
+  Typography,
+  Alert
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { getLocations, checkUnitAvailability, createProperty } from '../utils/api';
+import { getLocations, checkUnitAvailability, createProperty, uploadPropertyImages } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import ImageUpload from '../components/ImageUpload';
 
 const PropertyListing = () => {
   const navigate = useNavigate();
@@ -27,6 +29,9 @@ const PropertyListing = () => {
     price: ''
   });
   const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState('');
+  const [images, setImages] = useState([]);
+  const [imageError, setImageError] = useState('');
 
   const boroughs = ['Manhattan', 'Brooklyn', 'Queens', 'Bronx', 'Staten Island'];
   const bedroomOptions = [
@@ -55,7 +60,6 @@ const PropertyListing = () => {
   const handleInputChange = (event) => {
     const { name, value } = event.target;
     if (name === 'price') {
-      // Format price input
       const numericValue = value.replace(/[^0-9]/g, '');
       const formattedValue = numericValue ? `$${Number(numericValue).toLocaleString()}` : '';
       setFormData(prev => ({ ...prev, [name]: formattedValue }));
@@ -99,55 +103,48 @@ const PropertyListing = () => {
 
   const handleNext = async () => {
     if (!validateForm()) {
-      return;
+        return;
     }
 
-    // Format the data
     const propertyData = {
-      ...formData,
-      bedrooms: parseInt(formData.bedrooms),
-      bathrooms: parseFloat(formData.bathrooms),
-      price: formData.price.replace(/[^0-9.]/g, ''),
-      buildingAmenities: [],
-      unitFeatures: []
+        ...formData,
+        bedrooms: parseInt(formData.bedrooms),
+        bathrooms: parseFloat(formData.bathrooms),
+        price: formData.price.replace(/[^0-9.]/g, ''),
+        buildingAmenities: [],
+        unitFeatures: []
     };
 
     if (user) {
-      // If user is logged in, create property directly and go to amenities
-      try {
-        const propertyResponse = await createProperty({
-          ...propertyData,
-          broker: user.id
-        });
-        
-        navigate('/property-amenities', { 
-          state: { 
-            propertyId: propertyResponse.data._id,
-            userId: user.id 
-          }
-        });
-      } catch (error) {
-        console.error('Error creating property:', error);
-        setErrors(prev => ({
-          ...prev,
-          submit: 'Failed to create property. Please try again.'
-        }));
-      }
+        try {
+            const propertyResponse = await createProperty({
+                ...propertyData,
+                broker: user.id
+            });
+            
+            navigate('/property-amenities', { 
+                state: { 
+                    propertyId: propertyResponse.data._id,
+                    userId: user.id,
+                    images: images
+                }
+            });
+        } catch (error) {
+            console.error('Error creating property:', error);
+            setSubmitError(error.response?.data?.message || 'Failed to create property. Please try again.');
+            window.scrollTo(0, 0);
+        }
     } else {
-      // If not logged in, go to register with property data
-      navigate('/register', { 
-        state: { 
-          propertyData
-        } 
-      });
+        navigate('/register', { 
+            state: { 
+                propertyData
+            } 
+        });
     }
   };
 
   const formatPrice = (value) => {
-    // Remove all non-numeric characters
     const numericValue = value.replace(/[^0-9]/g, '');
-    
-    // Convert to number and format with commas
     if (numericValue) {
       const number = parseInt(numericValue, 10);
       return `$${number.toLocaleString()}`;
@@ -168,6 +165,26 @@ const PropertyListing = () => {
     '& .MuiOutlinedInput-root': {
       backgroundColor: 'rgba(255, 255, 255, 0.7)',
       backdropFilter: 'blur(10px)'
+    }
+  };
+
+  const handleImageUpload = async (formData) => {
+    try {
+        const files = formData.getAll('images');
+        setImages(prev => [...prev, ...files]);
+        setImageError('');
+    } catch (error) {
+        setImageError('Failed to upload images');
+        console.error('Image upload error:', error);
+    }
+  };
+
+  const handleImageDelete = async (image) => {
+    try {
+      setImages(prev => prev.filter(img => img.url !== image.url));
+      // You might want to add an API call to delete from Cloudinary here
+    } catch (error) {
+      console.error('Error deleting image:', error);
     }
   };
 
@@ -221,6 +238,18 @@ const PropertyListing = () => {
           >
             Tell us about your property
           </Typography>
+
+          {submitError && (
+            <Alert 
+                severity="error" 
+                sx={{ 
+                    mb: 3,
+                    width: '100%'
+                }}
+            >
+                {submitError}
+            </Alert>
+          )}
 
           <Box
             component="form"
@@ -348,6 +377,22 @@ const PropertyListing = () => {
               sx={textFieldStyle}
             />
           </Box>
+
+          <Box sx={{ mt: 3 }}>
+            <Typography variant="h6" sx={{ mb: 2, color: '#00008B' }}>
+              Property Images
+            </Typography>
+            <ImageUpload
+              onUpload={handleImageUpload}
+              existingImages={images}
+              onDelete={handleImageDelete}
+            />
+            {imageError && (
+              <Typography color="error" sx={{ mt: 1 }}>
+                {imageError}
+              </Typography>
+            )}
+          </Box>
         </Paper>
       </Container>
 
@@ -356,7 +401,7 @@ const PropertyListing = () => {
         variant="contained"
         onClick={handleNext}
         sx={{
-          position: 'absolute',
+          position: 'fixed',
           bottom: 32,
           right: 32,
           px: 3,
