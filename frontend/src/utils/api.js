@@ -25,8 +25,8 @@ api.interceptors.response.use(
   }
 );
 
-export const login = (credentials) => api.post('/users/login', credentials);
-export const register = (userData) => api.post('/users/register', userData);
+export const login = (credentials) => api.post('/auth/login', credentials);
+export const register = (userData) => api.post('/auth/register', userData);
 export const getApartments = (filters) => api.get('/apartments', { params: filters });
 export const getApartment = (id) => api.get(`/apartments/${id}`);
 export const createApplication = (data) => api.post('/applications', data);
@@ -36,7 +36,7 @@ export const createProperty = (propertyData) => api.post('/properties', property
 export const checkUnitAvailability = (address, borough, unitNumber) => 
   api.get('/properties/check-unit', { params: { address, borough, unitNumber } });
 export const checkEmailAvailability = (email) => 
-  api.get('/users/check-email', { params: { email } });
+  api.get('/auth/check-email', { params: { email } });
 export const updateProperty = (propertyId, data) => 
   api.patch(`/properties/${propertyId}`, data);
 export const getBrokerProperties = () => api.get('/properties/broker');
@@ -61,5 +61,10 @@ export const uploadPropertyImages = (propertyId, formData) =>
     });
 export const deletePropertyImage = (propertyId, imageId) =>
     api.delete(`/properties/${propertyId}/images/${imageId}`);
+export const updateUserProfile = (userData) => api.patch('/users/profile', userData);
+export const getUserApplications = () => api.get('/applications/user');
+export const getSavedListings = () => api.get('/users/saved-listings');
+export const saveListing = (propertyId) => api.post(`/users/saved-listings/${propertyId}`);
+export const removeSavedListing = (propertyId) => api.delete(`/users/saved-listings/${propertyId}`);
 
 export default api; 

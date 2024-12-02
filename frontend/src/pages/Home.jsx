@@ -95,9 +95,9 @@ const Home = () => {
           </Button>
           
           <Button
+            onClick={() => navigate('/register', { state: { fromShowcasing: true } })}
             variant="contained"
             size="large"
-            onClick={() => navigate('/property-listing')}
             sx={{
               py: 2.5,
               px: 4,

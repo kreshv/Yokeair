@@ -18,9 +18,13 @@ import PropertyListing from './pages/PropertyListing';
 import PropertyAmenities from './pages/PropertyAmenities';
 import Dashboard from './pages/Dashboard';
 import SearchFilters from './pages/SearchFilters';
+import Profile from './pages/client/Profile';
+import MyApplications from './pages/client/MyApplications';
+import SavedListings from './pages/client/SavedListings';
 
 // Context
 import { AuthProvider } from './context/AuthContext';
+import { SnackbarProvider } from './components/Snackbar';
 
 const theme = createTheme({
   palette: {
@@ -44,24 +48,29 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AuthProvider>
-        <Router>
-          <Routes>
-            <Route path="/" element={<MainLayout />}>
-              <Route index element={<Home />} />
-              <Route path="/location-selector" element={<LocationSelector />} />
-              <Route path="/search-filters" element={<SearchFilters />} />
-              <Route path="/property-listing" element={<PropertyListing />} />
-              <Route path="/property-amenities" element={<PropertyAmenities />} />
-              <Route path="/apartments" element={<ApartmentList />} />
-              <Route path="/apartments/:id" element={<ApartmentDetail />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-            </Route>
-            <Route element={<AuthLayout />}>
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-            </Route>
-          </Routes>
-        </Router>
+        <SnackbarProvider>
+          <Router>
+            <Routes>
+              <Route path="/" element={<MainLayout />}>
+                <Route index element={<Home />} />
+                <Route path="/location-selector" element={<LocationSelector />} />
+                <Route path="/search-filters" element={<SearchFilters />} />
+                <Route path="/property-listing" element={<PropertyListing />} />
+                <Route path="/property-amenities" element={<PropertyAmenities />} />
+                <Route path="/apartments" element={<ApartmentList />} />
+                <Route path="/apartments/:id" element={<ApartmentDetail />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/my-applications" element={<MyApplications />} />
+                <Route path="/saved-listings" element={<SavedListings />} />
+              </Route>
+              <Route element={<AuthLayout />}>
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+              </Route>
+            </Routes>
+          </Router>
+        </SnackbarProvider>
       </AuthProvider>
     </ThemeProvider>
   );

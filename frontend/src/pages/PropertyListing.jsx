@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Box, 
   Container, 
@@ -42,6 +42,12 @@ const PropertyListing = () => {
     { value: 4, label: '4+' }
   ];
   const bathroomOptions = ['1', '1.5', '2', '2.5', '3', '3.5', '4'];
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/register', { state: { fromShowcasing: true } });
+    }
+  }, [user, navigate]);
 
   const handleBoroughChange = async (event) => {
     const borough = event.target.value;

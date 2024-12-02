@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link as RouterLink, useLocation } from 'react-router-dom';
 import { 
   Container, 
   Paper, 
@@ -14,7 +14,9 @@ import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login: authLogin } = useAuth();
+  const fromShowcasing = location.state?.fromShowcasing;
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -36,9 +38,15 @@ const Login = () => {
       const response = await login(formData);
       const { token, user } = response.data;
       authLogin(token);
-      navigate('/');
+      
+      if (fromShowcasing) {
+        navigate('/property-listing');
+      } else {
+        navigate(user.role === 'broker' ? '/dashboard' : '/');
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'An error occurred during login');
+      console.error('Login error:', err);
     }
   };
 
@@ -106,7 +114,10 @@ const Login = () => {
               type="email"
               value={formData.email}
               onChange={handleChange}
+              error={!!error}
+              variant="outlined"
               required
+              autoComplete="email"
               sx={{
                 '& .MuiOutlinedInput-root': {
                   backgroundColor: 'rgba(255, 255, 255, 0.7)',
@@ -122,7 +133,10 @@ const Login = () => {
               type="password"
               value={formData.password}
               onChange={handleChange}
+              error={!!error}
+              variant="outlined"
               required
+              autoComplete="current-password"
               sx={{
                 '& .MuiOutlinedInput-root': {
                   backgroundColor: 'rgba(255, 255, 255, 0.7)',
@@ -157,6 +171,26 @@ const Login = () => {
             >
               Login
             </Button>
+          </Box>
+
+          <Box sx={{ mt: 3, textAlign: 'center' }}>
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                color: 'text.secondary',
+                '& a': {
+                  color: '#4169E1',
+                  textDecoration: 'none',
+                  fontWeight: 500,
+                  '&:hover': {
+                    textDecoration: 'underline'
+                  }
+                }
+              }}
+            >
+              Don't have an account yet?{' '}
+              <RouterLink to="/register">Register here!</RouterLink>
+            </Typography>
           </Box>
         </Paper>
       </Container>

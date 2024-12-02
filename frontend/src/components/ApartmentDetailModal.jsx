@@ -161,23 +161,25 @@ const ApartmentDetailModal = ({ open, onClose, apartment }) => {
                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                             <LocationOnOutlined sx={{ mr: 1 }} />
                             <Typography>
-                                {apartment.building?.address?.street}, {apartment.neighborhood}, {apartment.borough}
+                                {apartment.building?.address?.street} #{apartment.unitNumber} in {apartment.neighborhood}, {apartment.borough}
                             </Typography>
                         </Box>
 
-                        <Grid container spacing={3} sx={{ mb: 3 }}>
-                            <Grid item xs={4}>
+                        <Grid container spacing={1} sx={{ mb: 3 }}>
+                            <Grid item xs={1.8}>
                                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                     <BedOutlined sx={{ mr: 1 }} />
                                     <Typography>
-                                        {apartment.bedrooms === 0 ? 'Studio' : `${apartment.bedrooms} bed`}
+                                        {apartment.bedrooms === 1 ? '1 bedroom' : `${apartment.bedrooms} bedrooms`}
                                     </Typography>
                                 </Box>
                             </Grid>
-                            <Grid item xs={4}>
+                            <Grid item xs={1.8}>
                                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                     <BathtubOutlined sx={{ mr: 1 }} />
-                                    <Typography>{apartment.bathrooms} bath</Typography>
+                                    <Typography>
+                                        {apartment.bathrooms === 1 ? '1 bathroom' : `${apartment.bathrooms} bathrooms`}
+                                    </Typography>
                                 </Box>
                             </Grid>
                             <Grid item xs={4}>

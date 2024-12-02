@@ -18,8 +18,14 @@ import {
 } from '@mui/icons-material';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
+import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
 import { useState } from 'react';
 import ApartmentDetailModal from './ApartmentDetailModal';
+import { saveListing, removeSavedListing } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
+import { useSnackbar } from './Snackbar';
+import { useNavigate } from 'react-router-dom';
 
 const formatPrice = (price) => {
   return new Intl.NumberFormat('en-US', {
@@ -29,10 +35,15 @@ const formatPrice = (price) => {
   }).format(price);
 };
 
-const ApartmentCard = ({ apartment }) => {
+const ApartmentCard = ({ apartment, isSaved: initialSaved = false, showSaveButton = true }) => {
+  const navigate = useNavigate();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
+  const [isSaved, setIsSaved] = useState(initialSaved);
+  const [saveError, setSaveError] = useState('');
+  const { user } = useAuth();
   const hasMultipleImages = apartment.images?.length > 1;
+  const { showSnackbar } = useSnackbar();
 
   const handleNextImage = (e) => {
     e.stopPropagation();
@@ -46,6 +57,35 @@ const ApartmentCard = ({ apartment }) => {
     setCurrentImageIndex((prev) => 
       prev === 0 ? apartment.images.length - 1 : prev - 1
     );
+  };
+
+  const handleSaveClick = async (e) => {
+    e.stopPropagation();
+    
+    if (!user) {
+      navigate('/register', { 
+        state: { 
+          returnTo: window.location.pathname,
+          fromSave: true 
+        }
+      });
+      return;
+    }
+
+    try {
+      if (isSaved) {
+        await removeSavedListing(apartment._id);
+        setIsSaved(false);
+        showSnackbar('Listing removed from saved items');
+      } else {
+        await saveListing(apartment._id);
+        setIsSaved(true);
+        showSnackbar('Listing saved successfully');
+      }
+    } catch (error) {
+      showSnackbar('Failed to save listing', 'error');
+      console.error('Save error:', error);
+    }
   };
 
   const {
@@ -172,13 +212,28 @@ const ApartmentCard = ({ apartment }) => {
             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5, mb: 2 }}>
               <LocationOnOutlined fontSize="small" sx={{ mt: 0.3 }} />
               <Typography variant="body2" color="text.secondary">
-                {building?.address?.street}, {neighborhood}, {borough}
+                {building?.address?.street}, {borough}
               </Typography>
             </Box>
 
-            {features?.length > 0 && (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                {features.slice(0, 3).map((feature) => (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 2 }}>
+              {apartment.building?.amenities?.length > 0 ? (
+                apartment.building.amenities.map((amenity) => (
+                  <Chip
+                    key={amenity._id}
+                    label={amenity.name}
+                    size="small"
+                    variant="outlined"
+                    sx={{ 
+                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                      '& .MuiChip-label': {
+                        fontSize: '0.75rem'
+                      }
+                    }}
+                  />
+                ))
+              ) : apartment.features?.length > 0 ? (
+                apartment.features.map((feature) => (
                   <Chip
                     key={feature._id}
                     label={feature.name}
@@ -191,21 +246,30 @@ const ApartmentCard = ({ apartment }) => {
                       }
                     }}
                   />
-                ))}
-                {features.length > 3 && (
-                  <Chip
-                    label={`+${features.length - 3} more`}
-                    size="small"
-                    variant="outlined"
-                    sx={{ 
-                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                      '& .MuiChip-label': {
-                        fontSize: '0.75rem'
-                      }
-                    }}
-                  />
-                )}
-              </Box>
+                ))
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  No amenities or features available
+                </Typography>
+              )}
+            </Box>
+
+            {showSaveButton && (
+              <IconButton
+                onClick={handleSaveClick}
+                sx={{
+                  position: 'absolute',
+                  top: 8,
+                  right: 8,
+                  bgcolor: 'rgba(255, 255, 255, 0.8)',
+                  zIndex: 1,
+                  '&:hover': {
+                    bgcolor: 'rgba(255, 255, 255, 0.9)'
+                  }
+                }}
+              >
+                {isSaved ? <BookmarkIcon color="primary" /> : <BookmarkBorderIcon />}
+              </IconButton>
             )}
           </CardContent>
         </CardActionArea>

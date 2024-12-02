@@ -3,12 +3,15 @@ const mongoose = require('mongoose');
 const userSchema = new mongoose.Schema({
     name: {
         type: String,
-        required: true
+        required: true,
+        trim: true
     },
     email: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
+        trim: true,
+        lowercase: true
     },
     password: {
         type: String,
@@ -17,11 +20,20 @@ const userSchema = new mongoose.Schema({
     role: {
         type: String,
         enum: ['client', 'broker'],
-        required: true
+        required: true,
+        default: 'client'
     },
     createdAt: {
         type: Date,
         default: Date.now
+    },
+    savedListings: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Property'
+    }],
+    phone: {
+        type: String,
+        trim: true
     }
 });
 

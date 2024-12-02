@@ -21,15 +21,16 @@ const Register = () => {
   const location = useLocation();
   const { login } = useAuth();
   const propertyData = location.state?.propertyData;
+  const fromShowcasing = location.state?.fromShowcasing;
 
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: '',
-    phone: '',
-    isBroker: true // Default to true since coming from property listing
+    isBroker: false
   });
   const [error, setError] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -69,32 +70,19 @@ const Register = () => {
     }
 
     try {
-      // First register the user
-      const response = await register(formData);
-      
-      // Get the token and user data
-      const { token, user } = response.data;
-      login(token);
-      
-      // If we have property data, create the property
-      if (propertyData) {
-        try {
-          // Add the user ID to the property data
-          const propertyResponse = await createProperty({
-            ...propertyData,
-            broker: user.id // Change userId to broker to match the model
-          });
-          
-          navigate('/property-amenities', { 
-            state: { 
-              propertyId: propertyResponse.data._id,
-              userId: user.id 
-            }
-          });
-        } catch (propertyError) {
-          console.error('Error creating property:', propertyError);
-          setError('Failed to create property. Please try again.');
-        }
+      const userData = {
+        name: `${formData.firstName} ${formData.lastName}`.trim(),
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+        role: formData.isBroker ? 'broker' : 'client'
+      };
+
+      const response = await register(userData);
+      login(response.data.token);
+
+      if (fromShowcasing || formData.isBroker) {
+        navigate('/property-listing');
       } else {
         navigate('/');
       }
@@ -154,20 +142,12 @@ const Register = () => {
           </Typography>
 
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert severity="error" sx={{ mb: 3 }}>
               {error}
             </Alert>
           )}
 
-          <Box 
-            component="form" 
-            onSubmit={handleSubmit}
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 3
-            }}
-          >
+          <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             <Box sx={{ display: 'flex', gap: 2 }}>
               <TextField
                 fullWidth
@@ -205,13 +185,13 @@ const Register = () => {
 
             <TextField
               fullWidth
-              label="Phone"
+              label="Phone Number"
               name="phone"
-              type="tel"
               value={formData.phone}
               onChange={handleChange}
               required
               sx={textFieldStyle}
+              placeholder="(123) 456-7890"
             />
 
             <TextField
@@ -239,19 +219,12 @@ const Register = () => {
             <FormControlLabel
               control={
                 <Checkbox
+                  name="isBroker"
                   checked={formData.isBroker}
                   onChange={handleChange}
-                  name="isBroker"
-                  color="primary"
                 />
               }
               label="I am a brokerage"
-              sx={{ 
-                color: '#00008B',
-                '& .MuiCheckbox-root': {
-                  color: '#00008B'
-                }
-              }}
             />
 
             <Button 
@@ -282,36 +255,27 @@ const Register = () => {
             </Button>
           </Box>
 
-          {propertyData && (
-            <Box sx={{ mt: 3, textAlign: 'center' }}>
-              <Typography 
-                variant="body1" 
-                sx={{ 
-                  color: '#00008B',
-                  opacity: 0.8
-                }}
-              >
-                Already have an account?{' '}
-                <Button
-                  component={RouterLink}
-                  to="/login"
-                  state={{ propertyData }} // Pass propertyData to login
-                  sx={{
-                    textTransform: 'none',
-                    fontWeight: 500,
-                    textDecoration: 'underline',
-                    color: '#4169E1',
-                    '&:hover': {
-                      backgroundColor: 'transparent',
-                      color: '#1E3A8A'
-                    }
-                  }}
-                >
-                  Log in here
-                </Button>
-              </Typography>
-            </Box>
-          )}
+          <Box sx={{ mt: 3, textAlign: 'center' }}>
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                color: 'text.secondary',
+                '& a': {
+                  color: '#4169E1',
+                  textDecoration: 'none',
+                  fontWeight: 500,
+                  '&:hover': {
+                    textDecoration: 'underline'
+                  }
+                }
+              }}
+            >
+              Already registered?{' '}
+              <RouterLink to="/login" state={{ fromShowcasing: fromShowcasing }}>
+                Login here!
+              </RouterLink>
+            </Typography>
+          </Box>
         </Paper>
       </Container>
     </Box>

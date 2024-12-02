@@ -1,113 +1,79 @@
 const User = require('../models/User');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const Property = require('../models/Property');
 
-// Register user
-exports.registerUser = async (req, res) => {
+exports.updateProfile = async (req, res) => {
     try {
-        const { firstName, lastName, email, password, phone, isBroker } = req.body;
+        const { name, email, phone } = req.body;
+        const user = await User.findById(req.user.id);
 
-        // Check if user already exists
-        let user = await User.findOne({ email });
-        if (user) {
-            return res.status(400).json({ message: 'User already exists' });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
         }
 
-        // Combine firstName and lastName into name
-        const name = `${firstName} ${lastName}`.trim();
-
-        // Create new user
-        user = new User({
-            name,
-            email,
-            password,
-            phone,
-            role: isBroker ? 'broker' : 'client'
-        });
-
-        // Hash password
-        const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(password, salt);
+        // Update fields
+        if (name) user.name = name;
+        if (email) user.email = email;
+        if (phone) user.phone = phone;
 
         await user.save();
-
-        // Create token
-        const payload = {
-            user: {
-                id: user.id,
-                role: user.role
-            }
-        };
-
-        jwt.sign(
-            payload,
-            process.env.JWT_SECRET,
-            { expiresIn: '5h' },
-            (err, token) => {
-                if (err) throw err;
-                // Return both token and user data
-                res.json({ 
-                    token,
-                    user: {
-                        id: user.id,
-                        role: user.role,
-                        name: user.name,
-                        email: user.email
-                    }
-                });
-            }
-        );
-    } catch (err) {
-        console.error('Registration error:', err);
-        res.status(500).json({ message: err.message });
+        res.json(user);
+    } catch (error) {
+        console.error('Error updating profile:', error);
+        res.status(500).json({ message: 'Error updating profile' });
     }
 };
 
-// Login user
-exports.loginUser = async (req, res) => {
+exports.getSavedListings = async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const user = await User.findById(req.user.id).populate({
+            path: 'savedListings',
+            populate: {
+                path: 'building',
+                select: 'address amenities'
+            }
+        });
 
-        // Check if user exists
-        let user = await User.findOne({ email });
-        if (!user) {
-            return res.status(400).json({ message: 'Invalid credentials' });
+        res.json(user.savedListings);
+    } catch (error) {
+        console.error('Error getting saved listings:', error);
+        res.status(500).json({ message: 'Error getting saved listings' });
+    }
+};
+
+exports.saveListing = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        const property = await Property.findById(req.params.propertyId);
+
+        if (!property) {
+            return res.status(404).json({ message: 'Property not found' });
         }
 
-        // Verify password
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(400).json({ message: 'Invalid credentials' });
+        if (user.savedListings.includes(req.params.propertyId)) {
+            return res.status(400).json({ message: 'Property already saved' });
         }
 
-        // Create JWT token
-        const payload = {
-            user: {
-                id: user.id,
-                role: user.role
-            }
-        };
+        user.savedListings.push(req.params.propertyId);
+        await user.save();
 
-        jwt.sign(
-            payload,
-            process.env.JWT_SECRET,
-            { expiresIn: '1h' },
-            (err, token) => {
-                if (err) throw err;
-                // Return both token and user data
-                res.json({ 
-                    token,
-                    user: {
-                        id: user.id,
-                        role: user.role,
-                        name: user.name,
-                        email: user.email
-                    }
-                });
-            }
+        res.json({ message: 'Property saved successfully' });
+    } catch (error) {
+        console.error('Error saving listing:', error);
+        res.status(500).json({ message: 'Error saving listing' });
+    }
+};
+
+exports.removeSavedListing = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        user.savedListings = user.savedListings.filter(
+            id => id.toString() !== req.params.propertyId
         );
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error');
+        await user.save();
+
+        res.json({ message: 'Property removed from saved listings' });
+    } catch (error) {
+        console.error('Error removing saved listing:', error);
+        res.status(500).json({ message: 'Error removing saved listing' });
     }
 }; 

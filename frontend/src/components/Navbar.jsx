@@ -1,8 +1,14 @@
-import { AppBar, Toolbar, Button, Box, Menu, MenuItem, Tooltip } from '@mui/material';
+import { AppBar, Toolbar, Button, Box, Menu, MenuItem, Tooltip, IconButton, Divider } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState } from 'react';
 import MenuIcon from '@mui/icons-material/Menu';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import LogoutIcon from '@mui/icons-material/Logout';
+import Typography from '@mui/material/Typography';
+import DashboardIcon from '@mui/icons-material/Dashboard';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -21,6 +27,36 @@ const Navbar = () => {
     logout();
     navigate('/');
     handleClose();
+  };
+
+  const getMenuItems = () => {
+    if (user?.role === 'broker') {
+      return [
+        {
+          label: 'Dashboard',
+          icon: <DashboardIcon />,
+          onClick: () => navigate('/dashboard')
+        }
+      ];
+    } else {
+      return [
+        {
+          label: 'Profile',
+          icon: <AccountCircleIcon />,
+          onClick: () => navigate('/profile')
+        },
+        {
+          label: 'My Applications',
+          icon: <AssignmentIcon />,
+          onClick: () => navigate('/my-applications')
+        },
+        {
+          label: 'Saved Listings',
+          icon: <BookmarkIcon />,
+          onClick: () => navigate('/saved-listings')
+        }
+      ];
+    }
   };
 
   return (
@@ -69,9 +105,8 @@ const Navbar = () => {
                     color: '#000',
                     backgroundColor: 'rgba(255, 255, 255, 0.8)',
                     borderRadius: '12px',
-                    width: '100px',
+                    width: '60px',
                     height: '40px',
-                    minWidth: '100px',
                     '&:hover': {
                       backgroundColor: 'rgba(255, 255, 255, 0.9)',
                       transform: 'translateY(-2px)',
@@ -90,22 +125,71 @@ const Navbar = () => {
                 PaperProps={{
                   sx: {
                     mt: 1,
+                    width: '200px',
+                    borderRadius: '12px',
                     backgroundColor: 'rgba(255, 255, 255, 0.95)',
                     backdropFilter: 'blur(8px)',
-                    borderRadius: '12px',
                     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
                     '& .MuiMenuItem-root': {
-                      fontSize: '0.95rem',
-                      py: 1,
-                      px: 2
+                      fontSize: '0.9rem',
+                      py: 1.2,
+                      px: 2,
+                      gap: 1.5,
+                      transition: 'all 0.2s ease-in-out',
+                      '&:hover': {
+                        backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                        transform: 'translateX(4px)',
+                        '& .MuiSvgIcon-root': {
+                          color: '#4169E1'
+                        },
+                        '& .MuiTypography-root': {
+                          color: '#4169E1'
+                        }
+                      },
+                      '& .MuiSvgIcon-root': {
+                        fontSize: '1.1rem',
+                        color: '#666'
+                      },
+                      '& .MuiTypography-root': {
+                        fontSize: '0.9rem',
+                        fontWeight: 500,
+                        color: '#333'
+                      }
                     }
                   }
                 }}
+                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
               >
-                <MenuItem onClick={() => { navigate('/dashboard'); handleClose(); }}>
-                  Dashboard
+                {getMenuItems().map((item) => (
+                  <MenuItem 
+                    key={item.label} 
+                    onClick={() => {
+                      item.onClick();
+                      handleClose();
+                    }}
+                  >
+                    {item.icon}
+                    <Typography>{item.label}</Typography>
+                  </MenuItem>
+                ))}
+                <Divider sx={{ my: 1 }} />
+                <MenuItem 
+                  onClick={handleLogout}
+                  sx={{
+                    '&:hover': {
+                      '& .MuiSvgIcon-root': {
+                        color: '#f44336 !important'
+                      },
+                      '& .MuiTypography-root': {
+                        color: '#f44336 !important'
+                      }
+                    }
+                  }}
+                >
+                  <LogoutIcon />
+                  <Typography>Logout</Typography>
                 </MenuItem>
-                <MenuItem onClick={handleLogout}>Logout</MenuItem>
               </Menu>
             </>
           ) : (
