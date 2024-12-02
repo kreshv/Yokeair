@@ -44,7 +44,15 @@ export const searchProperties = (params) =>
   api.get('/properties/search', { params });
 export const updatePropertyStatus = (propertyId, status) => 
   api.patch(`/properties/${propertyId}/status`, { status });
-export const deleteProperty = (propertyId) => api.delete(`/properties/${propertyId}`);
+export const deleteProperty = async (propertyId) => {
+    try {
+        const response = await api.delete(`/properties/${propertyId}`);
+        return response.data;
+    } catch (error) {
+        console.error('Error deleting property:', error);
+        throw error;
+    }
+};
 export const uploadPropertyImages = (propertyId, formData) => 
     api.post(`/properties/${propertyId}/images`, formData, {
         headers: {

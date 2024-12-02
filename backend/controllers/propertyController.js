@@ -1,5 +1,6 @@
 const Property = require('../models/Property');
 const Building = require('../models/Building');
+const { deleteImage } = require('../utils/cloudinary');
 
 exports.createProperty = async (req, res) => {
     try {
@@ -324,11 +325,35 @@ exports.deleteProperty = async (req, res) => {
             return res.status(403).json({ message: 'Not authorized to delete this property' });
         }
 
+        // Delete images from Cloudinary
+        if (property.images && property.images.length > 0) {
+            const deletePromises = property.images.map(async (image) => {
+                if (image.public_id) {
+                    try {
+                        await deleteImage(image.public_id);
+                    } catch (error) {
+                        console.error(`Failed to delete image ${image.public_id}:`, error);
+                        // Continue with deletion even if some images fail to delete
+                    }
+                }
+            });
+
+            await Promise.all(deletePromises);
+        }
+
+        // Delete the property from MongoDB
         await property.deleteOne();
-        res.json({ message: 'Property deleted successfully' });
+        
+        res.json({ 
+            message: 'Property and associated images deleted successfully',
+            deletedProperty: property
+        });
     } catch (error) {
         console.error('Error deleting property:', error);
-        res.status(500).json({ message: 'Error deleting property' });
+        res.status(500).json({ 
+            message: 'Error deleting property',
+            error: error.message 
+        });
     }
 };
 
@@ -344,13 +369,19 @@ exports.uploadImages = async (req, res) => {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
-        const images = req.files.map(file => ({
+        const existingImageUrls = property.images.map(img => img.url); // Get existing image URLs
+        const newImages = req.files.map(file => ({
             url: file.path,
             public_id: file.filename
         }));
 
-        property.images = property.images.concat(images);
-        await property.save();
+        // Check for duplicates
+        const uniqueImages = newImages.filter(newImage => !existingImageUrls.includes(newImage.url));
+
+        if (uniqueImages.length > 0) {
+            property.images = property.images.concat(uniqueImages);
+            await property.save();
+        }
 
         res.json(property);
     } catch (error) {
