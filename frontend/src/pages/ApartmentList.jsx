@@ -11,7 +11,7 @@ import {
 import { useLocation, useNavigate } from 'react-router-dom';
 import { searchProperties } from '../utils/api';
 import ApartmentCard from '../components/ApartmentCard';
-import TuneIcon from '@mui/icons-material/Tune';
+import SortButton from '../components/SortButton';
 
 const ApartmentList = () => {
     const location = useLocation();
@@ -39,6 +39,21 @@ const ApartmentList = () => {
 
     const handleRefineSearch = () => {
         navigate('/search-filters', { state: searchParams });
+    };
+
+    const handleSort = (sortType) => {
+        let sortedApartments = [...apartments];
+        switch (sortType) {
+            case 'price_asc':
+                sortedApartments.sort((a, b) => a.price - b.price);
+                break;
+            case 'price_desc':
+                sortedApartments.sort((a, b) => b.price - a.price);
+                break;
+            default:
+                break;
+        }
+        setApartments(sortedApartments);
     };
 
     if (loading) {
@@ -75,7 +90,7 @@ const ApartmentList = () => {
             <Container sx={{ mt: 10 }}>
                 {apartments.length > 0 ? (
                     <>
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 4 }}>
+                        <Box sx={{ display: 'flex', gap: 2, mb: 3, justifyContent: 'flex-end' }}>
                             <Button
                                 variant="contained"
                                 onClick={handleRefineSearch}
@@ -102,6 +117,9 @@ const ApartmentList = () => {
                             >
                                 Refine Search
                             </Button>
+                        </Box>
+                        <Box sx={{ display: 'flex', gap: 2, mb: 3, justifyContent: 'flex-end' }}>
+                            <SortButton onSort={handleSort} />
                         </Box>
                         <Grid container spacing={3}>
                             {apartments.map((apartment) => (

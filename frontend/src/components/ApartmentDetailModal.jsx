@@ -16,7 +16,9 @@ import {
     BedOutlined,
     BathtubOutlined,
     SquareFootOutlined,
-    LocationOnOutlined
+    LocationOnOutlined,
+    Apartment as ApartmentIcon,
+    Home as HomeIcon
 } from '@mui/icons-material';
 import { useState } from 'react';
 
@@ -51,19 +53,18 @@ const ApartmentDetailModal = ({ open, onClose, apartment }) => {
         <Dialog
             open={open}
             onClose={onClose}
-            maxWidth={false}
+            maxWidth="lg"
             fullWidth
-            fullScreen={fullScreen}
             PaperProps={{
                 sx: {
-                    width: '75%',
-                    height: '85vh',
-                    maxWidth: 'none',
                     borderRadius: '20px',
+                    maxHeight: '92vh',
+                    width: '85%',
+                    margin: 'auto',
                     bgcolor: 'background.paper',
-                    backgroundImage: 'none',
-                    m: 'auto',
-                    overflow: 'auto'
+                    '& .MuiDialog-paper': {
+                        borderRadius: '20px',
+                    }
                 }
             }}
         >
@@ -71,89 +72,131 @@ const ApartmentDetailModal = ({ open, onClose, apartment }) => {
                 onClick={onClose}
                 sx={{
                     position: 'absolute',
-                    right: 8,
-                    top: 8,
+                    right: 12,
+                    top: 12,
                     color: 'white',
-                    bgcolor: 'rgba(0, 0, 0, 0.4)',
+                    bgcolor: 'rgba(255, 255, 255, 0.15)',
+                    backdropFilter: 'blur(4px)',
                     zIndex: 1,
                     '&:hover': {
-                        bgcolor: 'rgba(0, 0, 0, 0.6)'
+                        bgcolor: 'rgba(255, 255, 255, 0.25)'
                     }
                 }}
             >
                 <CloseIcon />
             </IconButton>
 
-            <DialogContent sx={{ p: 0 }}>
-                <Box sx={{ position: 'relative' }}>
-                    {/* Image Carousel */}
-                    <Box
-                        sx={{
-                            height: '50vh',
-                            position: 'relative',
-                            bgcolor: 'grey.100'
-                        }}
-                    >
-                        {apartment.images?.length > 0 ? (
-                            <Box
-                                component="img"
-                                src={apartment.images[currentImageIndex]?.url || apartment.images[currentImageIndex]}
-                                alt={`Apartment ${currentImageIndex + 1}`}
+            <Box sx={{ position: 'relative' }}>
+                {/* Image Section - Increased to 60% of modal height */}
+                <Box sx={{ 
+                    height: '60vh',
+                    position: 'relative',
+                    bgcolor: 'grey.100'
+                }}>
+                    {apartment.images?.length > 0 ? (
+                        <img
+                            src={apartment.images[currentImageIndex]?.url}
+                            alt={`Property ${currentImageIndex + 1}`}
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover'
+                            }}
+                        />
+                    ) : (
+                        <Box
+                            sx={{
+                                height: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}
+                        >
+                            <Typography color="textSecondary">
+                                No image available
+                            </Typography>
+                        </Box>
+                    )}
+
+                    {/* Navigation Buttons - More transparent and subtle */}
+                    {apartment.images?.length > 1 && (
+                        <>
+                            <IconButton
+                                onClick={handlePrevImage}
                                 sx={{
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: 'cover'
-                                }}
-                            />
-                        ) : (
-                            <Box
-                                sx={{
-                                    height: '100%',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
+                                    position: 'absolute',
+                                    left: 16,
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    bgcolor: 'rgba(255, 255, 255, 0.3)',
+                                    backdropFilter: 'blur(4px)',
+                                    '&:hover': { 
+                                        bgcolor: 'rgba(255, 255, 255, 0.5)',
+                                    },
+                                    padding: '8px',
                                 }}
                             >
-                                <Typography color="text.secondary">
-                                    No images available
-                                </Typography>
-                            </Box>
-                        )}
+                                <NavigateBeforeIcon sx={{ fontSize: '1.5rem' }} />
+                            </IconButton>
+                            <IconButton
+                                onClick={handleNextImage}
+                                sx={{
+                                    position: 'absolute',
+                                    right: 16,
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    bgcolor: 'rgba(255, 255, 255, 0.3)',
+                                    backdropFilter: 'blur(4px)',
+                                    '&:hover': { 
+                                        bgcolor: 'rgba(255, 255, 255, 0.5)',
+                                    },
+                                    padding: '8px',
+                                }}
+                            >
+                                <NavigateNextIcon sx={{ fontSize: '1.5rem' }} />
+                            </IconButton>
+                        </>
+                    )}
 
-                        {apartment.images?.length > 1 && (
-                            <>
-                                <IconButton
-                                    onClick={handlePrevImage}
+                    {/* Image Counter - More subtle */}
+                    {apartment.images?.length > 1 && (
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                bottom: 16,
+                                left: '50%',
+                                transform: 'translateX(-50%)',
+                                display: 'flex',
+                                gap: 0.5
+                            }}
+                        >
+                            {apartment.images.map((_, index) => (
+                                <Box
+                                    key={index}
                                     sx={{
-                                        position: 'absolute',
-                                        left: 16,
-                                        top: '50%',
-                                        transform: 'translateY(-50%)',
-                                        bgcolor: 'rgba(255, 255, 255, 0.8)',
-                                        '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' }
+                                        width: '4px',
+                                        height: '4px',
+                                        borderRadius: '50%',
+                                        bgcolor: index === currentImageIndex 
+                                            ? 'rgba(255, 255, 255, 0.9)'
+                                            : 'rgba(255, 255, 255, 0.4)',
+                                        transition: 'all 0.3s ease'
                                     }}
-                                >
-                                    <NavigateBeforeIcon />
-                                </IconButton>
-                                <IconButton
-                                    onClick={handleNextImage}
-                                    sx={{
-                                        position: 'absolute',
-                                        right: 16,
-                                        top: '50%',
-                                        transform: 'translateY(-50%)',
-                                        bgcolor: 'rgba(255, 255, 255, 0.8)',
-                                        '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' }
-                                    }}
-                                >
-                                    <NavigateNextIcon />
-                                </IconButton>
-                            </>
-                        )}
-                    </Box>
+                                />
+                            ))}
+                        </Box>
+                    )}
+                </Box>
 
-                    {/* Apartment Details */}
-                    <Box sx={{ p: 4 }}>
+                {/* Content Section - Left aligned containers with reduced top margin */}
+                <Box sx={{ 
+                    p: 4,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start'
+                }}>
+                    {/* Price and basic info */}
+                    <Box sx={{ width: '100%', mb: 2 }}>
                         <Typography variant="h4" component="h2" gutterBottom>
                             {formatPrice(apartment.price)}/month
                         </Typography>
@@ -165,8 +208,8 @@ const ApartmentDetailModal = ({ open, onClose, apartment }) => {
                             </Typography>
                         </Box>
 
-                        <Grid container spacing={1} sx={{ mb: 3 }}>
-                            <Grid item xs={2.5}>
+                        <Grid container spacing={1} sx={{ mb: 2 }}>
+                            <Grid item xs={2}>
                                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                     <BedOutlined sx={{ mr: 1 }} />
                                     <Typography>
@@ -174,7 +217,7 @@ const ApartmentDetailModal = ({ open, onClose, apartment }) => {
                                     </Typography>
                                 </Box>
                             </Grid>
-                            <Grid item xs={2.5}>
+                            <Grid item xs={2}>
                                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                     <BathtubOutlined sx={{ mr: 1 }} />
                                     <Typography>
@@ -189,55 +232,119 @@ const ApartmentDetailModal = ({ open, onClose, apartment }) => {
                                 </Box>
                             </Grid>
                         </Grid>
-
-                        {/* Add Building Amenities Section */}
-                        {apartment.building?.amenities?.length > 0 && (
-                            <Box sx={{ mt: 4 }}>
-                                <Typography variant="h6" gutterBottom sx={{ color: '#00008B' }}>
-                                    Building Amenities
-                                </Typography>
-                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                                    {apartment.building.amenities.map((amenity) => (
-                                        <Chip
-                                            key={amenity._id}
-                                            label={amenity.name}
-                                            variant="outlined"
-                                            size="medium"
-                                            sx={{ 
-                                                backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                                                borderRadius: '15px'
-                                            }}
-                                        />
-                                    ))}
-                                </Box>
-                            </Box>
-                        )}
-
-                        {/* Unit Features Section */}
-                        {apartment.features?.length > 0 && (
-                            <Box sx={{ mt: 4 }}>
-                                <Typography variant="h6" gutterBottom sx={{ color: '#00008B' }}>
-                                    Unit Features
-                                </Typography>
-                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                                    {apartment.features.map((feature) => (
-                                        <Chip
-                                            key={feature._id}
-                                            label={feature.name}
-                                            variant="outlined"
-                                            size="medium"
-                                            sx={{ 
-                                                backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                                                borderRadius: '15px'
-                                            }}
-                                        />
-                                    ))}
-                                </Box>
-                            </Box>
-                        )}
                     </Box>
+
+                    {/* Building Amenities Section */}
+                    {apartment.building?.amenities?.length > 0 && (
+                        <Box 
+                            sx={{ 
+                                mt: 0.5,
+                                p: 3,
+                                width: '70%',
+                                backgroundColor: 'rgba(0, 0, 139, 0.03)',
+                                borderRadius: '16px',
+                                border: '1px solid rgba(0, 0, 139, 0.1)',
+                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+                                alignSelf: 'flex-start'
+                            }}
+                        >
+                            <Typography 
+                                variant="h6" 
+                                gutterBottom 
+                                sx={{ 
+                                    color: '#00008B',
+                                    fontWeight: 300,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1,
+                                    mb: 2
+                                }}
+                            >
+                                <ApartmentIcon />
+                                Building Amenities
+                            </Typography>
+                            <Box sx={{ 
+                                display: 'flex', 
+                                flexWrap: 'wrap', 
+                                gap: 1.5
+                            }}>
+                                {apartment.building.amenities.map((amenity) => (
+                                    <Chip
+                                        key={amenity._id}
+                                        label={amenity.name}
+                                        variant="outlined"
+                                        size="medium"
+                                        sx={{ 
+                                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                            borderColor: 'rgba(0, 0, 139, 0.2)',
+                                            borderRadius: '12px',
+                                            px: 1,
+                                            '&:hover': {
+                                                backgroundColor: 'rgba(0, 0, 139, 0.05)',
+                                            }
+                                        }}
+                                    />
+                                ))}
+                            </Box>
+                        </Box>
+                    )}
+
+                    {/* Unit Features Section */}
+                    {apartment.features?.length > 0 && (
+                        <Box 
+                            sx={{ 
+                                mt: 2,
+                                p: 3,
+                                width: '70%',
+                                backgroundColor: 'rgba(0, 0, 139, 0.03)',
+                                borderRadius: '16px',
+                                border: '1px solid rgba(0, 0, 139, 0.1)',
+                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+                                alignSelf: 'flex-start'
+                            }}
+                        >
+                            <Typography 
+                                variant="h6" 
+                                gutterBottom 
+                                sx={{ 
+                                    color: '#00008B',
+                                    fontWeight: 300,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1,
+                                    mb: 2
+                                }}
+                            >
+                                <HomeIcon />
+                                Unit Features
+                            </Typography>
+                            <Box sx={{ 
+                                display: 'flex', 
+                                flexWrap: 'wrap', 
+                                gap: 1.5
+                            }}>
+                                {apartment.features.map((feature) => (
+                                    <Chip
+                                        key={feature._id}
+                                        label={feature.name}
+                                        variant="outlined"
+                                        size="medium"
+                                        sx={{ 
+                                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                            borderColor: 'rgba(0, 0, 139, 0.2)',
+                                            borderRadius: '12px',
+                                            px: 1,
+                                            '&:hover': {
+                                                backgroundColor: 'rgba(0, 0, 139, 0.05)',
+                                            }
+                                        }}
+                                    />
+                                ))}
+                            </Box>
+                        </Box>
+                    )}
                 </Box>
-            </DialogContent>
+            </Box>
         </Dialog>
     );
 };

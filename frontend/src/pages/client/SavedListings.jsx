@@ -62,8 +62,14 @@ const SavedListings = () => {
                         p: 4,
                         mt: 12,
                         borderRadius: '25px',
-                        background: 'linear-gradient(145deg, rgba(245, 241, 237, 0.9), rgba(236, 229, 221, 0.8))',
+                        background: 'transparent',
                         backdropFilter: 'blur(10px)',
+                        boxShadow: '0 12px 24px rgba(0, 0, 0, 0.3), 0 6px 12px rgba(255, 255, 255, 0.2)',
+                        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                        '&:hover': {
+                            transform: 'translateY(-4px)',
+                            boxShadow: '0 16px 32px rgba(0, 0, 0, 0.4), 0 8px 16px rgba(255, 255, 255, 0.3)',
+                        },
                     }}
                 >
                     <Box sx={{ 
@@ -72,16 +78,16 @@ const SavedListings = () => {
                         alignItems: 'center', 
                         mb: 4 
                     }}>
-                        <Typography variant="h5" sx={{ color: '#00008B' }}>
+                        <Typography variant="h6" sx={{ color: '#FFFFFF', textTransform: 'uppercase', fontSize: '1.25rem' }}>
                             Saved Listings
                         </Typography>
                         <Button 
                             variant="contained"
                             onClick={handleSearchApartments}
                             sx={{
-                                px: 3,
-                                py: 1.5,
-                                fontSize: '1rem',
+                                px: 2,
+                                py: 1,
+                                fontSize: '0.875rem',
                                 fontWeight: 400,
                                 color: '#000',
                                 textTransform: 'uppercase',

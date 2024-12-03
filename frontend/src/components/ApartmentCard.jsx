@@ -137,13 +137,17 @@ const ApartmentCard = ({ apartment, isSaved: initialSaved = false, showSaveButto
           height: '100%', 
           display: 'flex', 
           flexDirection: 'column',
-          transition: 'transform 0.2s ease-in-out',
+          transition: 'all 0.3s ease-in-out',
           borderRadius: '20px',
           overflow: 'hidden',
           cursor: 'pointer',
+          position: 'relative',
           '&:hover': {
             transform: 'translateY(-4px)',
-            boxShadow: 4
+            boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
+            '& .image-overlay': {
+              opacity: 1
+            }
           }
         }}
         onClick={() => setModalOpen(true)}
@@ -159,36 +163,19 @@ const ApartmentCard = ({ apartment, isSaved: initialSaved = false, showSaveButto
                   alt={`${bedrooms} bedroom apartment in ${neighborhood}`}
                   sx={{ objectFit: 'cover' }}
                 />
-                {hasMultipleImages && (
-                  <>
-                    <IconButton
-                      onClick={handlePrevImage}
-                      sx={{
-                        position: 'absolute',
-                        left: 8,
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        bgcolor: 'rgba(255, 255, 255, 0.8)',
-                        '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' }
-                      }}
-                    >
-                      <NavigateBeforeIcon />
-                    </IconButton>
-                    <IconButton
-                      onClick={handleNextImage}
-                      sx={{
-                        position: 'absolute',
-                        right: 8,
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        bgcolor: 'rgba(255, 255, 255, 0.8)',
-                        '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' }
-                      }}
-                    >
-                      <NavigateNextIcon />
-                    </IconButton>
-                  </>
-                )}
+                <Box
+                  className="image-overlay"
+                  sx={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: '50%',
+                    background: 'linear-gradient(to top, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 100%)',
+                    opacity: 0,
+                    transition: 'opacity 0.3s ease-in-out'
+                  }}
+                />
               </>
             ) : (
               <Box
