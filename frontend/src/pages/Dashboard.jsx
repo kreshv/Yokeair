@@ -23,24 +23,25 @@ import { useAuth } from '../context/AuthContext';
 import { getBrokerProperties, updatePropertyStatus, deleteProperty } from '../utils/api';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 
-const StatusButton = ({ children, selected, onClick }) => (
+const StatusButton = ({ children, selected, onClick, sx }) => (
   <Button
     onClick={onClick}
     sx={{
       color: '#000',
-      backgroundColor: selected ? 'rgba(65, 105, 225, 0.2)' : 'rgba(255, 255, 255, 0.8)',
+      backgroundColor: selected ? 'rgba(128, 0, 128, 0.2)' : 'rgba(255, 255, 255, 0.8)',
       borderRadius: '12px',
-      px: 3,
+      px: 2,
       py: 1,
-      minWidth: '120px',
+      minWidth: '100px',
       boxShadow: selected ? '0 4px 6px rgba(0, 0, 0, 0.2)' : 'none',
-      border: selected ? '1px solid rgba(65, 105, 225, 0.5)' : 'none',
+      border: selected ? '2px solid #00008B' : 'none',
       '&:hover': {
-        backgroundColor: selected ? 'rgba(65, 105, 225, 0.3)' : 'rgba(255, 255, 255, 0.9)',
-        transform: 'translateY(-2px)',
+        backgroundColor: selected ? 'rgba(128, 0, 128, 0.3)' : 'rgba(255, 255, 255, 0.9)',
+        transform: 'translateY(-4px)',
         transition: 'all 0.2s ease-in-out',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
-      }
+      },
+      ...sx
     }}
   >
     {children}
@@ -324,6 +325,26 @@ const Dashboard = () => {
               </Typography>
               <StatusButton
                 onClick={() => navigate('/property-listing')}
+                sx={{
+                  px: 2,
+                  py: 1,
+                  fontSize: '0.9rem',
+                  fontWeight: 400,
+                  color: '#000',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                  backdropFilter: 'blur(8px)',
+                  borderRadius: '20px',
+                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                  transition: 'all 0.3s ease-in-out',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    transform: 'translateY(-4px)',
+                    color: '#00008B',
+                    boxShadow: '0 6px 8px rgba(0, 0, 0, 0.2)'
+                  }
+                }}
               >
                 Add New Property
               </StatusButton>
@@ -333,18 +354,78 @@ const Dashboard = () => {
               <StatusButton
                 selected={selectedStatuses.includes('available')}
                 onClick={() => handleStatusToggle('available')}
+                sx={{
+                  px: 2,
+                  py: 1,
+                  fontSize: '0.9rem',
+                  fontWeight: 400,
+                  color: '#000',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                  backdropFilter: 'blur(8px)',
+                  borderRadius: '20px',
+                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                  transition: 'all 0.3s ease-in-out',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    transform: 'translateY(-4px)',
+                    color: '#00008B',
+                    boxShadow: '0 6px 8px rgba(0, 0, 0, 0.2)'
+                  }
+                }}
               >
                 Available
               </StatusButton>
               <StatusButton
                 selected={selectedStatuses.includes('in_contract')}
                 onClick={() => handleStatusToggle('in_contract')}
+                sx={{
+                  px: 2,
+                  py: 1,
+                  fontSize: '0.9rem',
+                  fontWeight: 400,
+                  color: '#000',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                  backdropFilter: 'blur(8px)',
+                  borderRadius: '20px',
+                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                  transition: 'all 0.3s ease-in-out',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    transform: 'translateY(-4px)',
+                    color: '#00008B',
+                    boxShadow: '0 6px 8px rgba(0, 0, 0, 0.2)'
+                  }
+                }}
               >
                 In Contract
               </StatusButton>
               <StatusButton
                 selected={selectedStatuses.includes('rented')}
                 onClick={() => handleStatusToggle('rented')}
+                sx={{
+                  px: 2,
+                  py: 1,
+                  fontSize: '0.9rem',
+                  fontWeight: 400,
+                  color: '#000',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                  backdropFilter: 'blur(8px)',
+                  borderRadius: '20px',
+                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                  transition: 'all 0.3s ease-in-out',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    transform: 'translateY(-4px)',
+                    color: '#00008B',
+                    boxShadow: '0 6px 8px rgba(0, 0, 0, 0.2)'
+                  }
+                }}
               >
                 Rented
               </StatusButton>

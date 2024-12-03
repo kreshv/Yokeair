@@ -25,15 +25,20 @@ exports.updateProfile = async (req, res) => {
 
 exports.getSavedListings = async (req, res) => {
     try {
-        const user = await User.findById(req.user.id).populate({
-            path: 'savedListings',
+        const user = await User.findById(req.user.id);
+        const listings = await Property.find({
+            _id: { $in: user.savedListings }
+        })
+        .populate({
+            path: 'building',
+            select: 'address amenities',
             populate: {
-                path: 'building',
-                select: 'address amenities'
+                path: 'amenities'
             }
-        });
+        })
+        .populate('features');
 
-        res.json(user.savedListings);
+        res.json(listings);
     } catch (error) {
         console.error('Error getting saved listings:', error);
         res.status(500).json({ message: 'Error getting saved listings' });

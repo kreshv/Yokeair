@@ -166,7 +166,7 @@ const ApartmentDetailModal = ({ open, onClose, apartment }) => {
                         </Box>
 
                         <Grid container spacing={1} sx={{ mb: 3 }}>
-                            <Grid item xs={1.8}>
+                            <Grid item xs={2.5}>
                                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                     <BedOutlined sx={{ mr: 1 }} />
                                     <Typography>
@@ -174,7 +174,7 @@ const ApartmentDetailModal = ({ open, onClose, apartment }) => {
                                     </Typography>
                                 </Box>
                             </Grid>
-                            <Grid item xs={1.8}>
+                            <Grid item xs={2.5}>
                                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                     <BathtubOutlined sx={{ mr: 1 }} />
                                     <Typography>

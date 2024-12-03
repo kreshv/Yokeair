@@ -265,10 +265,11 @@ const SearchFilters = () => {
                     borderRadius: '20px',
                     zIndex: 1000,
                     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                    transition: 'all 0.3s ease-in-out',
                     '&:hover': {
                         backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                        transform: 'translateY(-2px)',
-                        transition: 'all 0.2s ease-in-out',
+                        transform: 'translateY(-4px)',
+                        color: '#4169E1',
                         boxShadow: '0 6px 8px rgba(0, 0, 0, 0.2)'
                     }
                 }}

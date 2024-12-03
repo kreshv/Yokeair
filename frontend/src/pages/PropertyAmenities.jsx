@@ -109,28 +109,40 @@ const PropertyAmenities = () => {
   };
 
   const handleSubmit = async () => {
+    setLoading(true);
     try {
-      // First update the property with amenities
-      await updateProperty(propertyId, {
-        buildingAmenities: selectedAmenities.building,
-        unitFeatures: selectedAmenities.unit
-      });
-
-      // If there are images, upload them
-      const images = location.state?.images;
-      if (images && images.length > 0) {
-        const formData = new FormData();
-        images.forEach(image => {
-          formData.append('images', image);
+        // First update the property with amenities
+        await updateProperty(propertyId, {
+            buildingAmenities: selectedAmenities.building,
+            unitFeatures: selectedAmenities.unit
         });
-        
-        await uploadPropertyImages(propertyId, formData);
-      }
 
-      navigate('/dashboard');
+        // If there are images, upload them
+        if (location.state?.images && location.state.images.length > 0) {
+            const formData = new FormData();
+            location.state.images.forEach((image, index) => {
+                formData.append('images', image);
+            });
+            
+            try {
+                console.log('Uploading images:', location.state.images.length);
+                const response = await uploadPropertyImages(propertyId, formData);
+                console.log('Upload response:', response);
+            } catch (imageError) {
+                console.error('Error uploading images:', imageError);
+                if (imageError.response) {
+                    console.error('Error response:', imageError.response.data);
+                }
+                throw new Error('Failed to upload images');
+            }
+        }
+
+        navigate('/dashboard');
     } catch (error) {
-      console.error('Error:', error);
-      setError('Failed to update property');
+        console.error('Error:', error);
+        setError(error.message || 'Failed to update property');
+    } finally {
+        setLoading(false);
     }
   };
 
@@ -249,16 +261,25 @@ const PropertyAmenities = () => {
           borderRadius: '20px',
           zIndex: 1000,
           boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          transition: 'all 0.3s ease-in-out',
           '&:hover': {
             backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            transform: 'translateY(-2px)',
-            transition: 'all 0.2s ease-in-out',
+            transform: 'translateY(-4px)',
+            color: '#00008B',
             boxShadow: '0 6px 8px rgba(0, 0, 0, 0.2)'
           }
         }}
       >
         Submit Listing
       </Button>
+      {loading && (
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 2, opacity: 0.8 }}>
+          <CircularProgress color="primary" />
+          <Typography variant="body2" sx={{ mt: 1 }}>
+            Loading, please wait...
+          </Typography>
+        </Box>
+      )}
     </Box>
   );
 };

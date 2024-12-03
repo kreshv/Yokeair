@@ -1,12 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { createProperty, updateProperty, getBrokerProperties, searchProperties, updatePropertyStatus, deleteProperty } = require('../controllers/propertyController');
+const { createProperty, updateProperty, getBrokerProperties, searchProperties, updatePropertyStatus, deleteProperty, uploadImages } = require('../controllers/propertyController');
 const auth = require('../middleware/auth');
 const { validateProperty, checkValidation } = require('../middleware/validation');
 const { upload } = require('../config/cloudinary');
-const Property = require('../models/Property');
 
-// Create new property - Private (Broker only)
+// Routes
 router.post('/', 
     auth, 
     validateProperty,
@@ -44,7 +43,7 @@ router.get('/broker',
     getBrokerProperties
 );
 
-// Add this route for searching properties
+// Search properties
 router.get('/search', searchProperties);
 
 // Update property status - Private (Broker only)
@@ -58,42 +57,18 @@ router.delete('/:id', auth, async (req, res, next) => {
     next();
 }, deleteProperty);
 
-// Add this route for uploading images
+// Upload images - Private (Broker only)
 router.post('/:id/images', 
     auth,
-    upload.array('images', 10), // Allow up to 10 images
+    upload.array('images', 10),
     async (req, res, next) => {
+        console.log('Auth middleware passed, user:', req.user.id);
         if (req.user.role !== 'broker') {
             return res.status(403).json({ message: 'Access denied. Broker only.' });
         }
         next();
     },
-    async (req, res) => {
-        try {
-            const property = await Property.findById(req.params.id);
-            
-            if (!property) {
-                return res.status(404).json({ message: 'Property not found' });
-            }
-
-            if (property.broker.toString() !== req.user.id) {
-                return res.status(403).json({ message: 'Not authorized' });
-            }
-
-            const images = req.files.map(file => ({
-                url: file.path,
-                public_id: file.filename
-            }));
-
-            property.images = property.images.concat(images);
-            await property.save();
-
-            res.json(property);
-        } catch (error) {
-            console.error('Error uploading images:', error);
-            res.status(500).json({ message: 'Error uploading images' });
-        }
-    }
+    uploadImages
 );
 
 module.exports = router; 

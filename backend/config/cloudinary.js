@@ -10,14 +10,14 @@ cloudinary.config({
 
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
-    params: (req, file) => {
-        const uniqueSuffix = `${req.params.id}-${Date.now()}`;
-        return {
-            folder: 'yoke_properties',
-            allowed_formats: ['jpg', 'jpeg', 'png'],
-            public_id: `${uniqueSuffix}-${file.originalname}`,
-            transformation: [{ width: 1000, height: 1000, crop: 'limit' }]
-        };
+    params: {
+        folder: 'yoke_properties',
+        allowed_formats: ['jpg', 'jpeg', 'png'],
+        transformation: [{ width: 1000, height: 1000, crop: 'limit' }],
+        public_id: (req, file) => {
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+            return `property-${uniqueSuffix}`;
+        }
     }
 });
 

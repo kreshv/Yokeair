@@ -1,6 +1,6 @@
 const Property = require('../models/Property');
 const Building = require('../models/Building');
-const { deleteImage } = require('../utils/cloudinary');
+const { cloudinary } = require('../config/cloudinary');
 
 exports.createProperty = async (req, res) => {
     try {
@@ -128,12 +128,6 @@ exports.createProperty = async (req, res) => {
 
 exports.updateProperty = async (req, res) => {
     try {
-        console.log('Update request received:', {
-            propertyId: req.params.id,
-            body: req.body,
-            userId: req.user.id
-        });
-
         const { buildingAmenities, unitFeatures } = req.body;
         const propertyId = req.params.id;
 
@@ -164,15 +158,14 @@ exports.updateProperty = async (req, res) => {
         }
 
         // Populate the updated property
-        await property.populate('building features');
+        await property.populate(['building', 'features']);
 
         res.json(property);
     } catch (error) {
         console.error('Error updating property:', error);
         res.status(500).json({
             message: 'Error updating property',
-            error: error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            error: error.message
         });
     }
 };
@@ -320,7 +313,6 @@ exports.deleteProperty = async (req, res) => {
             return res.status(404).json({ message: 'Property not found' });
         }
 
-        // Check if user is the broker of this property
         if (property.broker.toString() !== req.user.id) {
             return res.status(403).json({ message: 'Not authorized to delete this property' });
         }
@@ -330,10 +322,9 @@ exports.deleteProperty = async (req, res) => {
             const deletePromises = property.images.map(async (image) => {
                 if (image.public_id) {
                     try {
-                        await deleteImage(image.public_id);
+                        await cloudinary.uploader.destroy(image.public_id);
                     } catch (error) {
                         console.error(`Failed to delete image ${image.public_id}:`, error);
-                        // Continue with deletion even if some images fail to delete
                     }
                 }
             });
@@ -341,7 +332,6 @@ exports.deleteProperty = async (req, res) => {
             await Promise.all(deletePromises);
         }
 
-        // Delete the property from MongoDB
         await property.deleteOne();
         
         res.json({ 
@@ -359,6 +349,15 @@ exports.deleteProperty = async (req, res) => {
 
 exports.uploadImages = async (req, res) => {
     try {
+        console.log('Upload request received:', {
+            files: req.files?.length,
+            propertyId: req.params.id
+        });
+
+        if (!req.files || req.files.length === 0) {
+            return res.status(400).json({ message: 'No images provided' });
+        }
+
         const property = await Property.findById(req.params.id);
         
         if (!property) {
@@ -369,23 +368,26 @@ exports.uploadImages = async (req, res) => {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
-        const existingImageUrls = property.images.map(img => img.url); // Get existing image URLs
-        const newImages = req.files.map(file => ({
+        // Handle the Cloudinary uploads
+        const uploadedImages = req.files.map(file => ({
             url: file.path,
             public_id: file.filename
         }));
 
-        // Check for duplicates
-        const uniqueImages = newImages.filter(newImage => !existingImageUrls.includes(newImage.url));
-
-        if (uniqueImages.length > 0) {
-            property.images = property.images.concat(uniqueImages);
-            await property.save();
+        // Update property with new images
+        if (!property.images) {
+            property.images = [];
         }
+        
+        property.images = property.images.concat(uploadedImages);
+        await property.save();
 
         res.json(property);
     } catch (error) {
-        console.error('Error uploading images:', error);
-        res.status(500).json({ message: 'Error uploading images' });
+        console.error('Full error details:', error);
+        res.status(500).json({ 
+            message: 'Error uploading images',
+            error: error.message
+        });
     }
 }; 

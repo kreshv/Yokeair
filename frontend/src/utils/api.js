@@ -53,12 +53,25 @@ export const deleteProperty = async (propertyId) => {
         throw error;
     }
 };
-export const uploadPropertyImages = (propertyId, formData) => 
-    api.post(`/properties/${propertyId}/images`, formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data'
+export const uploadPropertyImages = async (propertyId, formData) => {
+    try {
+        const response = await api.post(`/properties/${propertyId}/images`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            },
+            transformRequest: [function (data) {
+                return data; // Do not transform the formData
+            }]
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error in uploadPropertyImages:', error);
+        if (error.response) {
+            console.error('Error response:', error.response.data);
         }
-    });
+        throw error;
+    }
+};
 export const deletePropertyImage = (propertyId, imageId) =>
     api.delete(`/properties/${propertyId}/images/${imageId}`);
 export const updateUserProfile = (userData) => api.patch('/users/profile', userData);

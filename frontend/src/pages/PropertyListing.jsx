@@ -185,13 +185,8 @@ const PropertyListing = () => {
     }
   };
 
-  const handleImageDelete = async (image) => {
-    try {
-      setImages(prev => prev.filter(img => img.url !== image.url));
-      // You might want to add an API call to delete from Cloudinary here
-    } catch (error) {
-      console.error('Error deleting image:', error);
-    }
+  const handleImageDelete = (imageToDelete) => {
+    setImages(prev => prev.filter(img => img !== imageToDelete));
   };
 
   return (
@@ -422,10 +417,11 @@ const PropertyListing = () => {
           borderRadius: '20px',
           zIndex: 1000,
           boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          transition: 'all 0.3s ease-in-out',
           '&:hover': {
             backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            transform: 'translateY(-2px)',
-            transition: 'all 0.2s ease-in-out',
+            transform: 'translateY(-4px)',
+            color: '#00008B',
             boxShadow: '0 6px 8px rgba(0, 0, 0, 0.2)'
           }
         }}

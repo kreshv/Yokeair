@@ -1,5 +1,10 @@
 const mongoose = require('mongoose');
 
+const imageSchema = new mongoose.Schema({
+    url: String,
+    public_id: String
+});
+
 const propertySchema = new mongoose.Schema({
     building: {
         type: mongoose.Schema.Types.ObjectId,
@@ -53,10 +58,10 @@ const propertySchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
-    images: [{
-        url: String,
-        public_id: String
-    }]
+    images: {
+        type: [imageSchema],
+        default: []
+    }
 });
 
 module.exports = mongoose.model('Property', propertySchema); 

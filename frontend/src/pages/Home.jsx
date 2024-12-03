@@ -91,7 +91,7 @@ const Home = () => {
               }
             }}
           >
-            Exploring homes
+            Explore Homes
           </Button>
           
           <Button
@@ -115,7 +115,7 @@ const Home = () => {
               }
             }}
           >
-            Showcasing my property
+            Showcase My Property
           </Button>
         </Box>
       </Paper>

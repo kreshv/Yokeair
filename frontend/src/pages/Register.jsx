@@ -15,6 +15,7 @@ import { register, checkEmailAvailability } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { createProperty } from '../utils/api';
 import { Link as RouterLink } from 'react-router-dom';
+import { saveListing } from '../utils/api';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -81,10 +82,23 @@ const Register = () => {
       const response = await register(userData);
       login(response.data.token);
 
-      if (fromShowcasing || formData.isBroker) {
+      if (!formData.isBroker && location.state?.fromSave) {
+        const returnTo = location.state?.returnTo;
+        const listingId = returnTo?.split('/').pop();
+        
+        if (listingId) {
+          try {
+            await saveListing(listingId);
+          } catch (saveError) {
+            console.error('Failed to save listing:', saveError);
+          }
+        }
+        
+        navigate('/location-selector');
+      } else if (fromShowcasing || formData.isBroker) {
         navigate('/property-listing');
       } else {
-        navigate('/');
+        navigate('/location-selector');
       }
     } catch (err) {
       console.error('Registration error:', err);
@@ -222,9 +236,15 @@ const Register = () => {
                   name="isBroker"
                   checked={formData.isBroker}
                   onChange={handleChange}
+                  sx={{
+                    color: '#00008B',
+                    '&.Mui-checked': {
+                      color: '#00008B',
+                    },
+                  }}
                 />
               }
-              label="I am a brokerage"
+              label="This is a Brokerage Account"
             />
 
             <Button 
@@ -243,10 +263,11 @@ const Register = () => {
                 backdropFilter: 'blur(8px)',
                 borderRadius: '20px',
                 boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                transition: 'all 0.3s ease-in-out',
                 '&:hover': {
                   backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                  transform: 'translateY(-2px)',
-                  transition: 'all 0.2s ease-in-out',
+                  transform: 'translateY(-4px)',
+                  color: '#00008B',
                   boxShadow: '0 6px 8px rgba(0, 0, 0, 0.2)'
                 }
               }}

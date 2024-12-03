@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -20,12 +21,13 @@ import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
-import { useState } from 'react';
 import ApartmentDetailModal from './ApartmentDetailModal';
-import { saveListing, removeSavedListing } from '../utils/api';
+import { saveListing, removeSavedListing, getSavedListings } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { useSnackbar } from './Snackbar';
 import { useNavigate } from 'react-router-dom';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 
 const formatPrice = (price) => {
   return new Intl.NumberFormat('en-US', {
@@ -44,6 +46,24 @@ const ApartmentCard = ({ apartment, isSaved: initialSaved = false, showSaveButto
   const { user } = useAuth();
   const hasMultipleImages = apartment.images?.length > 1;
   const { showSnackbar } = useSnackbar();
+
+  // Check if apartment is saved when component mounts
+  useEffect(() => {
+    const checkSavedStatus = async () => {
+      if (user) {
+        try {
+          const response = await getSavedListings();
+          const savedListings = response.data;
+          const isListingSaved = savedListings.some(listing => listing._id === apartment._id);
+          setIsSaved(isListingSaved);
+        } catch (error) {
+          console.error('Error checking saved status:', error);
+        }
+      }
+    };
+
+    checkSavedStatus();
+  }, [user, apartment._id]);
 
   const handleNextImage = (e) => {
     e.stopPropagation();
@@ -83,8 +103,12 @@ const ApartmentCard = ({ apartment, isSaved: initialSaved = false, showSaveButto
         showSnackbar('Listing saved successfully');
       }
     } catch (error) {
-      showSnackbar('Failed to save listing', 'error');
-      console.error('Save error:', error);
+      if (error.response?.status === 400) {
+        showSnackbar('This listing is already saved', 'info');
+      } else {
+        showSnackbar('Failed to save listing', 'error');
+        console.error('Save error:', error);
+      }
     }
   };
 
@@ -101,6 +125,10 @@ const ApartmentCard = ({ apartment, isSaved: initialSaved = false, showSaveButto
     neighborhood,
     borough
   } = apartment;
+
+  const imageUrl = images && images.length > 0 
+    ? images[0].url 
+    : '/no-image-available.png'; // Your fallback image
 
   return (
     <>
@@ -127,7 +155,7 @@ const ApartmentCard = ({ apartment, isSaved: initialSaved = false, showSaveButto
                 <CardMedia
                   component="img"
                   height="200"
-                  image={images[currentImageIndex]?.url || images[currentImageIndex]}
+                  image={imageUrl}
                   alt={`${bedrooms} bedroom apartment in ${neighborhood}`}
                   sx={{ objectFit: 'cover' }}
                 />
@@ -176,6 +204,20 @@ const ApartmentCard = ({ apartment, isSaved: initialSaved = false, showSaveButto
                   No image available
                 </Typography>
               </Box>
+            )}
+            {(!user || user.role === 'client') && (
+              <IconButton
+                onClick={handleSaveClick}
+                sx={{
+                  position: 'absolute',
+                  top: 8,
+                  right: 8,
+                  bgcolor: 'rgba(255, 255, 255, 0.8)',
+                  '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' }
+                }}
+              >
+                {isSaved ? <BookmarkIcon color="primary" /> : <BookmarkBorderIcon />}
+              </IconButton>
             )}
           </Box>
 
@@ -253,24 +295,6 @@ const ApartmentCard = ({ apartment, isSaved: initialSaved = false, showSaveButto
                 </Typography>
               )}
             </Box>
-
-            {showSaveButton && (
-              <IconButton
-                onClick={handleSaveClick}
-                sx={{
-                  position: 'absolute',
-                  top: 8,
-                  right: 8,
-                  bgcolor: 'rgba(255, 255, 255, 0.8)',
-                  zIndex: 1,
-                  '&:hover': {
-                    bgcolor: 'rgba(255, 255, 255, 0.9)'
-                  }
-                }}
-              >
-                {isSaved ? <BookmarkIcon color="primary" /> : <BookmarkBorderIcon />}
-              </IconButton>
-            )}
           </CardContent>
         </CardActionArea>
       </Card>

@@ -1,109 +1,142 @@
-import { useCallback, useState } from 'react';
-import { useDropzone } from 'react-dropzone';
-import {
-    Box,
-    Button,
-    Typography,
-    IconButton,
-    CircularProgress,
-    ImageList,
-    ImageListItem,
-    ImageListItemBar
-} from '@mui/material';
+import { useState } from 'react';
+import { Box, Button, Typography, IconButton } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import CircularProgress from '@mui/material/CircularProgress';
 
-const ImageUpload = ({ onUpload, existingImages = [], onDelete }) => {
-    const [uploading, setUploading] = useState(false);
-    const [error, setError] = useState('');
+const ImageUpload = ({ onUpload, existingImages = [], onDelete, onUpdateOrder }) => {
+    const [loading, setLoading] = useState(false);
 
-    const onDrop = useCallback(async (acceptedFiles) => {
-        setUploading(true);
-        setError('');
-        
-        try {
+    const handleFileChange = (event) => {
+        const files = event.target.files;
+        if (files) {
             const formData = new FormData();
-            acceptedFiles.forEach(file => {
-                formData.append('images', file);
-            });
-            
-            await onUpload(formData);
-        } catch (err) {
-            setError('Failed to upload images');
-            console.error('Upload error:', err);
-        } finally {
-            setUploading(false);
+            for (let i = 0; i < files.length; i++) {
+                formData.append('images', files[i]);
+            }
+            setLoading(true);
+            onUpload(formData).finally(() => setLoading(false));
         }
-    }, [onUpload]);
+    };
 
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
-        onDrop,
-        accept: {
-            'image/*': ['.jpeg', '.jpg', '.png']
-        },
-        maxSize: 5242880 // 5MB
-    });
+    const handleDragEnd = (result) => {
+        if (!result.destination) return;
+        const reorderedImages = Array.from(existingImages);
+        const [removed] = reorderedImages.splice(result.source.index, 1);
+        reorderedImages.splice(result.destination.index, 0, removed);
+        onUpdateOrder(reorderedImages);
+    };
 
     return (
-        <Box sx={{ width: '100%' }}>
-            <Box
-                {...getRootProps()}
-                sx={{
-                    border: '2px dashed',
-                    borderColor: isDragActive ? 'primary.main' : 'grey.300',
-                    borderRadius: 2,
-                    p: 3,
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                    backgroundColor: isDragActive ? 'rgba(25, 118, 210, 0.08)' : 'transparent',
-                    transition: 'all 0.2s ease',
-                    '&:hover': {
-                        backgroundColor: 'rgba(0, 0, 0, 0.04)'
-                    }
-                }}
-            >
-                <input {...getInputProps()} />
-                <CloudUploadIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
-                <Typography variant="h6" gutterBottom>
-                    Drag & Drop Images Here
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                    or click to select files
-                </Typography>
-                <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                    Maximum file size: 5MB
-                </Typography>
-                {uploading && <CircularProgress sx={{ mt: 2 }} />}
-                {error && (
-                    <Typography color="error" sx={{ mt: 2 }}>
-                        {error}
+        <Box>
+            <input
+                accept="image/*"
+                style={{ display: 'none' }}
+                id="image-upload"
+                multiple
+                type="file"
+                onChange={handleFileChange}
+            />
+            <label htmlFor="image-upload">
+                <Button
+                    variant="outlined"
+                    component="span"
+                    startIcon={<CloudUploadIcon />}
+                    sx={{
+                        mb: 2,
+                        color: '#000',
+                        borderColor: '#000',
+                        '&:hover': {
+                            borderColor: '#00008B',
+                            color: '#00008B'
+                        }
+                    }}
+                >
+                    Upload Images
+                </Button>
+            </label>
+
+            {loading && (
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 2, opacity: 0.8 }}>
+                    <CircularProgress color="primary" />
+                    <Typography variant="body2" sx={{ mt: 1 }}>
+                        Uploading images, please wait...
                     </Typography>
-                )}
-            </Box>
+                </Box>
+            )}
+
+            {/* Image Previews with Drag and Drop */}
+            <DragDropContext onDragEnd={handleDragEnd}>
+                <Droppable droppableId="imageUpload">
+                    {(provided) => (
+                        <Box 
+                            ref={provided.innerRef} 
+                            {...provided.droppableProps} 
+                            sx={{ 
+                                display: 'flex', 
+                                flexWrap: 'wrap', 
+                                gap: 2,
+                                mt: 2 
+                            }}
+                        >
+                            {existingImages.map((image, index) => (
+                                <Draggable key={index} draggableId={`image-${index}`} index={index}>
+                                    {(provided) => (
+                                        <Box
+                                            ref={provided.innerRef}
+                                            {...provided.draggableProps}
+                                            {...provided.dragHandleProps}
+                                            sx={{
+                                                position: 'relative',
+                                                width: 120, // Smaller size
+                                                height: 120, // Smaller size
+                                                borderRadius: '8px',
+                                                overflow: 'hidden',
+                                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                            }}
+                                        >
+                                            <img
+                                                src={URL.createObjectURL(image)}
+                                                alt={`Property image ${index + 1}`}
+                                                style={{
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    objectFit: 'cover'
+                                                }}
+                                            />
+                                            <IconButton
+                                                onClick={() => onDelete(image)}
+                                                sx={{
+                                                    position: 'absolute',
+                                                    top: 4,
+                                                    right: 4,
+                                                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                                                    transition: 'all 0.3s ease-in-out',
+                                                    '&:hover': {
+                                                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                                        transform: 'scale(1.1)',
+                                                        color: '#FF0000'  // Red color on hover
+                                                    }
+                                                }}
+                                                size="small"
+                                            >
+                                                <DeleteIcon sx={{ fontSize: 20 }} />
+                                            </IconButton>
+                                        </Box>
+                                    )}
+                                </Draggable>
+                            ))}
+                            {provided.placeholder}
+                        </Box>
+                    )}
+                </Droppable>
+            </DragDropContext>
 
             {existingImages.length > 0 && (
-                <ImageList sx={{ width: '100%', mt: 2 }} cols={3} rowHeight={164}>
-                    {existingImages.map((image, index) => (
-                        <ImageListItem key={image.url}>
-                            <img
-                                src={image.url}
-                                alt={`Property image ${index + 1}`}
-                                loading="lazy"
-                                style={{ height: '100%', objectFit: 'cover' }}
-                            />
-                            <ImageListItemBar
-                                actionIcon={
-                                    <IconButton
-                                        sx={{ color: 'rgba(255, 255, 255, 0.54)' }}
-                                        onClick={() => onDelete(image)}
-                                    >
-                                        <DeleteIcon />
-                                    </IconButton>
-                                }
-                            />
-                        </ImageListItem>
-                    ))}
-                </ImageList>
+                <Typography variant="caption" sx={{ display: 'block', mt: 1, color: 'text.secondary' }}>
+                    {existingImages.length} image{existingImages.length !== 1 ? 's' : ''} selected
+                </Typography>
             )}
         </Box>
     );

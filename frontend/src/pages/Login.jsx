@@ -161,10 +161,11 @@ const Login = () => {
                 backdropFilter: 'blur(8px)',
                 borderRadius: '20px',
                 boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                transition: 'all 0.3s ease-in-out',
                 '&:hover': {
                   backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                  transform: 'translateY(-2px)',
-                  transition: 'all 0.2s ease-in-out',
+                  transform: 'translateY(-4px)',
+                  color: '#00008B',
                   boxShadow: '0 6px 8px rgba(0, 0, 0, 0.2)'
                 }
               }}
