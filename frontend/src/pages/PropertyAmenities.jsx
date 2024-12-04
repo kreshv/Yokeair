@@ -182,12 +182,17 @@ const PropertyAmenities = () => {
         <Paper 
           elevation={5}
           sx={{
-            p: 5,
-            mt: '10vh',
+            p: 4,
+            mt: 12,
             borderRadius: '25px',
-            background: 'linear-gradient(145deg, rgba(245, 241, 237, 0.8), rgba(236, 229, 221, 0.7))',
-            backdropFilter: 'blur(15px)',
-            border: '1px solid rgba(211, 211, 211, 0.3)'
+            background: 'linear-gradient(145deg, rgba(245, 241, 237, 0.9), rgba(236, 229, 221, 0.8))',
+            backdropFilter: 'blur(10px)',
+            boxShadow: '0 12px 24px rgba(0, 0, 0, 0.3), 0 6px 12px rgba(255, 255, 255, 0.2)',
+            transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+            '&:hover': {
+              transform: 'translateY(-4px)',
+              boxShadow: '0 16px 32px rgba(0, 0, 0, 0.4), 0 8px 16px rgba(255, 255, 255, 0.3)',
+            }
           }}
         >
           <Typography 

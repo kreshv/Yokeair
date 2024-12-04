@@ -22,24 +22,26 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getBrokerProperties, updatePropertyStatus, deleteProperty } from '../utils/api';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import { styled } from '@mui/material/styles';
 
 const StatusButton = ({ children, selected, onClick, sx }) => (
   <Button
     onClick={onClick}
     sx={{
       color: '#000',
-      backgroundColor: selected ? 'rgba(128, 0, 128, 0.2)' : 'rgba(255, 255, 255, 0.8)',
-      borderRadius: '12px',
-      px: 2,
-      py: 1,
-      minWidth: '100px',
+      backgroundColor: selected ? 'rgba(128, 0, 128, 0.3)' : 'rgba(255, 255, 255, 0.8)',
+      borderRadius: '20px',
+      px: 1.5,
+      py: 0.5,
+      minWidth: '80px',
+      fontSize: '0.85rem',
       boxShadow: selected ? '0 4px 6px rgba(0, 0, 0, 0.2)' : 'none',
       border: selected ? '2px solid #00008B' : 'none',
       '&:hover': {
-        backgroundColor: selected ? 'rgba(128, 0, 128, 0.3)' : 'rgba(255, 255, 255, 0.9)',
+        backgroundColor: selected ? 'rgba(128, 0, 128, 0.4)' : 'rgba(255, 255, 255, 0.9)',
         transform: 'translateY(-4px)',
         transition: 'all 0.2s ease-in-out',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
       },
       ...sx
     }}
@@ -48,7 +50,32 @@ const StatusButton = ({ children, selected, onClick, sx }) => (
   </Button>
 );
 
+// Create a styled Paper component for PropertyCard
+const StyledPropertyCard = styled(Paper)(({ theme }) => ({
+    padding: theme.spacing(3),
+    borderRadius: '15px',
+    background: 'rgba(255, 255, 255, 0.8)',
+    transition: 'all 0.2s ease-in-out',
+    position: 'relative',
+    '&:hover': {
+        transform: 'translateY(-2px)',
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    },
+}));
+
+// Utility function to format status
+const formatStatus = (status) => {
+    return status
+        .replace('_', ' ') // Replace underscores with spaces
+        .toLowerCase() // Convert to lowercase
+        .split(' ') // Split into words
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // Capitalize first letter of each word
+        .join(' '); // Join back into a string
+};
+
 const PropertyCard = ({ property, onStatusChange, onDelete }) => {
+  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [statusMenuAnchor, setStatusMenuAnchor] = useState(null);
@@ -97,161 +124,148 @@ const PropertyCard = ({ property, onStatusChange, onDelete }) => {
   };
 
   return (
-    <>
-      <Paper
+    <StyledPropertyCard>
+      <IconButton
+        onClick={handleMenuClick}
         sx={{
-          p: 3,
-          borderRadius: '15px',
-          background: 'rgba(255, 255, 255, 0.8)',
-          transition: 'all 0.2s ease-in-out',
-          position: 'relative',
-          '&:hover': {
-            transform: 'translateY(-2px)',
+          position: 'absolute',
+          top: 8,
+          right: 8
+        }}
+      >
+        <MoreVertIcon />
+      </IconButton>
+
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+        PaperProps={{
+          sx: {
+            mt: 1,
+            width: '150px',
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(8px)',
+            borderRadius: '15px',
             boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-            backgroundColor: 'rgba(255, 255, 255, 0.9)'
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            '& .MuiMenuItem-root': {
+              fontSize: '0.85rem',
+              py: 1,
+              px: 2,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, 0.05)',
+              }
+            }
           }
         }}
       >
-        <IconButton
-          onClick={handleMenuClick}
-          sx={{
-            position: 'absolute',
-            top: 8,
-            right: 8
-          }}
-        >
-          <MoreVertIcon />
-        </IconButton>
+        <MenuItem onClick={() => navigate(`/property-listing/${property._id}`)}>Edit</MenuItem>
+        <MenuItem onClick={handleStatusMenuClick}>Change Status</MenuItem>
+        <MenuItem onClick={handleDeleteClick} sx={{ color: 'error.main' }}>
+          Delete
+        </MenuItem>
+      </Menu>
 
-        <Menu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={handleMenuClose}
-          PaperProps={{
-            sx: {
-              mt: 1,
-              backgroundColor: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(8px)',
-              borderRadius: '15px',
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              '& .MuiMenuItem-root': {
-                fontSize: '0.95rem',
-                py: 1.5,
-                px: 3,
-                transition: 'all 0.2s ease-in-out',
+      <Menu
+        anchorEl={statusMenuAnchor}
+        open={Boolean(statusMenuAnchor)}
+        onClose={handleStatusMenuClose}
+        PaperProps={{
+          sx: {
+            mt: 1,
+            ml: -1,
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(8px)',
+            borderRadius: '15px',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            '& .MuiMenuItem-root': {
+              fontSize: '0.95rem',
+              py: 1.5,
+              px: 3,
+              transition: 'all 0.2s ease-in-out',
+              '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, 0.05)',
+              },
+              '&.Mui-selected': {
+                backgroundColor: 'rgba(65, 105, 225, 0.1)',
                 '&:hover': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                  backgroundColor: 'rgba(65, 105, 225, 0.2)',
                 }
               }
             }
-          }}
-        >
-          <MenuItem onClick={handleStatusMenuClick}>Change Status</MenuItem>
-          <MenuItem onClick={handleDeleteClick} sx={{ color: 'error.main' }}>
-            Delete Listing
-          </MenuItem>
-        </Menu>
-
-        <Menu
-          anchorEl={statusMenuAnchor}
-          open={Boolean(statusMenuAnchor)}
-          onClose={handleStatusMenuClose}
-          PaperProps={{
-            sx: {
-              mt: 1,
-              ml: -1,
-              backgroundColor: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(8px)',
-              borderRadius: '15px',
-              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              '& .MuiMenuItem-root': {
-                fontSize: '0.95rem',
-                py: 1.5,
-                px: 3,
-                transition: 'all 0.2s ease-in-out',
-                '&:hover': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.05)',
-                },
-                '&.Mui-selected': {
-                  backgroundColor: 'rgba(65, 105, 225, 0.1)',
-                  '&:hover': {
-                    backgroundColor: 'rgba(65, 105, 225, 0.2)',
-                  }
-                }
-              }
-            }
-          }}
-          anchorOrigin={{
-            vertical: 'top',
-            horizontal: 'right'
-          }}
-          transformOrigin={{
-            vertical: 'top',
-            horizontal: 'left'
-          }}
-        >
-          <MenuItem 
-            onClick={() => handleStatusChange('available')}
-            selected={property.status === 'available'}
-          >
-            Available
-          </MenuItem>
-          <MenuItem 
-            onClick={() => handleStatusChange('in_contract')}
-            selected={property.status === 'in_contract'}
-          >
-            In Contract
-          </MenuItem>
-          <MenuItem 
-            onClick={() => handleStatusChange('rented')}
-            selected={property.status === 'rented'}
-          >
-            Rented
-          </MenuItem>
-        </Menu>
-
-        <Typography variant="h6">
-          {property.building.address.street} - Unit {property.unitNumber}
-        </Typography>
-        <Typography>
-          {property.building.address.neighborhood}, {property.building.address.borough}
-        </Typography>
-        <Typography>
-          {property.bedrooms} BR | ${property.price}/month
-        </Typography>
-        <Typography 
-          sx={{ 
-            color: property.status === 'available' ? 'success.main' : 
-                   property.status === 'in_contract' ? 'warning.main' : 'error.main',
-            fontWeight: 'bold'
-          }}
-        >
-          Status: {property.status.replace('_', ' ').toUpperCase()}
-        </Typography>
-      </Paper>
-
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
+          }
+        }}
+        anchorOrigin={{
+          vertical: 'top',
+          horizontal: 'right'
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'left'
+        }}
       >
-        <DialogTitle>Delete Listing</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this listing? This action cannot be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleDeleteConfirm} color="error">
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </>
+        <MenuItem 
+          onClick={() => handleStatusChange('available')}
+          selected={property.status === 'available'}
+        >
+          Available
+        </MenuItem>
+        <MenuItem 
+          onClick={() => handleStatusChange('in_contract')}
+          selected={property.status === 'in_contract'}
+        >
+          In Contract
+        </MenuItem>
+        <MenuItem 
+          onClick={() => handleStatusChange('rented')}
+          selected={property.status === 'rented'}
+        >
+          Rented
+        </MenuItem>
+      </Menu>
+
+      <Typography variant="h6">
+        {property.building.address.street} - Unit {property.unitNumber}
+      </Typography>
+      <Typography>
+        {property.building.address.neighborhood}, {property.building.address.borough}
+      </Typography>
+      <Typography>
+        {property.bedrooms} BR | ${property.price}/month
+      </Typography>
+      <Typography 
+        sx={{ 
+          position: 'absolute',
+          bottom: 16,
+          right: 16,
+          color: property.status === 'available' ? 'success.main' : 
+                 property.status === 'in_contract' ? 'warning.main' : 'error.main',
+          fontWeight: 'bold'
+        }}
+      >
+        {formatStatus(property.status)}
+      </Typography>
+    </StyledPropertyCard>
   );
 };
+
+// Create a styled Paper component for consistent styling
+const StyledPaper = styled(Paper)(({ theme }) => ({
+    padding: theme.spacing(4),
+    marginTop: theme.spacing(12),
+    borderRadius: '25px',
+    background: 'linear-gradient(145deg, rgba(245, 241, 237, 0.9), rgba(236, 229, 221, 0.8))',
+    backdropFilter: 'blur(10px)',
+    boxShadow: '0 12px 24px rgba(0, 0, 0, 0.3), 0 6px 12px rgba(255, 255, 255, 0.2)',
+    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+    '&:hover': {
+        transform: 'translateY(-4px)',
+        boxShadow: '0 16px 32px rgba(0, 0, 0, 0.4), 0 8px 16px rgba(255, 255, 255, 0.3)',
+    },
+}));
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -309,15 +323,7 @@ const Dashboard = () => {
       }}
     >
       <Container>
-        <Paper
-          sx={{
-            p: 4,
-            mt: 12,
-            borderRadius: '25px',
-            background: 'linear-gradient(145deg, rgba(245, 241, 237, 0.9), rgba(236, 229, 221, 0.8))',
-            backdropFilter: 'blur(10px)',
-          }}
-        >
+        <StyledPaper>
           <Box sx={{ mb: 4 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
               <Typography variant="h5" sx={{ color: '#00008B' }}>
@@ -449,7 +455,7 @@ const Dashboard = () => {
               </Grid>
             ))}
           </Grid>
-        </Paper>
+        </StyledPaper>
       </Container>
     </Box>
   );

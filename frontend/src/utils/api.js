@@ -37,8 +37,6 @@ export const checkUnitAvailability = (address, borough, unitNumber) =>
   api.get('/properties/check-unit', { params: { address, borough, unitNumber } });
 export const checkEmailAvailability = (email) => 
   api.get('/auth/check-email', { params: { email } });
-export const updateProperty = (propertyId, data) => 
-  api.patch(`/properties/${propertyId}`, data);
 export const getBrokerProperties = () => api.get('/properties/broker');
 export const searchProperties = (params) => 
   api.get('/properties/search', { params });
@@ -60,7 +58,7 @@ export const uploadPropertyImages = async (propertyId, formData) => {
                 'Content-Type': 'multipart/form-data'
             },
             transformRequest: [function (data) {
-                return data; // Do not transform the formData
+                return data;
             }]
         });
         return response.data;
@@ -79,5 +77,7 @@ export const getUserApplications = () => api.get('/applications/user');
 export const getSavedListings = () => api.get('/users/saved-listings');
 export const saveListing = (propertyId) => api.post(`/users/saved-listings/${propertyId}`);
 export const removeSavedListing = (propertyId) => api.delete(`/users/saved-listings/${propertyId}`);
+export const getProperty = (id) => api.get(`/properties/${id}`);
+export const updateProperty = (id, data) => api.patch(`/properties/${id}`, data);
 
 export default api; 

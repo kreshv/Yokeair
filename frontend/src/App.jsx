@@ -21,6 +21,7 @@ import SearchFilters from './pages/SearchFilters';
 import Profile from './pages/client/Profile';
 import MyApplications from './pages/client/MyApplications';
 import SavedListings from './pages/client/SavedListings';
+import EditProperty from './pages/EditProperty';
 
 // Context
 import { AuthProvider } from './context/AuthContext';
@@ -63,6 +64,7 @@ function App() {
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/my-applications" element={<MyApplications />} />
                 <Route path="/saved-listings" element={<SavedListings />} />
+                <Route path="/property-listing/:id" element={<EditProperty />} />
               </Route>
               <Route element={<AuthLayout />}>
                 <Route path="/login" element={<Login />} />

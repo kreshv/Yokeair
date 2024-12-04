@@ -6,7 +6,8 @@ import {
     Typography,
     Button,
     CircularProgress,
-    Alert
+    Alert,
+    Paper
 } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { searchProperties } from '../utils/api';
@@ -38,7 +39,7 @@ const ApartmentList = () => {
     }, [searchParams]);
 
     const handleRefineSearch = () => {
-        navigate('/search-filters', { state: searchParams });
+        navigate('/location-selector', { state: searchParams });
     };
 
     const handleSort = (sortType) => {
@@ -88,9 +89,74 @@ const ApartmentList = () => {
             }}
         >
             <Container sx={{ mt: 10 }}>
-                {apartments.length > 0 ? (
-                    <>
-                        <Box sx={{ display: 'flex', gap: 2, mb: 3, justifyContent: 'flex-end' }}>
+                <Paper
+                    sx={{
+                        p: 4,
+                        borderRadius: '25px',
+                        background: 'transparent',
+                        backdropFilter: 'blur(10px)',
+                        boxShadow: '0 12px 24px rgba(0, 0, 0, 0.3), 0 6px 12px rgba(255, 255, 255, 0.2)',
+                        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                        '&:hover': {
+                            transform: 'translateY(-4px)',
+                            boxShadow: '0 16px 32px rgba(0, 0, 0, 0.4), 0 8px 16px rgba(255, 255, 255, 0.3)',
+                        },
+                    }}
+                >
+                    {apartments.length > 0 ? (
+                        <>
+                            <Box sx={{ display: 'flex', gap: 2, mb: 3, justifyContent: 'flex-end' }}>
+                                <Button
+                                    variant="contained"
+                                    onClick={handleRefineSearch}
+                                    sx={{
+                                        px: 2.5,
+                                        py: 1.2,
+                                        fontSize: '0.9rem',
+                                        fontWeight: 400,
+                                        color: '#000',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '1px',
+                                        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                                        backdropFilter: 'blur(8px)',
+                                        borderRadius: '20px',
+                                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                                        transition: 'all 0.3s ease-in-out',
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                            transform: 'translateY(-4px)',
+                                            color: '#00008B',
+                                            boxShadow: '0 6px 8px rgba(0, 0, 0, 0.2)'
+                                        }
+                                    }}
+                                >
+                                    Refine Search
+                                </Button>
+                            </Box>
+                            <Box sx={{ display: 'flex', gap: 2, mb: 3, justifyContent: 'flex-end' }}>
+                                <SortButton onSort={handleSort} />
+                            </Box>
+                            <Grid container spacing={3}>
+                                {apartments.map((apartment) => (
+                                    <Grid item key={apartment._id} xs={12} sm={6} md={4}>
+                                        <ApartmentCard apartment={apartment} />
+                                    </Grid>
+                                ))}
+                            </Grid>
+                        </>
+                    ) : (
+                        <Box 
+                            sx={{ 
+                                display: 'flex', 
+                                justifyContent: 'center', 
+                                alignItems: 'center', 
+                                gap: 3,
+                                minHeight: '60vh' 
+                            }}
+                        >
+                            <Typography sx={{ color: 'white' }}>
+                                No apartments found matching your criteria.
+                            </Typography>
                             <Button
                                 variant="contained"
                                 onClick={handleRefineSearch}
@@ -118,58 +184,8 @@ const ApartmentList = () => {
                                 Refine Search
                             </Button>
                         </Box>
-                        <Box sx={{ display: 'flex', gap: 2, mb: 3, justifyContent: 'flex-end' }}>
-                            <SortButton onSort={handleSort} />
-                        </Box>
-                        <Grid container spacing={3}>
-                            {apartments.map((apartment) => (
-                                <Grid item key={apartment._id} xs={12} sm={6} md={4}>
-                                    <ApartmentCard apartment={apartment} />
-                                </Grid>
-                            ))}
-                        </Grid>
-                    </>
-                ) : (
-                    <Box 
-                        sx={{ 
-                            display: 'flex', 
-                            justifyContent: 'center', 
-                            alignItems: 'center', 
-                            gap: 3,
-                            minHeight: '60vh' 
-                        }}
-                    >
-                        <Typography sx={{ color: 'white' }}>
-                            No apartments found matching your criteria.
-                        </Typography>
-                        <Button
-                            variant="contained"
-                            onClick={handleRefineSearch}
-                            sx={{
-                                px: 2.5,
-                                py: 1.2,
-                                fontSize: '0.9rem',
-                                fontWeight: 400,
-                                color: '#000',
-                                textTransform: 'uppercase',
-                                letterSpacing: '1px',
-                                backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                                backdropFilter: 'blur(8px)',
-                                borderRadius: '20px',
-                                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                                transition: 'all 0.3s ease-in-out',
-                                '&:hover': {
-                                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                                    transform: 'translateY(-4px)',
-                                    color: '#00008B',
-                                    boxShadow: '0 6px 8px rgba(0, 0, 0, 0.2)'
-                                }
-                            }}
-                        >
-                            Refine Search
-                        </Button>
-                    </Box>
-                )}
+                    )}
+                </Paper>
             </Container>
         </Box>
     );

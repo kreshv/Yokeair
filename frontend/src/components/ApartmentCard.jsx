@@ -192,7 +192,7 @@ const ApartmentCard = ({ apartment, isSaved: initialSaved = false, showSaveButto
                 </Typography>
               </Box>
             )}
-            {(!user || user.role === 'client') && (
+            {user && (
               <IconButton
                 onClick={handleSaveClick}
                 sx={{
