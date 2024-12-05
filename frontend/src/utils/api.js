@@ -2,6 +2,9 @@ import axios from 'axios';
 
 const api = axios.create({
   baseURL: 'http://localhost:5000/api',
+  headers: {
+    'Content-Type': 'application/json'
+  }
 });
 
 // Add a request interceptor
@@ -72,12 +75,21 @@ export const uploadPropertyImages = async (propertyId, formData) => {
 };
 export const deletePropertyImage = (propertyId, imageId) =>
     api.delete(`/properties/${propertyId}/images/${imageId}`);
-export const updateUserProfile = (userData) => api.patch('/users/profile', userData);
+export const updateUserProfile = async (userData) => {
+    console.log('Sending User Profile Update:', userData);
+    const response = await api.put('/users/profile', userData);
+    return response;
+};
 export const getUserApplications = () => api.get('/applications/user');
 export const getSavedListings = () => api.get('/users/saved-listings');
 export const saveListing = (propertyId) => api.post(`/users/saved-listings/${propertyId}`);
 export const removeSavedListing = (propertyId) => api.delete(`/users/saved-listings/${propertyId}`);
 export const getProperty = (id) => api.get(`/properties/${id}`);
 export const updateProperty = (id, data) => api.patch(`/properties/${id}`, data);
+export const updateProfilePicture = async (imageUrl) => {
+    console.log('Updating Profile Picture:', imageUrl);
+    const response = await api.put('/users/profile-picture', { profilePicture: imageUrl });
+    return response.data;
+};
 
 export default api; 

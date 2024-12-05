@@ -47,18 +47,39 @@ const ApartmentCard = ({ apartment, isSaved: initialSaved = false, showSaveButto
   const hasMultipleImages = apartment.images?.length > 1;
   const { showSnackbar } = useSnackbar();
 
+  // Determine if save button should be shown
+  const shouldShowSaveButton = (() => {
+    // If no user is logged in, don't show save button
+    if (!user) return false;
+    
+    // If user is a broker, don't show save button
+    if (user.role === 'broker') return false;
+    
+    // If user is a client, show save button
+    return user.role === 'client';
+  })();
+
   // Check if apartment is saved when component mounts
   useEffect(() => {
     const checkSavedStatus = async () => {
-      if (user) {
-        try {
-          const response = await getSavedListings();
-          const savedListings = response.data;
-          const isListingSaved = savedListings.some(listing => listing._id === apartment._id);
-          setIsSaved(isListingSaved);
-        } catch (error) {
+      try {
+        // Only check saved status if user is logged in
+        if (!localStorage.getItem('token')) {
+          setIsSaved(false);
+          return;
+        }
+        
+        const response = await getSavedListings();
+        // Check if response.data exists and is an array
+        const savedListings = Array.isArray(response.data) ? response.data : [];
+        setIsSaved(savedListings.some(listing => listing._id === apartment._id));
+      } catch (error) {
+        console.error('Error checking saved status:', error);
+        // Don't show error for 404 when user is not logged in
+        if (error?.response?.status !== 404) {
           console.error('Error checking saved status:', error);
         }
+        setIsSaved(false);
       }
     };
 
@@ -152,138 +173,133 @@ const ApartmentCard = ({ apartment, isSaved: initialSaved = false, showSaveButto
         }}
         onClick={() => setModalOpen(true)}
       >
-        <CardActionArea>
-          <Box sx={{ position: 'relative' }}>
-            {images?.length > 0 ? (
-              <>
-                <CardMedia
-                  component="img"
-                  height="200"
-                  image={imageUrl}
-                  alt={`${bedrooms} bedroom apartment in ${neighborhood}`}
-                  sx={{ objectFit: 'cover' }}
-                />
-                <Box
-                  className="image-overlay"
+        <Box sx={{ position: 'relative' }}>
+          {images?.length > 0 ? (
+            <>
+              <CardMedia
+                component="img"
+                height="200"
+                image={imageUrl}
+                alt={`${bedrooms} bedroom apartment in ${neighborhood}`}
+                sx={{ objectFit: 'cover' }}
+              />
+              {shouldShowSaveButton && (
+                <IconButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSaveClick(e);
+                  }}
                   sx={{
                     position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: '50%',
-                    background: 'linear-gradient(to top, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 100%)',
-                    opacity: 0,
-                    transition: 'opacity 0.3s ease-in-out'
+                    top: 8,
+                    right: 8,
+                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                      transform: 'scale(1.1)'
+                    }
                   }}
-                />
-              </>
-            ) : (
-              <Box
-                sx={{
-                  height: 200,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  bgcolor: 'grey.200'
-                }}
-              >
-                <Typography color="textSecondary">
-                  No image available
-                </Typography>
-              </Box>
-            )}
-            {user && (
-              <IconButton
-                onClick={handleSaveClick}
-                sx={{
-                  position: 'absolute',
-                  top: 8,
-                  right: 8,
-                  bgcolor: 'rgba(255, 255, 255, 0.8)',
-                  '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.9)' }
-                }}
-              >
-                {isSaved ? <BookmarkIcon color="primary" /> : <BookmarkBorderIcon />}
-              </IconButton>
+                >
+                  {isSaved ? (
+                    <BookmarkIcon sx={{ color: '#4169E1' }} />
+                  ) : (
+                    <BookmarkBorderIcon />
+                  )}
+                </IconButton>
+              )}
+            </>
+          ) : (
+            <Box
+              sx={{
+                height: 200,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                bgcolor: 'grey.200'
+              }}
+            >
+              <Typography color="textSecondary">
+                No image available
+              </Typography>
+            </Box>
+          )}
+        </Box>
+
+        <CardContent sx={{ flexGrow: 1, pt: 2 }}>
+          <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <Typography variant="h5" component="h2" gutterBottom>
+              {formatPrice(price)}/month
+            </Typography>
+            {status === 'available' && (
+              <Chip 
+                label="Available" 
+                color="success" 
+                size="small"
+                sx={{ ml: 1 }}
+              />
             )}
           </Box>
 
-          <CardContent sx={{ flexGrow: 1, pt: 2 }}>
-            <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <Typography variant="h5" component="h2" gutterBottom>
-                {formatPrice(price)}/month
-              </Typography>
-              {status === 'available' && (
-                <Chip 
-                  label="Available" 
-                  color="success" 
+          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <BedOutlined fontSize="small" />
+              <Typography variant="body2">{bedrooms === 0 ? 'Studio' : `${bedrooms} bed`}</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <BathtubOutlined fontSize="small" />
+              <Typography variant="body2">{bathrooms} bath</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <SquareFootOutlined fontSize="small" />
+              <Typography variant="body2">{squareFootage} ft²</Typography>
+            </Box>
+          </Box>
+
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5, mb: 2 }}>
+            <LocationOnOutlined fontSize="small" sx={{ mt: 0.3 }} />
+            <Typography variant="body2" color="text.secondary">
+              {building?.address?.street}, {borough}
+            </Typography>
+          </Box>
+
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 2 }}>
+            {apartment.building?.amenities?.length > 0 ? (
+              apartment.building.amenities.map((amenity) => (
+                <Chip
+                  key={amenity._id}
+                  label={amenity.name}
                   size="small"
-                  sx={{ ml: 1 }}
+                  variant="outlined"
+                  sx={{ 
+                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                    '& .MuiChip-label': {
+                      fontSize: '0.75rem'
+                    }
+                  }}
                 />
-              )}
-            </Box>
-
-            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <BedOutlined fontSize="small" />
-                <Typography variant="body2">{bedrooms === 0 ? 'Studio' : `${bedrooms} bed`}</Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <BathtubOutlined fontSize="small" />
-                <Typography variant="body2">{bathrooms} bath</Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <SquareFootOutlined fontSize="small" />
-                <Typography variant="body2">{squareFootage} ft²</Typography>
-              </Box>
-            </Box>
-
-            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5, mb: 2 }}>
-              <LocationOnOutlined fontSize="small" sx={{ mt: 0.3 }} />
+              ))
+            ) : apartment.features?.length > 0 ? (
+              apartment.features.map((feature) => (
+                <Chip
+                  key={feature._id}
+                  label={feature.name}
+                  size="small"
+                  variant="outlined"
+                  sx={{ 
+                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                    '& .MuiChip-label': {
+                      fontSize: '0.75rem'
+                    }
+                  }}
+                />
+              ))
+            ) : (
               <Typography variant="body2" color="text.secondary">
-                {building?.address?.street}, {borough}
+                No amenities or features available
               </Typography>
-            </Box>
-
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 2 }}>
-              {apartment.building?.amenities?.length > 0 ? (
-                apartment.building.amenities.map((amenity) => (
-                  <Chip
-                    key={amenity._id}
-                    label={amenity.name}
-                    size="small"
-                    variant="outlined"
-                    sx={{ 
-                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                      '& .MuiChip-label': {
-                        fontSize: '0.75rem'
-                      }
-                    }}
-                  />
-                ))
-              ) : apartment.features?.length > 0 ? (
-                apartment.features.map((feature) => (
-                  <Chip
-                    key={feature._id}
-                    label={feature.name}
-                    size="small"
-                    variant="outlined"
-                    sx={{ 
-                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                      '& .MuiChip-label': {
-                        fontSize: '0.75rem'
-                      }
-                    }}
-                  />
-                ))
-              ) : (
-                <Typography variant="body2" color="text.secondary">
-                  No amenities or features available
-                </Typography>
-              )}
-            </Box>
-          </CardContent>
-        </CardActionArea>
+            )}
+          </Box>
+        </CardContent>
       </Card>
 
       <ApartmentDetailModal

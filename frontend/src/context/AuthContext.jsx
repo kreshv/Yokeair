@@ -31,12 +31,36 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const updateUser = (userData) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const decoded = jwt.jwtDecode(token);
+        
+        const updatedUserData = { 
+          ...decoded.user, 
+          ...userData 
+        };
+        
+        if (!userData.profilePicture && decoded.user.profilePicture) {
+          updatedUserData.profilePicture = decoded.user.profilePicture;
+        }
+        
+        setUser(updatedUserData);
+      } catch (error) {
+        console.error('Error updating user:', error);
+      }
+    } else {
+      setUser(userData);
+    }
+  };
+
   if (loading) {
     return null;
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

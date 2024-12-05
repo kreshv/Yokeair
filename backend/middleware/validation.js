@@ -64,13 +64,21 @@ exports.validateProperty = [
 ];
 
 exports.validateRegistration = [
-    check('name')
+    check('firstName')
         .trim()
         .notEmpty()
-        .withMessage('Name is required'),
+        .withMessage('First name is required'),
+    check('lastName')
+        .trim()
+        .notEmpty()
+        .withMessage('Last name is required'),
     check('email')
         .isEmail()
         .withMessage('Please include a valid email'),
+    check('phone')
+        .trim()
+        .notEmpty()
+        .withMessage('Phone number is required'),
     check('password')
         .isLength({ min: 6 })
         .withMessage('Password must be at least 6 characters long'),

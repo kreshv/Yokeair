@@ -69,11 +69,11 @@ const EditProperty = () => {
     const [error, setError] = useState('');
 
     const features = [
-        { id: '1', name: 'Balcony' },
-        { id: '2', name: 'Terrace' },
-        { id: '3', name: 'Backyard' },
-        { id: '4', name: 'Dishwasher' },
-        { id: '5', name: 'Washer/Dryer' }
+        'Balcony',
+        'Terrace',
+        'Backyard',
+        'Dishwasher',
+        'Washer/Dryer'
     ];
 
     useEffect(() => {
@@ -84,9 +84,10 @@ const EditProperty = () => {
                 setProperty(propertyData);
                 setPrice(formatPrice(propertyData.price));
                 setSquareFootage(propertyData.squareFootage);
-                setSelectedFeatures(propertyData.features.map(f => f._id));
+                setSelectedFeatures(propertyData.features.map(f => f.name));
                 setLoading(false);
             } catch (err) {
+                console.error('Error fetching property:', err);
                 setError('Failed to load property');
                 setLoading(false);
             }
@@ -97,7 +98,8 @@ const EditProperty = () => {
 
     const formatPrice = (value) => {
         if (!value) return '';
-        const numberValue = parseFloat(value.replace(/[^0-9.]/g, ''));
+        const stringValue = typeof value === 'number' ? value.toString() : value;
+        const numberValue = parseFloat(stringValue.replace(/[^0-9.]/g, ''));
         return numberValue ? `$${numberValue.toLocaleString()}` : '';
     };
 
@@ -106,11 +108,11 @@ const EditProperty = () => {
         setPrice(formatPrice(rawValue));
     };
 
-    const handleFeatureToggle = (featureId) => {
+    const handleFeatureToggle = (featureName) => {
         setSelectedFeatures(prev => 
-            prev.includes(featureId)
-                ? prev.filter(id => id !== featureId)
-                : [...prev, featureId]
+            prev.includes(featureName)
+                ? prev.filter(name => name !== featureName)
+                : [...prev, featureName]
         );
     };
 
@@ -225,10 +227,10 @@ const EditProperty = () => {
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 4 }}>
                         {features.map((feature) => (
                             <FeatureButton
-                                key={feature.id}
-                                name={feature.name}
-                                selected={selectedFeatures.includes(feature.id)}
-                                onClick={() => handleFeatureToggle(feature.id)}
+                                key={feature}
+                                name={feature}
+                                selected={selectedFeatures.includes(feature)}
+                                onClick={() => handleFeatureToggle(feature)}
                             />
                         ))}
                     </Box>

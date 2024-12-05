@@ -33,6 +33,11 @@ const Navbar = () => {
     if (user?.role === 'broker') {
       return [
         {
+          label: 'Profile',
+          icon: <AccountCircleIcon />,
+          onClick: () => navigate('/profile')
+        },
+        {
           label: 'Dashboard',
           icon: <DashboardIcon />,
           onClick: () => navigate('/dashboard')

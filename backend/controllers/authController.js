@@ -4,10 +4,7 @@ const jwt = require('jsonwebtoken');
 
 exports.registerUser = async (req, res) => {
     try {
-        const { name, email, password, role } = req.body;
-
-        // Log the received data
-        console.log('Registration data received:', { name, email, role });
+        const { firstName, lastName, email, password, phone, role } = req.body;
 
         // Check if user exists
         let user = await User.findOne({ email });
@@ -17,8 +14,10 @@ exports.registerUser = async (req, res) => {
 
         // Create new user with explicit role
         user = new User({
-            name: name.trim(),
+            firstName: firstName.trim(),
+            lastName: lastName.trim(),
             email: email.toLowerCase(),
+            phone: phone.trim(),
             password,
             role: role || 'client' // Default to client if role is not specified
         });
@@ -33,6 +32,10 @@ exports.registerUser = async (req, res) => {
         const payload = {
             user: {
                 id: user.id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+                phone: user.phone,
                 role: user.role
             }
         };
@@ -43,7 +46,17 @@ exports.registerUser = async (req, res) => {
             { expiresIn: '5h' },
             (err, token) => {
                 if (err) throw err;
-                res.json({ token });
+                res.json({ 
+                    token,
+                    user: {
+                        id: user.id,
+                        firstName: user.firstName,
+                        lastName: user.lastName,
+                        email: user.email,
+                        phone: user.phone,
+                        role: user.role
+                    }
+                });
             }
         );
     } catch (err) {
@@ -75,7 +88,12 @@ exports.loginUser = async (req, res) => {
         const payload = {
             user: {
                 id: user.id,
-                role: user.role
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+                phone: user.phone,
+                role: user.role,
+                profilePicture: user.profilePicture || null
             }
         };
 
@@ -85,7 +103,18 @@ exports.loginUser = async (req, res) => {
             { expiresIn: '5h' },
             (err, token) => {
                 if (err) throw err;
-                res.json({ token, user });
+                res.json({ 
+                    token,
+                    user: {
+                        id: user.id,
+                        firstName: user.firstName,
+                        lastName: user.lastName,
+                        email: user.email,
+                        phone: user.phone,
+                        role: user.role,
+                        profilePicture: user.profilePicture || null
+                    }
+                });
             }
         );
     } catch (err) {

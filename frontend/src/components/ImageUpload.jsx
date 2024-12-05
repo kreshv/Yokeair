@@ -5,7 +5,12 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import CircularProgress from '@mui/material/CircularProgress';
 
-const ImageUpload = ({ onUpload, existingImages = [], onDelete, onUpdateOrder }) => {
+const ImageUpload = ({ 
+    onUpload, 
+    existingImages = [], 
+    onDelete = () => {}, 
+    onUpdateOrder = () => {} 
+}) => {
     const [loading, setLoading] = useState(false);
 
     const handleFileChange = (event) => {
@@ -26,6 +31,13 @@ const ImageUpload = ({ onUpload, existingImages = [], onDelete, onUpdateOrder })
         const [removed] = reorderedImages.splice(result.source.index, 1);
         reorderedImages.splice(result.destination.index, 0, removed);
         onUpdateOrder(reorderedImages);
+    };
+
+    const getImageUrl = (image) => {
+        if (image instanceof File) {
+            return URL.createObjectURL(image);
+        }
+        return image.url || image;
     };
 
     return (
@@ -66,9 +78,8 @@ const ImageUpload = ({ onUpload, existingImages = [], onDelete, onUpdateOrder })
                 </Box>
             )}
 
-            {/* Image Previews with Drag and Drop */}
             <DragDropContext onDragEnd={handleDragEnd}>
-                <Droppable droppableId="imageUpload">
+                <Droppable droppableId="imageUpload" direction="horizontal">
                     {(provided) => (
                         <Box 
                             ref={provided.innerRef} 
@@ -81,7 +92,11 @@ const ImageUpload = ({ onUpload, existingImages = [], onDelete, onUpdateOrder })
                             }}
                         >
                             {existingImages.map((image, index) => (
-                                <Draggable key={index} draggableId={`image-${index}`} index={index}>
+                                <Draggable 
+                                    key={`image-${index}`} 
+                                    draggableId={`image-${index}`} 
+                                    index={index}
+                                >
                                     {(provided) => (
                                         <Box
                                             ref={provided.innerRef}
@@ -89,15 +104,15 @@ const ImageUpload = ({ onUpload, existingImages = [], onDelete, onUpdateOrder })
                                             {...provided.dragHandleProps}
                                             sx={{
                                                 position: 'relative',
-                                                width: 120, // Smaller size
-                                                height: 120, // Smaller size
+                                                width: 120,
+                                                height: 120,
                                                 borderRadius: '8px',
                                                 overflow: 'hidden',
                                                 boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                                             }}
                                         >
                                             <img
-                                                src={URL.createObjectURL(image)}
+                                                src={getImageUrl(image)}
                                                 alt={`Property image ${index + 1}`}
                                                 style={{
                                                     width: '100%',
@@ -116,7 +131,7 @@ const ImageUpload = ({ onUpload, existingImages = [], onDelete, onUpdateOrder })
                                                     '&:hover': {
                                                         backgroundColor: 'rgba(255, 255, 255, 0.9)',
                                                         transform: 'scale(1.1)',
-                                                        color: '#FF0000'  // Red color on hover
+                                                        color: '#FF0000'
                                                     }
                                                 }}
                                                 size="small"
