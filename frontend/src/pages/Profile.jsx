@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { updateUserProfile, updateProfilePicture } from '../utils/api';
+import { updateUserProfile, updateProfilePicture, resetPassword } from '../utils/api';
 import {
   Box,
   Container,
@@ -19,11 +19,12 @@ import {
   IconButton,
   Badge
 } from '@mui/material';
-import { Edit as EditIcon, PhotoCamera } from '@mui/icons-material';
+import { Edit as EditIcon, PhotoCamera, Lock as LockIcon } from '@mui/icons-material';
 
 const Profile = () => {
   const { user, updateUser } = useAuth();
   const [open, setOpen] = useState(false);
+  const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const cloudinaryRef = useRef();
@@ -33,6 +34,11 @@ const Profile = () => {
     lastName: user?.lastName || '',
     email: user?.email || '',
     phone: user?.phone || ''
+  });
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmNewPassword: ''
   });
 
   const handleOpen = () => {
@@ -197,6 +203,52 @@ const Profile = () => {
     }
   };
 
+  const handleResetPasswordOpen = () => {
+    setResetPasswordOpen(true);
+    setError('');
+    setSuccess('');
+    setPasswordData({
+      currentPassword: '',
+      newPassword: '',
+      confirmNewPassword: ''
+    });
+  };
+
+  const handleResetPasswordClose = () => {
+    setResetPasswordOpen(false);
+  };
+
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleResetPasswordSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    // Basic validation
+    if (passwordData.newPassword !== passwordData.confirmNewPassword) {
+      setError('New passwords do not match');
+      return;
+    }
+
+    try {
+      await resetPassword({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword
+      });
+
+      setSuccess('Password reset successfully!');
+      setTimeout(() => {
+        handleResetPasswordClose();
+      }, 1500);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to reset password');
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -309,6 +361,29 @@ const Profile = () => {
               <Typography variant="body1" sx={{ mt: 1 }}>
                 {user?.phone || 'Not provided'}
               </Typography>
+            </Grid>
+            
+            <Grid item xs={12}>
+              <Divider sx={{ my: 2 }} />
+              <Button
+                fullWidth
+                variant="contained"
+                startIcon={<LockIcon />}
+                onClick={handleResetPasswordOpen}
+                sx={{
+                  borderRadius: '25px',
+                  backgroundColor: 'rgba(139, 0, 0, 0.1)',
+                  color: '#8B0000',
+                  textTransform: 'none',
+                  py: 1.5,
+                  '&:hover': {
+                    backgroundColor: 'rgba(139, 0, 0, 0.2)',
+                    transform: 'translateY(-2px)',
+                  }
+                }}
+              >
+                Reset Password
+              </Button>
             </Grid>
           </Grid>
         </Paper>
@@ -460,6 +535,71 @@ const Profile = () => {
             }}
           >
             Save Changes
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={resetPasswordOpen}
+        onClose={handleResetPasswordClose}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Reset Password</DialogTitle>
+        <DialogContent>
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+          {success && (
+            <Alert severity="success" sx={{ mb: 2 }}>
+              {success}
+            </Alert>
+          )}
+          <TextField
+            margin="dense"
+            name="currentPassword"
+            label="Current Password"
+            type="password"
+            fullWidth
+            variant="outlined"
+            value={passwordData.currentPassword}
+            onChange={handlePasswordChange}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin="dense"
+            name="newPassword"
+            label="New Password"
+            type="password"
+            fullWidth
+            variant="outlined"
+            value={passwordData.newPassword}
+            onChange={handlePasswordChange}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin="dense"
+            name="confirmNewPassword"
+            label="Confirm New Password"
+            type="password"
+            fullWidth
+            variant="outlined"
+            value={passwordData.confirmNewPassword}
+            onChange={handlePasswordChange}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleResetPasswordClose} color="primary">
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleResetPasswordSubmit} 
+            color="primary" 
+            variant="contained"
+          >
+            Reset Password
           </Button>
         </DialogActions>
       </Dialog>

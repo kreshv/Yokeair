@@ -1,10 +1,26 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { validatePassword } = require('../utils/passwordValidator');
 
 exports.registerUser = async (req, res) => {
     try {
         const { firstName, lastName, email, password, phone, role } = req.body;
+
+        // Validate password
+        const passwordValidation = validatePassword(password, { 
+            firstName, 
+            lastName, 
+            email, 
+            phone 
+        });
+
+        if (!passwordValidation.isValid) {
+            return res.status(400).json({ 
+                message: 'Password validation failed',
+                errors: passwordValidation.errors 
+            });
+        }
 
         // Check if user exists
         let user = await User.findOne({ email });

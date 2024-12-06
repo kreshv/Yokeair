@@ -8,7 +8,8 @@ const path = require('path');
 const { 
   getSavedListings, 
   saveListing, 
-  removeSavedListing 
+  removeSavedListing,
+  resetPassword 
 } = require('../controllers/userController');
 
 // Update user profile - Private
@@ -138,5 +139,8 @@ router.delete('/account', auth, async (req, res) => {
         res.status(500).json({ message: 'Server error', error: err.message });
     }
 });
+
+// Reset password - Private
+router.put('/reset-password', auth, resetPassword);
 
 module.exports = router; 

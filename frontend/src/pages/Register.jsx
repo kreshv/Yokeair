@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Container, 
@@ -9,13 +9,212 @@ import {
   Box,
   Alert,
   Checkbox,
-  FormControlLabel
+  FormControlLabel,
+  LinearProgress,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Popover,
+  IconButton
 } from '@mui/material';
 import { register, checkEmailAvailability } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { createProperty } from '../utils/api';
 import { Link as RouterLink } from 'react-router-dom';
 import { saveListing } from '../utils/api';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+
+const PASSWORD_REQUIREMENTS = {
+    minLength: 12,
+    maxLength: 64,
+    requireUppercase: true,
+    requireLowercase: true,
+    requireNumbers: true,
+    requireSpecialChars: true,
+    minPasswordStrength: 3
+};
+
+const calculatePasswordStrength = (password) => {
+    let score = 0;
+
+    // Length check (0-2 points)
+    if (password.length >= PASSWORD_REQUIREMENTS.minLength) score += 2;
+    else if (password.length >= 8) score += 1;
+
+    // Complexity checks (0-3 points)
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasLowercase = /[a-z]/.test(password);
+    const hasNumbers = /[0-9]/.test(password);
+    const hasSpecialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+
+    if (hasUppercase) score++;
+    if (hasLowercase) score++;
+    if (hasNumbers) score++;
+    if (hasSpecialChars) score++;
+
+    return score;
+};
+
+const validatePassword = (password) => {
+    const errors = [];
+
+    if (password.length < PASSWORD_REQUIREMENTS.minLength) {
+        errors.push(`At least ${PASSWORD_REQUIREMENTS.minLength} characters long`);
+    }
+
+    if (password.length > PASSWORD_REQUIREMENTS.maxLength) {
+        errors.push(`Not more than ${PASSWORD_REQUIREMENTS.maxLength} characters`);
+    }
+
+    if (PASSWORD_REQUIREMENTS.requireUppercase && !/[A-Z]/.test(password)) {
+        errors.push('Contains uppercase letter');
+    }
+
+    if (PASSWORD_REQUIREMENTS.requireLowercase && !/[a-z]/.test(password)) {
+        errors.push('Contains lowercase letter');
+    }
+
+    if (PASSWORD_REQUIREMENTS.requireNumbers && !/[0-9]/.test(password)) {
+        errors.push('Contains number');
+    }
+
+    if (PASSWORD_REQUIREMENTS.requireSpecialChars && !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+        errors.push('Contains special character');
+    }
+
+    const passwordStrength = calculatePasswordStrength(password);
+
+    return {
+        isValid: errors.length === 0,
+        errors,
+        strength: passwordStrength
+    };
+};
+
+const PasswordRequirementsList = ({ password, anchorEl, handleClose }) => {
+  const requirements = useMemo(() => [
+    {
+      check: password.length >= PASSWORD_REQUIREMENTS.minLength,
+      label: `At least ${PASSWORD_REQUIREMENTS.minLength} characters long`,
+      info: 'Longer passwords are more secure'
+    },
+    {
+      check: /[A-Z]/.test(password),
+      label: 'Contains uppercase letter',
+      info: 'e.g., A, B, C...'
+    },
+    {
+      check: /[a-z]/.test(password),
+      label: 'Contains lowercase letter',
+      info: 'e.g., a, b, c...'
+    },
+    {
+      check: /[0-9]/.test(password),
+      label: 'Contains number',
+      info: 'e.g., 1, 2, 3...'
+    },
+    {
+      check: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+      label: 'Contains special character',
+      info: 'e.g., @, #, $, !'
+    }
+  ], [password]);
+
+  return (
+    <Popover
+      open={Boolean(anchorEl)}
+      anchorEl={anchorEl}
+      onClose={handleClose}
+      anchorOrigin={{
+        vertical: 'bottom',
+        horizontal: 'center',
+      }}
+      transformOrigin={{
+        vertical: 'top',
+        horizontal: 'center',
+      }}
+      PaperProps={{
+        sx: {
+          width: '100%',
+          maxWidth: 300,
+          borderRadius: 2,
+          boxShadow: 3,
+          p: 1
+        }
+      }}
+    >
+      <List dense sx={{ 
+        bgcolor: 'background.paper',
+        '& .MuiListItem-root': {
+          padding: '2px 16px'
+        }
+      }}>
+        {requirements.map((req, index) => (
+          <ListItem key={index}>
+            <ListItemIcon sx={{ minWidth: 36 }}>
+              {req.check ? (
+                <CheckCircleOutlineIcon color="success" />
+              ) : (
+                <ErrorOutlineIcon color="error" />
+              )}
+            </ListItemIcon>
+            <ListItemText 
+              primary={
+                <Typography variant="body2" color={req.check ? 'success.main' : 'error.main'}>
+                  {req.label}
+                </Typography>
+              }
+            />
+            <InfoOutlinedIcon 
+              color="action" 
+              sx={{ 
+                fontSize: 16,
+                ml: 1,
+                cursor: 'help',
+                '&:hover': {
+                  color: 'primary.main'
+                }
+              }}
+              titleAccess={req.info}
+            />
+          </ListItem>
+        ))}
+      </List>
+    </Popover>
+  );
+};
+
+const PasswordStrengthIndicator = ({ strength }) => {
+  const getColor = useCallback(() => {
+    if (strength <= 1) return 'error';
+    if (strength <= 2) return 'warning';
+    if (strength <= 3) return 'primary';
+    return 'success';
+  }, [strength]);
+
+  return (
+    <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', mt: 1, mb: 1 }}>
+      <LinearProgress 
+        variant="determinate" 
+        value={(strength / 7) * 100} 
+        color={getColor()} 
+        sx={{
+          width: '50%',
+          height: 4,
+          borderRadius: 2,
+          backgroundColor: 'grey.200',
+          '& .MuiLinearProgress-bar': {
+            borderRadius: 2
+          }
+        }}
+      />
+    </Box>
+  );
+};
 
 const Register = () => {
   const navigate = useNavigate();
@@ -35,13 +234,47 @@ const Register = () => {
   });
   const [error, setError] = useState('');
   const [emailError, setEmailError] = useState('');
+  const [passwordErrors, setPasswordErrors] = useState([]);
+  const [passwordStrength, setPasswordStrength] = useState(0);
+  const [passwordTouched, setPasswordTouched] = useState(false);
+  const [passwordAnchorEl, setPasswordAnchorEl] = useState(null);
+  const [passwordHelpAnchor, setPasswordHelpAnchor] = useState(null);
 
   const handleChange = (e) => {
     const { name, value, checked } = e.target;
+    
+    // Special handling for phone number
+    if (name === 'phone') {
+      // Remove all non-digit characters
+      const digitsOnly = value.replace(/\D/g, '');
+      
+      // Limit to 11 digits
+      const limitedDigits = digitsOnly.slice(0, 11);
+      
+      // Format phone number
+      let formattedPhone = '';
+      if (limitedDigits.length <= 10) {
+        // 10 or fewer digits
+        formattedPhone = limitedDigits.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
+      } else if (limitedDigits.length === 11) {
+        // 11 digits
+        formattedPhone = limitedDigits.replace(/1?(\d{3})(\d{3})(\d{4})/, '+1 ($1) $2-$3');
+      }
+      
+      setFormData(prev => ({ ...prev, [name]: formattedPhone }));
+      return;
+    }
+    
+    // Existing change handling for other fields
     setFormData(prev => ({
       ...prev,
       [name]: name === 'isBroker' ? checked : value
     }));
+
+    // Existing password strength check
+    if (name === 'password') {
+      setPasswordStrength(checkPasswordStrength(value));
+    }
   };
 
   const handleEmailBlur = async (e) => {
@@ -56,12 +289,46 @@ const Register = () => {
     }
   };
 
+  const handlePasswordFocus = useCallback((event) => {
+    setPasswordAnchorEl(event.currentTarget);
+  }, []);
+
+  const handlePasswordBlur = useCallback(() => {
+    setPasswordAnchorEl(null);
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
+    // Phone number validation
+    const phoneDigits = formData.phone.replace(/\D/g, '');
+    if (phoneDigits.length !== 10 && phoneDigits.length !== 11) {
+      setError('Please enter a valid 10 or 11-digit phone number');
+      return;
+    }
+
+    if (phoneDigits.length === 10 && phoneDigits[0] === '1') {
+      setError('10-digit phone number cannot start with 1');
+      return;
+    }
+
+    if (phoneDigits.length === 11 && phoneDigits[0] !== '1') {
+      setError('11-digit phone number must start with 1');
+      return;
+    }
+
     if (emailError) {
       setError('Please use a different email address');
+      return;
+    }
+
+    // Password validation
+    const passwordValidation = validatePassword(formData.password);
+
+    if (!passwordValidation.isValid) {
+      setPasswordErrors(passwordValidation.errors);
+      setError('Please fix the password validation errors');
       return;
     }
 
@@ -75,7 +342,7 @@ const Register = () => {
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         email: formData.email,
-        phone: formData.phone,
+        phone: phoneDigits, // Send only digits to backend
         password: formData.password,
         role: formData.isBroker ? 'broker' : 'client'
       };
@@ -105,6 +372,25 @@ const Register = () => {
       console.error('Registration error:', err);
       setError(err.response?.data?.message || 'An error occurred during registration');
     }
+  };
+
+  const checkPasswordStrength = (password) => {
+    let score = 0;
+    if (password.length >= 12) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[a-z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+    return score;
+  };
+
+  const handlePasswordHelpClick = (event) => {
+    event.preventDefault();
+    setPasswordHelpAnchor(event.currentTarget);
+  };
+
+  const handlePasswordHelpClose = () => {
+    setPasswordHelpAnchor(null);
   };
 
   const textFieldStyle = {
@@ -216,16 +502,82 @@ const Register = () => {
               placeholder="(123) 456-7890"
             />
 
-            <TextField
-              fullWidth
-              label="Password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              sx={textFieldStyle}
-            />
+            <Box sx={{ position: 'relative' }}>
+              <TextField
+                fullWidth
+                label="Password"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                InputProps={{
+                  endAdornment: (
+                    <IconButton
+                      edge="end"
+                      onClick={handlePasswordHelpClick}
+                      size="small"
+                      sx={{ mr: 0.5 }}
+                    >
+                      <HelpOutlineIcon />
+                    </IconButton>
+                  )
+                }}
+                sx={textFieldStyle}
+              />
+              {formData.password && (
+                <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', mt: 1 }}>
+                  <LinearProgress
+                    variant="determinate"
+                    value={(passwordStrength / 5) * 100}
+                    sx={{
+                      width: '50%',
+                      height: 3,
+                      borderRadius: 1,
+                      bgcolor: 'grey.200',
+                      '& .MuiLinearProgress-bar': {
+                        borderRadius: 1,
+                        bgcolor: passwordStrength <= 2 ? 'error.main' : 
+                                passwordStrength <= 3 ? 'warning.main' : 
+                                passwordStrength <= 4 ? 'info.main' : 'success.main'
+                      }
+                    }}
+                  />
+                </Box>
+              )}
+            </Box>
+
+            <Popover
+              open={Boolean(passwordHelpAnchor)}
+              anchorEl={passwordHelpAnchor}
+              onClose={handlePasswordHelpClose}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'center',
+              }}
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'center',
+              }}
+              PaperProps={{
+                sx: {
+                  borderRadius: 3,
+                  overflow: 'hidden'
+                }
+              }}
+            >
+              <Box sx={{ p: 2, maxWidth: 300 }}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Password must have at least:
+                </Typography>
+                <Typography variant="body2" component="ul" sx={{ pl: 2, m: 0 }}>
+                  <li>12 characters</li>
+                  <li>Uppercase letter (A-Z)</li>
+                  <li>A number (0-9)</li>
+                  <li>Special character (!@#$...)</li>
+                </Typography>
+              </Box>
+            </Popover>
 
             <TextField
               fullWidth
@@ -235,6 +587,8 @@ const Register = () => {
               value={formData.confirmPassword}
               onChange={handleChange}
               required
+              error={formData.confirmPassword && formData.password !== formData.confirmPassword}
+              helperText={formData.confirmPassword && formData.password !== formData.confirmPassword ? 'Passwords do not match' : ''}
               sx={textFieldStyle}
             />
 

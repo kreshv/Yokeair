@@ -92,5 +92,9 @@ export const updateProfilePicture = async (imageUrl) => {
     return response.data;
 };
 export const deleteUserAccount = () => api.delete('/users/account');
+export const resetPassword = async (passwordData) => {
+    const response = await api.put('/users/reset-password', passwordData);
+    return response.data;
+};
 
 export default api; 
