@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Box, Button, Typography, IconButton } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import CircularProgress from '@mui/material/CircularProgress';
 
 const ImageUpload = ({ 

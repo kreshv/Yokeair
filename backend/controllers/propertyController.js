@@ -1,6 +1,7 @@
 const Property = require('../models/Property');
 const Building = require('../models/Building');
 const { cloudinary } = require('../config/cloudinary');
+const Feature = require('../models/Feature');
 
 exports.createProperty = async (req, res) => {
     try {
@@ -128,7 +129,7 @@ exports.createProperty = async (req, res) => {
 
 exports.updateProperty = async (req, res) => {
     try {
-        const { buildingAmenities, unitFeatures } = req.body;
+        const { buildingAmenities, unitFeatures, price, squareFootage } = req.body;
         const propertyId = req.params.id;
 
         // Find the property
@@ -152,10 +153,42 @@ exports.updateProperty = async (req, res) => {
         }
 
         // Update property features
-        if (unitFeatures) {
-            property.features = unitFeatures;
-            await property.save();
+        if (unitFeatures && unitFeatures.length > 0) {
+            // Find or create features
+            const featurePromises = unitFeatures.map(async (featureData) => {
+                let feature = await Feature.findOne({ 
+                    name: featureData.name, 
+                    category: 'Unit Feature' 
+                });
+                
+                if (!feature) {
+                    feature = new Feature({ 
+                        name: featureData.name, 
+                        category: 'Unit Feature' 
+                    });
+                    await feature.save();
+                }
+                
+                return feature._id;
+            });
+
+            property.features = await Promise.all(featurePromises);
+        } else {
+            // If no features are provided, clear existing features
+            property.features = [];
         }
+
+        // Update price if provided
+        if (price !== undefined) {
+            property.price = price;
+        }
+
+        // Update square footage if provided
+        if (squareFootage !== undefined) {
+            property.squareFootage = squareFootage;
+        }
+
+        await property.save();
 
         // Populate the updated property
         await property.populate(['building', 'features']);

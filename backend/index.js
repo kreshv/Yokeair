@@ -7,6 +7,9 @@ const app = express();
 // Connect to database
 connectDB();
 
+// Import models for seeding
+const Feature = require('./models/Feature');
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -40,4 +43,7 @@ const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+    
+    // Seed features on startup
+    Feature.seedFeatures().catch(console.error);
 }); 

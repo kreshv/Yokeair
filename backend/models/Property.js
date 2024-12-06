@@ -47,7 +47,7 @@ const propertySchema = new mongoose.Schema({
     },
     features: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Amenity'
+        ref: 'Feature'
     }],
     broker: {
         type: mongoose.Schema.Types.ObjectId,

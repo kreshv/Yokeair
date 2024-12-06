@@ -183,8 +183,8 @@ const PropertyCard = ({ property, onStatusChange, onDelete }) => {
             border: '1px solid rgba(255, 255, 255, 0.2)',
             '& .MuiMenuItem-root': {
               fontSize: '0.95rem',
-              py: 1.5,
-              px: 3,
+              py: 0.5,
+              px: 2,
               transition: 'all 0.2s ease-in-out',
               '&:hover': {
                 backgroundColor: 'rgba(0, 0, 0, 0.05)',
@@ -206,6 +206,7 @@ const PropertyCard = ({ property, onStatusChange, onDelete }) => {
           vertical: 'top',
           horizontal: 'left'
         }}
+        sx={{ width: '200px' }}
       >
         <MenuItem 
           onClick={() => handleStatusChange('available')}

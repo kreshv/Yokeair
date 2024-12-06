@@ -91,5 +91,6 @@ export const updateProfilePicture = async (imageUrl) => {
     const response = await api.put('/users/profile-picture', { profilePicture: imageUrl });
     return response.data;
 };
+export const deleteUserAccount = () => api.delete('/users/account');
 
 export default api; 

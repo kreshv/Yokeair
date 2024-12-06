@@ -1,8 +1,10 @@
 import { Box, Typography, Button, Paper } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Home = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   return (
     <Box
@@ -95,7 +97,13 @@ const Home = () => {
           </Button>
           
           <Button
-            onClick={() => navigate('/register', { state: { fromShowcasing: true } })}
+            onClick={() => {
+              if (user && user.role === 'broker') {
+                navigate('/property-listing');
+              } else {
+                navigate('/register', { state: { fromShowcasing: true } });
+              }
+            }}
             variant="contained"
             size="large"
             sx={{

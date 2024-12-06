@@ -12,4 +12,8 @@ export default defineConfig({
       },
     },
   },
+  optimizeDeps: {
+    include: ['@hello-pangea/dnd'],
+    force: true
+  }
 })

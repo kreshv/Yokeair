@@ -95,11 +95,11 @@ const Register = () => {
           }
         }
         
-        navigate('/location-selector');
-      } else if (fromShowcasing || formData.isBroker) {
+        navigate('/');
+      } else if (formData.isBroker && fromShowcasing) {
         navigate('/property-listing');
       } else {
-        navigate('/location-selector');
+        navigate('/');
       }
     } catch (err) {
       console.error('Registration error:', err);

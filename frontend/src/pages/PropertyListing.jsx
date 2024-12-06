@@ -46,6 +46,8 @@ const PropertyListing = () => {
   useEffect(() => {
     if (!user) {
       navigate('/register', { state: { fromShowcasing: true } });
+    } else if (user.role !== 'broker') {
+      navigate('/', { replace: true });
     }
   }, [user, navigate]);
 

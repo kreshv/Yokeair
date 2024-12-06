@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import { getProperty, updateProperty, uploadPropertyImages } from '../utils/api';
 import ImageUpload from '../components/ImageUpload';
+import { useSnackbar } from '../components/Snackbar';
 
 const FeatureButton = ({ name, selected, onClick }) => (
     <Button
@@ -60,6 +61,7 @@ const FeatureButton = ({ name, selected, onClick }) => (
 const EditProperty = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { showSnackbar } = useSnackbar();
     const [property, setProperty] = useState(null);
     const [price, setPrice] = useState('');
     const [squareFootage, setSquareFootage] = useState('');
@@ -83,7 +85,7 @@ const EditProperty = () => {
                 const propertyData = response.data;
                 setProperty(propertyData);
                 setPrice(formatPrice(propertyData.price));
-                setSquareFootage(propertyData.squareFootage);
+                setSquareFootage(propertyData.squareFootage || '');
                 setSelectedFeatures(propertyData.features.map(f => f.name));
                 setLoading(false);
             } catch (err) {
@@ -130,14 +132,20 @@ const EditProperty = () => {
     const handleSubmit = async () => {
         try {
             const numericPrice = parseFloat(price.replace(/[^0-9.]/g, ''));
-            await updateProperty(id, {
+            const response = await updateProperty(id, {
                 price: numericPrice,
                 squareFootage: parseInt(squareFootage),
-                features: selectedFeatures
+                unitFeatures: selectedFeatures.map(name => ({ name }))
             });
+            
+            // Add a success snackbar
+            showSnackbar('Property updated successfully', 'success');
             navigate('/dashboard');
         } catch (err) {
-            setError('Failed to update property');
+            console.error('Update property error:', err);
+            const errorMessage = err.response?.data?.message || 'Failed to update property';
+            setError(errorMessage);
+            showSnackbar(errorMessage, 'error');
         }
     };
 

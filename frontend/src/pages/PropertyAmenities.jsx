@@ -114,7 +114,10 @@ const PropertyAmenities = () => {
         // First update the property with amenities
         await updateProperty(propertyId, {
             buildingAmenities: selectedAmenities.building,
-            unitFeatures: selectedAmenities.unit
+            unitFeatures: selectedAmenities.unit.map(id => {
+                const feature = amenities.unit.find(a => a._id === id);
+                return { name: feature.name };
+            })
         });
 
         // If there are images, upload them

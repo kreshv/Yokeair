@@ -42,7 +42,7 @@ const Login = () => {
       if (fromShowcasing) {
         navigate('/property-listing');
       } else {
-        navigate(user.role === 'broker' ? '/dashboard' : '/');
+        navigate('/');
       }
     } catch (err) {
       setError(err.response?.data?.message || 'An error occurred during login');
