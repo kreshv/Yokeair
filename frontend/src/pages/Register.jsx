@@ -234,50 +234,55 @@ const Register = () => {
   });
   const [error, setError] = useState('');
   const [emailError, setEmailError] = useState('');
-  const [passwordErrors, setPasswordErrors] = useState([]);
+  const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
-  const [passwordTouched, setPasswordTouched] = useState(false);
-  const [passwordAnchorEl, setPasswordAnchorEl] = useState(null);
-  const [passwordHelpAnchor, setPasswordHelpAnchor] = useState(null);
 
-  const handleChange = (e) => {
+  const calculatePasswordStrength = useCallback((password) => {
+    let score = 0;
+    if (password.length >= 12) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[a-z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+    return score;
+  }, []);
+
+  const getStrengthColor = useCallback((strength) => {
+    if (strength <= 2) return 'error';
+    if (strength <= 3) return 'warning';
+    if (strength <= 4) return 'info';
+    return 'success';
+  }, []);
+
+  const handleChange = useCallback((e) => {
     const { name, value, checked } = e.target;
     
-    // Special handling for phone number
     if (name === 'phone') {
-      // Remove all non-digit characters
       const digitsOnly = value.replace(/\D/g, '');
-      
-      // Limit to 11 digits
       const limitedDigits = digitsOnly.slice(0, 11);
-      
-      // Format phone number
       let formattedPhone = '';
+      
       if (limitedDigits.length <= 10) {
-        // 10 or fewer digits
         formattedPhone = limitedDigits.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
       } else if (limitedDigits.length === 11) {
-        // 11 digits
         formattedPhone = limitedDigits.replace(/1?(\d{3})(\d{3})(\d{4})/, '+1 ($1) $2-$3');
       }
       
-      setFormData(prev => ({ ...prev, [name]: formattedPhone }));
+      setFormData(prev => ({ ...prev, phone: formattedPhone }));
       return;
     }
-    
-    // Existing change handling for other fields
+
     setFormData(prev => ({
       ...prev,
       [name]: name === 'isBroker' ? checked : value
     }));
 
-    // Existing password strength check
     if (name === 'password') {
-      setPasswordStrength(checkPasswordStrength(value));
+      setPasswordStrength(calculatePasswordStrength(value));
     }
-  };
+  }, [calculatePasswordStrength]);
 
-  const handleEmailBlur = async (e) => {
+  const handleEmailBlur = useCallback(async (e) => {
     const email = e.target.value;
     if (email) {
       try {
@@ -287,17 +292,9 @@ const Register = () => {
         setEmailError('This email is already registered');
       }
     }
-  };
-
-  const handlePasswordFocus = useCallback((event) => {
-    setPasswordAnchorEl(event.currentTarget);
   }, []);
 
-  const handlePasswordBlur = useCallback(() => {
-    setPasswordAnchorEl(null);
-  }, []);
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
     setError('');
 
@@ -327,7 +324,6 @@ const Register = () => {
     const passwordValidation = validatePassword(formData.password);
 
     if (!passwordValidation.isValid) {
-      setPasswordErrors(passwordValidation.errors);
       setError('Please fix the password validation errors');
       return;
     }
@@ -372,26 +368,14 @@ const Register = () => {
       console.error('Registration error:', err);
       setError(err.response?.data?.message || 'An error occurred during registration');
     }
-  };
-
-  const checkPasswordStrength = (password) => {
-    let score = 0;
-    if (password.length >= 12) score++;
-    if (/[A-Z]/.test(password)) score++;
-    if (/[a-z]/.test(password)) score++;
-    if (/[0-9]/.test(password)) score++;
-    if (/[^A-Za-z0-9]/.test(password)) score++;
-    return score;
-  };
-
-  const handlePasswordHelpClick = (event) => {
-    event.preventDefault();
-    setPasswordHelpAnchor(event.currentTarget);
-  };
-
-  const handlePasswordHelpClose = () => {
-    setPasswordHelpAnchor(null);
-  };
+  }, [
+    formData, 
+    emailError, 
+    login, 
+    location.state, 
+    fromShowcasing, 
+    navigate
+  ]);
 
   const textFieldStyle = {
     '& .MuiOutlinedInput-root': {
@@ -502,7 +486,7 @@ const Register = () => {
               placeholder="(123) 456-7890"
             />
 
-            <Box sx={{ position: 'relative' }}>
+            <Box>
               <TextField
                 fullWidth
                 label="Password"
@@ -510,74 +494,68 @@ const Register = () => {
                 type="password"
                 value={formData.password}
                 onChange={handleChange}
+                onFocus={() => setShowPasswordRequirements(true)}
+                onBlur={() => setShowPasswordRequirements(false)}
                 required
-                InputProps={{
-                  endAdornment: (
-                    <IconButton
-                      edge="end"
-                      onClick={handlePasswordHelpClick}
-                      size="small"
-                      sx={{ mr: 0.5 }}
-                    >
-                      <HelpOutlineIcon />
-                    </IconButton>
-                  )
-                }}
                 sx={textFieldStyle}
               />
               {formData.password && (
-                <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', mt: 1 }}>
+                <Box sx={{ 
+                  width: '100%', 
+                  display: 'flex', 
+                  justifyContent: 'center', 
+                  my: 0.5
+                }}>
                   <LinearProgress
                     variant="determinate"
                     value={(passwordStrength / 5) * 100}
+                    color={getStrengthColor(passwordStrength)}
                     sx={{
                       width: '50%',
                       height: 3,
-                      borderRadius: 1,
+                      borderRadius: 2,
                       bgcolor: 'grey.200',
                       '& .MuiLinearProgress-bar': {
-                        borderRadius: 1,
-                        bgcolor: passwordStrength <= 2 ? 'error.main' : 
-                                passwordStrength <= 3 ? 'warning.main' : 
-                                passwordStrength <= 4 ? 'info.main' : 'success.main'
+                        borderRadius: 2
                       }
                     }}
                   />
                 </Box>
               )}
+              {showPasswordRequirements && (
+                <Paper 
+                  elevation={4} 
+                  sx={{
+                    width: '50%',
+                    p: 1.25,
+                    mt: 1,
+                    borderRadius: 2,
+                    backgroundColor: 'background.paper',
+                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                  }}
+                >
+                  <Typography variant="subtitle2" gutterBottom>
+                    Password must have at least:
+                  </Typography>
+                  <Typography 
+                    variant="body2" 
+                    component="ul" 
+                    sx={{ 
+                      pl: 2, 
+                      m: 0,
+                      '& li': {
+                        mb: 0.5
+                      }
+                    }}
+                  >
+                    <li>12 characters</li>
+                    <li>One uppercase letter (A-Z)</li>
+                    <li>One number (0-9)</li>
+                    <li>One special character (!@#$...)</li>
+                  </Typography>
+                </Paper>
+              )}
             </Box>
-
-            <Popover
-              open={Boolean(passwordHelpAnchor)}
-              anchorEl={passwordHelpAnchor}
-              onClose={handlePasswordHelpClose}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'center',
-              }}
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'center',
-              }}
-              PaperProps={{
-                sx: {
-                  borderRadius: 3,
-                  overflow: 'hidden'
-                }
-              }}
-            >
-              <Box sx={{ p: 2, maxWidth: 300 }}>
-                <Typography variant="subtitle2" gutterBottom>
-                  Password must have at least:
-                </Typography>
-                <Typography variant="body2" component="ul" sx={{ pl: 2, m: 0 }}>
-                  <li>12 characters</li>
-                  <li>Uppercase letter (A-Z)</li>
-                  <li>A number (0-9)</li>
-                  <li>Special character (!@#$...)</li>
-                </Typography>
-              </Box>
-            </Popover>
 
             <TextField
               fullWidth
@@ -587,8 +565,8 @@ const Register = () => {
               value={formData.confirmPassword}
               onChange={handleChange}
               required
-              error={formData.confirmPassword && formData.password !== formData.confirmPassword}
-              helperText={formData.confirmPassword && formData.password !== formData.confirmPassword ? 'Passwords do not match' : ''}
+              error={Boolean(formData.confirmPassword && formData.password !== formData.confirmPassword)}
+              helperText={formData.confirmPassword && formData.password !== formData.confirmPassword ? 'Passwords do not match' : ' '}
               sx={textFieldStyle}
             />
 
