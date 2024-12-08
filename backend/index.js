@@ -10,9 +10,13 @@ connectDB();
 // Import models for seeding
 const Feature = require('./models/Feature');
 
-// Logging middleware
+// Detailed logging middleware
 app.use((req, res, next) => {
-  console.log(`Incoming request: ${req.method} ${req.path}`);
+  console.log('Request Details:');
+  console.log('Method:', req.method);
+  console.log('Path:', req.path);
+  console.log('Origin:', req.get('origin'));
+  console.log('Referer:', req.get('referer'));
   console.log('Headers:', req.headers);
   next();
 });
@@ -26,15 +30,18 @@ app.use(cors({
       'http://localhost:5173',
       'https://jolly-douhua-92a088.netlify.app'
     ];
+    console.log('Incoming Origin:', origin);
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      console.error('CORS Error for origin:', origin);
+      callback(new Error(`Not allowed by CORS: ${origin}`));
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Origin', 'X-Requested-With', 'Accept', 'x-auth-token'],
-  credentials: true
+  credentials: true,
+  optionsSuccessStatus: 200
 }));
 app.use(express.json());
 
