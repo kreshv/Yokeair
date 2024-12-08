@@ -20,27 +20,22 @@ app.use((req, res, next) => {
   next();
 });
 
-// CORS configuration - more permissive
-app.use(cors({
-  origin: true, // Allow all origins
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token', 'Origin', 'Accept']
-}));
-
-// Global middleware to set CORS headers
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-auth-token, Origin, Accept');
-  next();
-});
+// CORS configuration
+app.use(cors());
 
 app.use(express.json());
 
-// Test route
+// Basic route tests
+app.get('/', (req, res) => {
+  res.json({ message: 'Root endpoint working' });
+});
+
+app.get('/api', (req, res) => {
+  res.json({ message: 'API endpoint working' });
+});
+
 app.get('/api/test', (req, res) => {
-  res.json({ message: 'API is working' });
+  res.json({ message: 'Test endpoint working' });
 });
 
 // Import routes
@@ -51,13 +46,22 @@ const amenityRoutes = require('./routes/amenityRoutes');
 const locationRoutes = require('./routes/locationRoutes');
 const applicationRoutes = require('./routes/applicationRoutes');
 
-// Mount routes
+// Mount routes with explicit paths
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/properties', propertyRoutes);
 app.use('/api/amenities', amenityRoutes);
 app.use('/api/locations', locationRoutes);
 app.use('/api/applications', applicationRoutes);
+
+// Catch-all route for debugging
+app.use('*', (req, res) => {
+  res.status(404).json({
+    message: 'Route not found',
+    requestedPath: req.originalUrl,
+    method: req.method
+  });
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
