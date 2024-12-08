@@ -120,12 +120,31 @@ const EditProperty = () => {
 
     const handleImageUpload = async (formData) => {
         try {
+            setError('');
+            const file = formData.get('images'); // Using 'images' as the field name
+            
+            if (!file) {
+                setError('No file selected');
+                return;
+            }
+
+            // Validate file size
+            const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+            if (file.size > MAX_SIZE) {
+                setError(`File ${file.name} is too large (max 5MB)`);
+                return;
+            }
+
+            // Upload the file
             await uploadPropertyImages(id, formData);
+
             // Refresh property data to show new images
             const response = await getProperty(id);
             setProperty(response.data);
+            
         } catch (error) {
-            setError('Failed to upload images');
+            console.error('Upload error:', error);
+            setError(error.message || 'Failed to upload images');
         }
     };
 

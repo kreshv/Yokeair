@@ -64,6 +64,7 @@ const PropertyAmenities = () => {
   const { propertyId, userId } = location.state || {};
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [uploadStatus, setUploadStatus] = useState('');
   const [amenities, setAmenities] = useState({
     building: [],
     unit: []
@@ -110,6 +111,8 @@ const PropertyAmenities = () => {
 
   const handleSubmit = async () => {
     setLoading(true);
+    setError('');
+    
     try {
         // First update the property with amenities
         await updateProperty(propertyId, {
@@ -122,21 +125,16 @@ const PropertyAmenities = () => {
 
         // If there are images, upload them
         if (location.state?.images && location.state.images.length > 0) {
-            const formData = new FormData();
-            location.state.images.forEach((image, index) => {
-                formData.append('images', image);
-            });
-            
             try {
-                console.log('Uploading images:', location.state.images.length);
-                const response = await uploadPropertyImages(propertyId, formData);
-                console.log('Upload response:', response);
-            } catch (imageError) {
-                console.error('Error uploading images:', imageError);
-                if (imageError.response) {
-                    console.error('Error response:', imageError.response.data);
+                setUploadStatus('Uploading images...');
+                const result = await uploadPropertyImages(propertyId, location.state.images);
+                if (result.images) {
+                    setUploadStatus('Images uploaded successfully!');
                 }
-                throw new Error('Failed to upload images');
+            } catch (uploadError) {
+                console.error('Upload error:', uploadError);
+                setError(uploadError.message || 'Failed to upload images');
+                return;
             }
         }
 
@@ -146,6 +144,7 @@ const PropertyAmenities = () => {
         setError(error.message || 'Failed to update property');
     } finally {
         setLoading(false);
+        setUploadStatus('');
     }
   };
 
@@ -281,10 +280,22 @@ const PropertyAmenities = () => {
         Submit Listing
       </Button>
       {loading && (
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 2, opacity: 0.8 }}>
-          <CircularProgress color="primary" />
-          <Typography variant="body2" sx={{ mt: 1 }}>
-            Loading, please wait...
+        <Box sx={{ 
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          zIndex: 9999
+        }}>
+          <CircularProgress size={60} sx={{ mb: 2 }} />
+          <Typography variant="h6" sx={{ color: 'white', textAlign: 'center' }}>
+            {uploadStatus || 'Processing...'}
           </Typography>
         </Box>
       )}

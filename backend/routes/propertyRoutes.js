@@ -103,12 +103,38 @@ router.delete('/:id', auth, async (req, res, next) => {
 // Upload images - Private (Broker only)
 router.post('/:id/images', 
     auth,
-    upload.array('images', 10),
-    async (req, res, next) => {
+    (req, res, next) => {
         if (req.user.role !== 'broker') {
             return res.status(403).json({ message: 'Access denied. Broker only.' });
         }
         next();
+    },
+    (req, res, next) => {
+        upload.array('image', 15)(req, res, (err) => {
+            if (err) {
+                console.error('Multer error:', err);
+                if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+                    return res.status(400).json({ 
+                        message: 'Maximum 15 images allowed per upload' 
+                    });
+                }
+                if (err.code === 'LIMIT_FILE_SIZE') {
+                    return res.status(400).json({ 
+                        message: 'One or more images exceed the size limit of 5MB' 
+                    });
+                }
+                if (err.code === 'LIMIT_FILE_COUNT') {
+                    return res.status(400).json({ 
+                        message: 'Too many files. Maximum 15 images allowed' 
+                    });
+                }
+                return res.status(500).json({ 
+                    message: 'Image upload failed', 
+                    error: err.message 
+                });
+            }
+            next();
+        });
     },
     uploadImages
 );

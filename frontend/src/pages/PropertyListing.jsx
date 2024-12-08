@@ -178,7 +178,7 @@ const PropertyListing = () => {
 
   const handleImageUpload = async (formData) => {
     try {
-        const files = formData.getAll('images');
+        const files = formData.getAll('image');
         setImages(prev => [...prev, ...files]);
         setImageError('');
     } catch (error) {

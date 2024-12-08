@@ -401,45 +401,74 @@ exports.deleteProperty = async (req, res) => {
 
 exports.uploadImages = async (req, res) => {
     try {
-        console.log('Upload request received:', {
-            files: req.files?.length,
-            propertyId: req.params.id
-        });
-
-        if (!req.files || req.files.length === 0) {
-            return res.status(400).json({ message: 'No images provided' });
+        // Check if files were uploaded
+        if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
+            return res.status(400).json({ message: 'No images uploaded' });
         }
 
-        const property = await Property.findById(req.params.id);
-        
+        // Validate file types
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        const invalidFiles = req.files.filter(file => !allowedTypes.includes(file.mimetype));
+        if (invalidFiles.length > 0) {
+            return res.status(400).json({ 
+                message: `Invalid file type(s): ${invalidFiles.map(f => f.originalname).join(', ')}. Only JPG, PNG, and WebP files are allowed.` 
+            });
+        }
+
+        const propertyId = req.params.id;
+        const property = await Property.findById(propertyId);
+
         if (!property) {
             return res.status(404).json({ message: 'Property not found' });
         }
 
+        // Check if this broker owns the property
         if (property.broker.toString() !== req.user.id) {
-            return res.status(403).json({ message: 'Not authorized' });
+            return res.status(403).json({ message: 'Not authorized to modify this property' });
         }
 
-        // Handle the Cloudinary uploads
-        const uploadedImages = req.files.map(file => ({
+        // Initialize images array if it doesn't exist
+        if (!property.images) {
+            property.images = [];
+        }
+
+        // Process the uploaded files
+        const imageData = req.files.map(file => ({
             url: file.path,
             public_id: file.filename
         }));
 
-        // Update property with new images
-        if (!property.images) {
-            property.images = [];
-        }
+        // Add new images to the property
+        property.images = property.images.concat(imageData);
         
-        property.images = property.images.concat(uploadedImages);
+        // Save the updated property
         await property.save();
 
-        res.json(property);
+        // Return only the newly uploaded images
+        res.json({ 
+            message: 'Images uploaded successfully',
+            images: imageData
+        });
+
     } catch (error) {
-        console.error('Full error details:', error);
+        console.error('Error in uploadImages:', error);
+        
+        // Delete uploaded files if there was an error
+        if (req.files && Array.isArray(req.files)) {
+            for (const file of req.files) {
+                try {
+                    if (file.filename) {
+                        await deleteImage(file.filename);
+                    }
+                } catch (deleteError) {
+                    console.error('Error deleting file after upload failure:', deleteError);
+                }
+            }
+        }
+        
         res.status(500).json({ 
-            message: 'Error uploading images',
-            error: error.message
+            message: 'Failed to upload images',
+            error: error.message 
         });
     }
 };

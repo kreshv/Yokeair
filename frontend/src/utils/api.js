@@ -58,19 +58,53 @@ export const deleteProperty = async (propertyId) => {
 };
 export const uploadPropertyImages = async (propertyId, formData) => {
     try {
+        // Get the file from FormData
+        const file = formData.get('images');
+        if (!file) {
+            throw new Error('No file provided');
+        }
+
+        // Validate file size
+        const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+        if (file.size > MAX_FILE_SIZE) {
+            throw new Error(`File ${file.name} is too large. Maximum size is 5MB`);
+        }
+
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        const fileType = file.type || '';
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        const isValidType = allowedTypes.includes(fileType) || 
+                          ['jpg', 'jpeg', 'png', 'webp'].includes(fileExtension);
+
+        if (!isValidType) {
+            throw new Error(`File ${file.name} is not a supported image type. Please use JPG, PNG, or WebP files.`);
+        }
+
+        // Upload the file
         const response = await api.post(`/properties/${propertyId}/images`, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             },
-            transformRequest: [function (data) {
-                return data;
-            }]
+            timeout: 30000,
+            maxBodyLength: Infinity,
+            maxContentLength: Infinity
         });
+
         return response.data;
     } catch (error) {
         console.error('Error in uploadPropertyImages:', error);
-        if (error.response) {
-            console.error('Error response:', error.response.data);
+        if (error.code === 'ECONNABORTED') {
+            throw new Error('Upload timed out. Please try again.');
+        }
+        if (error.response?.status === 500) {
+            throw new Error('Server error during upload. Please try again or contact support if the problem persists.');
+        }
+        if (error.response?.data?.message) {
+            throw new Error(error.response.data.message);
+        }
+        if (error.message === 'Network Error') {
+            throw new Error('Network error. Please check your connection and try again.');
         }
         throw error;
     }

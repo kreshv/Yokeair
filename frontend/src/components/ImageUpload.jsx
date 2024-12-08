@@ -13,15 +13,22 @@ const ImageUpload = ({
 }) => {
     const [loading, setLoading] = useState(false);
 
-    const handleFileChange = (event) => {
+    const handleFileChange = async (event) => {
         const files = event.target.files;
         if (files) {
-            const formData = new FormData();
-            for (let i = 0; i < files.length; i++) {
-                formData.append('images', files[i]);
-            }
             setLoading(true);
-            onUpload(formData).finally(() => setLoading(false));
+            try {
+                // Upload files one by one
+                for (let i = 0; i < files.length; i++) {
+                    const formData = new FormData();
+                    formData.append('images', files[i]); // Using 'images' as the field name
+                    await onUpload(formData);
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+            } finally {
+                setLoading(false);
+            }
         }
     };
 
