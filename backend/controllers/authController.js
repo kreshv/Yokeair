@@ -5,15 +5,19 @@ const { validatePassword } = require('../utils/passwordValidator');
 
 exports.registerUser = async (req, res) => {
     try {
+        console.log('Registration attempt:', {
+            ...req.body,
+            password: '[REDACTED]' // Don't log the actual password
+        });
+
         const { firstName, lastName, email, password, phone, role } = req.body;
 
         // Validate password
         const passwordValidation = validatePassword(password, { 
-            firstName, 
-            lastName, 
-            email, 
-            phone 
+            firstName, lastName, email, phone 
         });
+
+        console.log('Password validation result:', passwordValidation);
 
         if (!passwordValidation.isValid) {
             return res.status(400).json({ 
@@ -24,6 +28,8 @@ exports.registerUser = async (req, res) => {
 
         // Check if user exists
         let user = await User.findOne({ email });
+        console.log('Existing user check:', { exists: !!user });
+
         if (user) {
             return res.status(400).json({ message: 'User already exists' });
         }
@@ -43,6 +49,7 @@ exports.registerUser = async (req, res) => {
         user.password = await bcrypt.hash(password, salt);
 
         await user.save();
+        console.log('User saved successfully:', { userId: user._id });
 
         // Create and return JWT token
         const payload = {
@@ -61,7 +68,10 @@ exports.registerUser = async (req, res) => {
             process.env.JWT_SECRET,
             { expiresIn: '5h' },
             (err, token) => {
-                if (err) throw err;
+                if (err) {
+                    console.error('JWT Sign error:', err);
+                    throw err;
+                }
                 res.json({ 
                     token,
                     user: {
@@ -76,7 +86,11 @@ exports.registerUser = async (req, res) => {
             }
         );
     } catch (err) {
-        console.error('Registration error:', err);
+        console.error('Registration error details:', {
+            message: err.message,
+            stack: err.stack,
+            name: err.name
+        });
         res.status(500).json({ 
             message: 'Server error during registration',
             error: err.message 
@@ -86,16 +100,25 @@ exports.registerUser = async (req, res) => {
 
 exports.loginUser = async (req, res) => {
     try {
+        console.log('Login attempt:', {
+            email: req.body.email,
+            hasPassword: !!req.body.password
+        });
+
         const { email, password } = req.body;
 
         // Check if user exists
         const user = await User.findOne({ email });
+        console.log('User found:', { exists: !!user });
+
         if (!user) {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
         // Verify password
         const isMatch = await bcrypt.compare(password, user.password);
+        console.log('Password match:', isMatch);
+
         if (!isMatch) {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
@@ -118,7 +141,10 @@ exports.loginUser = async (req, res) => {
             process.env.JWT_SECRET,
             { expiresIn: '5h' },
             (err, token) => {
-                if (err) throw err;
+                if (err) {
+                    console.error('JWT Sign error:', err);
+                    throw err;
+                }
                 res.json({ 
                     token,
                     user: {
@@ -134,7 +160,14 @@ exports.loginUser = async (req, res) => {
             }
         );
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error');
+        console.error('Login error details:', {
+            message: err.message,
+            stack: err.stack,
+            name: err.name
+        });
+        res.status(500).json({
+            message: 'Server error during login',
+            error: err.message
+        });
     }
 }; 
