@@ -21,20 +21,25 @@ app.use((req, res, next) => {
 });
 
 // CORS configuration
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'https://jolly-douhua-92a088.netlify.app');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, x-auth-token');
-  res.header('Access-Control-Allow-Credentials', true);
+app.use(cors({
+  origin: 'https://jolly-douhua-92a088.netlify.app',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token', 'Origin', 'Accept'],
+  credentials: true,
+  optionsSuccessStatus: 200
+}));
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  next();
+// Handle preflight requests
+app.options('*', (req, res) => {
+  res.status(200).end();
 });
 
 app.use(express.json());
+
+// Test route
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'API is working' });
+});
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
