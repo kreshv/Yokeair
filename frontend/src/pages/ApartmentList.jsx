@@ -65,7 +65,7 @@ const ApartmentList = () => {
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    background: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("/design3.jpg")`,
+                    background: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("/design3.png")`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                 }}
