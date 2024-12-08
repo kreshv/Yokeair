@@ -13,7 +13,10 @@ const storage = new CloudinaryStorage({
     params: {
         folder: 'yoke_properties',
         allowed_formats: ['jpg', 'jpeg', 'png'],
-        transformation: [{ width: 1000, height: 1000, crop: 'limit' }],
+        transformation: [
+            { width: 2000, height: 2000, crop: 'limit', quality: 'auto:best' },
+            { fetch_format: 'auto' }
+        ],
         public_id: (req, file) => {
             const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
             return `property-${uniqueSuffix}`;
@@ -21,6 +24,11 @@ const storage = new CloudinaryStorage({
     }
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ 
+    storage: storage,
+    limits: {
+        fileSize: 10 * 1024 * 1024 // 10MB
+    }
+});
 
 module.exports = { cloudinary, upload }; 
