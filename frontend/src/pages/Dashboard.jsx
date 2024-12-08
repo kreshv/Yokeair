@@ -79,6 +79,8 @@ const PropertyCard = ({ property, onStatusChange, onDelete }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [statusMenuAnchor, setStatusMenuAnchor] = useState(null);
+  const [deleteError, setDeleteError] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleMenuClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -114,142 +116,191 @@ const PropertyCard = ({ property, onStatusChange, onDelete }) => {
   };
 
   const handleDeleteConfirm = async () => {
+    setIsDeleting(true);
+    setDeleteError('');
+    
     try {
       await deleteProperty(property._id);
       onDelete();
       setDeleteDialogOpen(false);
     } catch (error) {
       console.error('Error deleting property:', error);
+      setDeleteError(error.response?.data?.message || 'Failed to delete property. Please try again.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   return (
-    <StyledPropertyCard>
-      <IconButton
-        onClick={handleMenuClick}
-        sx={{
-          position: 'absolute',
-          top: 8,
-          right: 8
-        }}
-      >
-        <MoreVertIcon />
-      </IconButton>
+    <>
+      <StyledPropertyCard>
+        <IconButton
+          onClick={handleMenuClick}
+          sx={{
+            position: 'absolute',
+            top: 8,
+            right: 8
+          }}
+        >
+          <MoreVertIcon />
+        </IconButton>
 
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-        PaperProps={{
-          sx: {
-            mt: 1,
-            width: '150px',
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(8px)',
-            borderRadius: '15px',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            '& .MuiMenuItem-root': {
-              fontSize: '0.85rem',
-              py: 1,
-              px: 2,
-              transition: 'all 0.2s ease-in-out',
-              '&:hover': {
-                backgroundColor: 'rgba(0, 0, 0, 0.05)',
-              }
-            }
-          }
-        }}
-      >
-        <MenuItem onClick={() => navigate(`/property-listing/${property._id}`)}>Edit</MenuItem>
-        <MenuItem onClick={handleStatusMenuClick}>Change Status</MenuItem>
-        <MenuItem onClick={handleDeleteClick} sx={{ color: 'error.main' }}>
-          Delete
-        </MenuItem>
-      </Menu>
-
-      <Menu
-        anchorEl={statusMenuAnchor}
-        open={Boolean(statusMenuAnchor)}
-        onClose={handleStatusMenuClose}
-        PaperProps={{
-          sx: {
-            mt: 1,
-            ml: -1,
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(8px)',
-            borderRadius: '15px',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            '& .MuiMenuItem-root': {
-              fontSize: '0.95rem',
-              py: 0.5,
-              px: 2,
-              transition: 'all 0.2s ease-in-out',
-              '&:hover': {
-                backgroundColor: 'rgba(0, 0, 0, 0.05)',
-              },
-              '&.Mui-selected': {
-                backgroundColor: 'rgba(65, 105, 225, 0.1)',
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleMenuClose}
+          PaperProps={{
+            sx: {
+              mt: 1,
+              width: '150px',
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(8px)',
+              borderRadius: '15px',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              '& .MuiMenuItem-root': {
+                fontSize: '0.85rem',
+                py: 1,
+                px: 2,
+                transition: 'all 0.2s ease-in-out',
                 '&:hover': {
-                  backgroundColor: 'rgba(65, 105, 225, 0.2)',
+                  backgroundColor: 'rgba(0, 0, 0, 0.05)',
                 }
               }
             }
+          }}
+        >
+          <MenuItem onClick={() => navigate(`/property-listing/${property._id}`)}>Edit</MenuItem>
+          <MenuItem onClick={handleStatusMenuClick}>Change Status</MenuItem>
+          <MenuItem onClick={handleDeleteClick} sx={{ color: 'error.main' }}>
+            Delete
+          </MenuItem>
+        </Menu>
+
+        <Menu
+          anchorEl={statusMenuAnchor}
+          open={Boolean(statusMenuAnchor)}
+          onClose={handleStatusMenuClose}
+          PaperProps={{
+            sx: {
+              mt: 1,
+              ml: -1,
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(8px)',
+              borderRadius: '15px',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              '& .MuiMenuItem-root': {
+                fontSize: '0.95rem',
+                py: 0.5,
+                px: 2,
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                },
+                '&.Mui-selected': {
+                  backgroundColor: 'rgba(65, 105, 225, 0.1)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(65, 105, 225, 0.2)',
+                  }
+                }
+              }
+            }
+          }}
+          anchorOrigin={{
+            vertical: 'top',
+            horizontal: 'right'
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'left'
+          }}
+          sx={{ width: '200px' }}
+        >
+          <MenuItem 
+            onClick={() => handleStatusChange('available')}
+            selected={property.status === 'available'}
+          >
+            Available
+          </MenuItem>
+          <MenuItem 
+            onClick={() => handleStatusChange('in_contract')}
+            selected={property.status === 'in_contract'}
+          >
+            In Contract
+          </MenuItem>
+          <MenuItem 
+            onClick={() => handleStatusChange('rented')}
+            selected={property.status === 'rented'}
+          >
+            Rented
+          </MenuItem>
+        </Menu>
+
+        <Typography variant="h6">
+          {property.building.address.street} - Unit {property.unitNumber}
+        </Typography>
+        <Typography>
+          {property.building.address.neighborhood}, {property.building.address.borough}
+        </Typography>
+        <Typography>
+          {property.bedrooms} BR | ${property.price}/month
+        </Typography>
+        <Typography 
+          sx={{ 
+            position: 'absolute',
+            bottom: 16,
+            right: 16,
+            color: property.status === 'available' ? 'success.main' : 
+                   property.status === 'in_contract' ? 'warning.main' : 'error.main',
+            fontWeight: 'bold'
+          }}
+        >
+          {formatStatus(property.status)}
+        </Typography>
+      </StyledPropertyCard>
+
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => !isDeleting && setDeleteDialogOpen(false)}
+        PaperProps={{
+          sx: {
+            borderRadius: '15px',
+            p: 1
           }
         }}
-        anchorOrigin={{
-          vertical: 'top',
-          horizontal: 'right'
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'left'
-        }}
-        sx={{ width: '200px' }}
       >
-        <MenuItem 
-          onClick={() => handleStatusChange('available')}
-          selected={property.status === 'available'}
-        >
-          Available
-        </MenuItem>
-        <MenuItem 
-          onClick={() => handleStatusChange('in_contract')}
-          selected={property.status === 'in_contract'}
-        >
-          In Contract
-        </MenuItem>
-        <MenuItem 
-          onClick={() => handleStatusChange('rented')}
-          selected={property.status === 'rented'}
-        >
-          Rented
-        </MenuItem>
-      </Menu>
-
-      <Typography variant="h6">
-        {property.building.address.street} - Unit {property.unitNumber}
-      </Typography>
-      <Typography>
-        {property.building.address.neighborhood}, {property.building.address.borough}
-      </Typography>
-      <Typography>
-        {property.bedrooms} BR | ${property.price}/month
-      </Typography>
-      <Typography 
-        sx={{ 
-          position: 'absolute',
-          bottom: 16,
-          right: 16,
-          color: property.status === 'available' ? 'success.main' : 
-                 property.status === 'in_contract' ? 'warning.main' : 'error.main',
-          fontWeight: 'bold'
-        }}
-      >
-        {formatStatus(property.status)}
-      </Typography>
-    </StyledPropertyCard>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this listing? This action cannot be undone.
+          </DialogContentText>
+          {deleteError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {deleteError}
+            </Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => setDeleteDialogOpen(false)} 
+            disabled={isDeleting}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleDeleteConfirm} 
+            color="error"
+            disabled={isDeleting}
+          >
+            {isDeleting ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              'Delete'
+            )}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };
 

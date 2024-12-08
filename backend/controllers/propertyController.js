@@ -341,7 +341,8 @@ exports.updatePropertyStatus = async (req, res) => {
 
 exports.deleteProperty = async (req, res) => {
     try {
-        const property = await Property.findById(req.params.id);
+        const property = await Property.findById(req.params.id)
+            .populate('building');
         
         if (!property) {
             return res.status(404).json({ message: 'Property not found' });
@@ -372,10 +373,21 @@ exports.deleteProperty = async (req, res) => {
             { $pull: { savedListings: property._id } }
         );
 
-        await property.deleteOne();
+        // Check if this is the last property in the building
+        const propertiesInBuilding = await Property.countDocuments({ 
+            building: property.building._id 
+        });
+
+        // Delete the property using findByIdAndDelete
+        await Property.findByIdAndDelete(property._id);
+
+        // If this was the last property, delete the building too
+        if (propertiesInBuilding === 1) {
+            await Building.findByIdAndDelete(property.building._id);
+        }
         
         res.json({ 
-            message: 'Property and associated images deleted successfully',
+            message: 'Property and associated data deleted successfully',
             deletedProperty: property
         });
     } catch (error) {
