@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Box, Button, Typography, IconButton } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -12,16 +12,21 @@ const ImageUpload = ({
     onUpdateOrder = () => {} 
 }) => {
     const [loading, setLoading] = useState(false);
+    const fileInputRef = useRef(null);
 
     const handleFileChange = async (event) => {
+        console.log('File change event triggered');
         const files = event.target.files;
-        if (files) {
+        console.log('Selected files:', files);
+        
+        if (files && files.length > 0) {
             setLoading(true);
             try {
                 // Upload files one by one
                 for (let i = 0; i < files.length; i++) {
                     const formData = new FormData();
-                    formData.append('images', files[i]); // Using 'images' as the field name
+                    formData.append('images', files[i]);
+                    console.log('Uploading file:', files[i].name);
                     await onUpload(formData);
                 }
             } catch (error) {
@@ -29,7 +34,14 @@ const ImageUpload = ({
             } finally {
                 setLoading(false);
             }
+        } else {
+            console.log('No files selected');
         }
+    };
+
+    const handleButtonClick = () => {
+        console.log('Upload button clicked');
+        fileInputRef.current?.click();
     };
 
     const handleDragEnd = (result) => {
@@ -50,6 +62,7 @@ const ImageUpload = ({
     return (
         <Box>
             <input
+                ref={fileInputRef}
                 accept="image/*"
                 style={{ display: 'none' }}
                 id="image-upload"
@@ -57,24 +70,23 @@ const ImageUpload = ({
                 type="file"
                 onChange={handleFileChange}
             />
-            <label htmlFor="image-upload">
-                <Button
-                    variant="outlined"
-                    component="span"
-                    startIcon={<CloudUploadIcon />}
-                    sx={{
-                        mb: 2,
-                        color: '#000',
-                        borderColor: '#000',
-                        '&:hover': {
-                            borderColor: '#00008B',
-                            color: '#00008B'
-                        }
-                    }}
-                >
-                    Upload Images
-                </Button>
-            </label>
+            <Button
+                variant="outlined"
+                component="span"
+                onClick={handleButtonClick}
+                startIcon={<CloudUploadIcon />}
+                sx={{
+                    mb: 2,
+                    color: '#000',
+                    borderColor: '#000',
+                    '&:hover': {
+                        borderColor: '#00008B',
+                        color: '#00008B'
+                    }
+                }}
+            >
+                Upload Images
+            </Button>
 
             {loading && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 2, opacity: 0.8 }}>

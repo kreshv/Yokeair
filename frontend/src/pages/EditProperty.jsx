@@ -148,6 +148,31 @@ const EditProperty = () => {
         }
     };
 
+    const handleImageDelete = async (imageToDelete) => {
+        try {
+            // Remove the image from the property
+            const updatedImages = property.images.filter(image => 
+                image.url !== imageToDelete.url && image.public_id !== imageToDelete.public_id
+            );
+
+            // Update the property with the filtered images
+            const response = await updateProperty(id, {
+                images: updatedImages
+            });
+
+            // Update the local state
+            setProperty(prevProperty => ({
+                ...prevProperty,
+                images: updatedImages
+            }));
+
+            showSnackbar('Image deleted successfully', 'success');
+        } catch (err) {
+            console.error('Error deleting image:', err);
+            showSnackbar('Failed to delete image', 'error');
+        }
+    };
+
     const handleSubmit = async () => {
         try {
             const numericPrice = parseFloat(price.replace(/[^0-9.]/g, ''));
@@ -267,6 +292,7 @@ const EditProperty = () => {
                     </Typography>
                     <ImageUpload
                         onUpload={handleImageUpload}
+                        onDelete={handleImageDelete}
                         existingImages={property?.images || []}
                     />
 

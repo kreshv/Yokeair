@@ -178,12 +178,21 @@ const PropertyListing = () => {
 
   const handleImageUpload = async (formData) => {
     try {
-        const files = formData.getAll('image');
-        setImages(prev => [...prev, ...files]);
-        setImageError('');
+        console.log('PropertyListing: handleImageUpload called');
+        const files = formData.getAll('images');
+        console.log('PropertyListing: Files to upload:', files);
+        
+        if (files && files.length > 0) {
+            setImages(prev => [...prev, ...files]);
+            setImageError('');
+            console.log('PropertyListing: Images state updated');
+        } else {
+            console.log('PropertyListing: No files in FormData');
+            setImageError('No files selected');
+        }
     } catch (error) {
+        console.error('PropertyListing: Image upload error:', error);
         setImageError('Failed to upload images');
-        console.error('Image upload error:', error);
     }
   };
 

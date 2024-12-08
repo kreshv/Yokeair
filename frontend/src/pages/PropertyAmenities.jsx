@@ -127,10 +127,16 @@ const PropertyAmenities = () => {
         if (location.state?.images && location.state.images.length > 0) {
             try {
                 setUploadStatus('Uploading images...');
-                const result = await uploadPropertyImages(propertyId, location.state.images);
-                if (result.images) {
-                    setUploadStatus('Images uploaded successfully!');
+                
+                // Create a single FormData with all images
+                const formData = new FormData();
+                for (const file of location.state.images) {
+                    formData.append('image', file);
                 }
+                
+                // Upload all images in one request
+                await uploadPropertyImages(propertyId, formData);
+                setUploadStatus('Images uploaded successfully!');
             } catch (uploadError) {
                 console.error('Upload error:', uploadError);
                 setError(uploadError.message || 'Failed to upload images');
