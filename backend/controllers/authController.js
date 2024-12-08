@@ -7,7 +7,7 @@ exports.registerUser = async (req, res) => {
     try {
         console.log('Registration attempt:', {
             ...req.body,
-            password: '[REDACTED]' // Don't log the actual password
+            password: '[REDACTED]'
         });
 
         const { firstName, lastName, email, password, phone, role } = req.body;
@@ -34,14 +34,14 @@ exports.registerUser = async (req, res) => {
             return res.status(400).json({ message: 'User already exists' });
         }
 
-        // Create new user with explicit role
+        // Create new user
         user = new User({
             firstName: firstName.trim(),
             lastName: lastName.trim(),
             email: email.toLowerCase(),
             phone: phone.trim(),
             password,
-            role: role || 'client' // Default to client if role is not specified
+            role: role || 'client'
         });
 
         // Hash password
@@ -51,7 +51,7 @@ exports.registerUser = async (req, res) => {
         await user.save();
         console.log('User saved successfully:', { userId: user._id });
 
-        // Create and return JWT token
+        // Create JWT token
         const payload = {
             user: {
                 id: user.id,
@@ -63,28 +63,35 @@ exports.registerUser = async (req, res) => {
             }
         };
 
-        jwt.sign(
-            payload,
-            process.env.JWT_SECRET,
-            { expiresIn: '5h' },
-            (err, token) => {
-                if (err) {
-                    console.error('JWT Sign error:', err);
-                    throw err;
-                }
-                res.json({ 
-                    token,
-                    user: {
-                        id: user.id,
-                        firstName: user.firstName,
-                        lastName: user.lastName,
-                        email: user.email,
-                        phone: user.phone,
-                        role: user.role
+        try {
+            const token = await new Promise((resolve, reject) => {
+                jwt.sign(
+                    payload,
+                    process.env.JWT_SECRET,
+                    { expiresIn: '5h' },
+                    (err, token) => {
+                        if (err) reject(err);
+                        else resolve(token);
                     }
-                });
-            }
-        );
+                );
+            });
+
+            console.log('JWT created successfully for new user');
+            
+            return res.json({ 
+                token,
+                user: payload.user
+            });
+        } catch (jwtError) {
+            console.error('JWT Creation Error:', {
+                error: jwtError,
+                secret: process.env.JWT_SECRET ? 'Secret exists' : 'No secret found'
+            });
+            return res.status(500).json({
+                message: 'Error creating authentication token',
+                error: 'JWT creation failed'
+            });
+        }
     } catch (err) {
         console.error('Registration error details:', {
             message: err.message,
@@ -123,7 +130,7 @@ exports.loginUser = async (req, res) => {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
-        // Create and return JWT token
+        // Create JWT token
         const payload = {
             user: {
                 id: user.id,
@@ -136,29 +143,36 @@ exports.loginUser = async (req, res) => {
             }
         };
 
-        jwt.sign(
-            payload,
-            process.env.JWT_SECRET,
-            { expiresIn: '5h' },
-            (err, token) => {
-                if (err) {
-                    console.error('JWT Sign error:', err);
-                    throw err;
-                }
-                res.json({ 
-                    token,
-                    user: {
-                        id: user.id,
-                        firstName: user.firstName,
-                        lastName: user.lastName,
-                        email: user.email,
-                        phone: user.phone,
-                        role: user.role,
-                        profilePicture: user.profilePicture || null
+        // Use Promise-based JWT sign
+        try {
+            const token = await new Promise((resolve, reject) => {
+                jwt.sign(
+                    payload,
+                    process.env.JWT_SECRET,
+                    { expiresIn: '5h' },
+                    (err, token) => {
+                        if (err) reject(err);
+                        else resolve(token);
                     }
-                });
-            }
-        );
+                );
+            });
+
+            console.log('JWT created successfully');
+            
+            return res.json({ 
+                token,
+                user: payload.user
+            });
+        } catch (jwtError) {
+            console.error('JWT Creation Error:', {
+                error: jwtError,
+                secret: process.env.JWT_SECRET ? 'Secret exists' : 'No secret found'
+            });
+            return res.status(500).json({
+                message: 'Error creating authentication token',
+                error: 'JWT creation failed'
+            });
+        }
     } catch (err) {
         console.error('Login error details:', {
             message: err.message,
@@ -170,4 +184,4 @@ exports.loginUser = async (req, res) => {
             error: err.message
         });
     }
-}; 
+};
