@@ -12,7 +12,12 @@ const Feature = require('./models/Feature');
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:5173', // Frontend URL
+  origin: [
+    'https://yokeair.com', 
+    'https://www.yokeair.com', 
+    'http://localhost:5173',
+    'https://jolly-douhua-92a088.netlify.app'
+  ],
   credentials: true
 }));
 app.use(express.json());
