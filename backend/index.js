@@ -10,44 +10,22 @@ connectDB();
 // Import models for seeding
 const Feature = require('./models/Feature');
 
+// Enable pre-flight requests for all routes
+app.options('*', cors());
+
 // Detailed logging middleware
 app.use((req, res, next) => {
   console.log('Request Details:');
   console.log('Method:', req.method);
   console.log('Path:', req.path);
   console.log('Origin:', req.get('origin'));
-  console.log('Referer:', req.get('referer'));
   console.log('Headers:', req.headers);
   next();
 });
 
-// Middleware
-app.use(cors({
-  origin: function (origin, callback) {
-    const allowedOrigins = [
-      'https://yokeair.com', 
-      'https://www.yokeair.com', 
-      'http://localhost:5173',
-      'https://jolly-douhua-92a088.netlify.app',
-      null,  // Allow null origin for same-origin requests
-      undefined  // Allow undefined origin
-    ];
-    
-    console.log('Incoming Origin:', origin);
-    
-    // Always allow if origin is in the list or is null/undefined
-    if (!origin || allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    
-    console.error('CORS Error for origin:', origin);
-    return callback(new Error(`Not allowed by CORS: ${origin}`));
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Origin', 'X-Requested-With', 'Accept', 'x-auth-token'],
-  credentials: true,
-  optionsSuccessStatus: 200
-}));
+// Simple CORS middleware
+app.use(cors());
+
 app.use(express.json());
 
 // Import routes
