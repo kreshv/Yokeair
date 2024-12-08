@@ -98,5 +98,28 @@ export const resetPassword = async (passwordData) => {
     const response = await api.put('/users/reset-password', passwordData);
     return response.data;
 };
+export const bulkDeleteProperties = async (propertyIds, onProgress) => {
+    let deletedCount = 0;
+    const errors = [];
+
+    for (const propertyId of propertyIds) {
+        try {
+            await deleteProperty(propertyId);
+            deletedCount++;
+            if (onProgress) {
+                onProgress(deletedCount, propertyIds.length);
+            }
+        } catch (error) {
+            console.error(`Error deleting property ${propertyId}:`, error);
+            errors.push({ propertyId, error: error.message });
+        }
+    }
+
+    return {
+        success: deletedCount === propertyIds.length,
+        deletedCount,
+        errors
+    };
+};
 
 export default api; 

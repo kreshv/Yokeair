@@ -1,6 +1,6 @@
 const Property = require('../models/Property');
 const Building = require('../models/Building');
-const { cloudinary } = require('../config/cloudinary');
+const { upload, cloudinary } = require('../config/cloudinary');
 const Feature = require('../models/Feature');
 const User = require('../models/User');
 
@@ -440,6 +440,58 @@ exports.uploadImages = async (req, res) => {
         res.status(500).json({ 
             message: 'Error uploading images',
             error: error.message
+        });
+    }
+};
+
+exports.bulkDeleteProperties = async (req, res) => {
+    try {
+        console.log('Bulk delete request received:', req.body);
+        const { propertyIds } = req.body;
+        
+        if (!propertyIds || !Array.isArray(propertyIds) || propertyIds.length === 0) {
+            return res.status(400).json({ message: 'No properties selected for deletion' });
+        }
+
+        // Verify all properties belong to the current broker
+        const properties = await Property.find({
+            _id: { $in: propertyIds },
+            broker: req.user.id
+        });
+
+        console.log('Found properties:', properties.length);
+
+        if (properties.length !== propertyIds.length) {
+            return res.status(403).json({ 
+                message: 'You are not authorized to delete one or more of these properties' 
+            });
+        }
+
+        // Delete all properties
+        const deleteResult = await Property.deleteMany({ 
+            _id: { $in: propertyIds },
+            broker: req.user.id  // Extra safety check
+        });
+
+        console.log('Delete result:', deleteResult);
+        
+        // Remove property references from all users' savedListings
+        await User.updateMany(
+            { savedListings: { $in: propertyIds } },
+            { $pull: { savedListings: { $in: propertyIds } } }
+        );
+
+        res.json({ 
+            message: 'Properties deleted successfully',
+            deletedCount: deleteResult.deletedCount
+        });
+    } catch (error) {
+        console.error('Error in bulkDeleteProperties:', error);
+        console.error('Stack:', error.stack);
+        res.status(500).json({ 
+            message: 'Error deleting properties',
+            error: error.message,
+            stack: error.stack
         });
     }
 }; 

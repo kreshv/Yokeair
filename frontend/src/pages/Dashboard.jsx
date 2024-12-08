@@ -16,13 +16,19 @@ import {
   DialogTitle,
   Menu,
   MenuItem,
-  IconButton
+  IconButton,
+  Checkbox
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getBrokerProperties, updatePropertyStatus, deleteProperty } from '../utils/api';
+import { getBrokerProperties, updatePropertyStatus, deleteProperty, bulkDeleteProperties } from '../utils/api';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { styled } from '@mui/material/styles';
+import axios from 'axios';
+import { API_BASE_URL } from '../config.js';
+import DeleteIcon from '@mui/icons-material/Delete';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
 
 const StatusButton = ({ children, selected, onClick, sx }) => (
   <Button
@@ -61,6 +67,13 @@ const StyledPropertyCard = styled(Paper)(({ theme }) => ({
         transform: 'translateY(-2px)',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
         backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        '& .property-checkbox': {
+            opacity: 1,
+        },
+    },
+    '& .property-checkbox': {
+        opacity: 0,
+        transition: 'opacity 0.2s ease-in-out',
     },
 }));
 
@@ -74,7 +87,7 @@ const formatStatus = (status) => {
         .join(' '); // Join back into a string
 };
 
-const PropertyCard = ({ property, onStatusChange, onDelete }) => {
+const PropertyCard = ({ property, onStatusChange, onDelete, selected, onSelect }) => {
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -134,6 +147,47 @@ const PropertyCard = ({ property, onStatusChange, onDelete }) => {
   return (
     <>
       <StyledPropertyCard>
+        <Box sx={{ 
+          position: 'absolute', 
+          top: 4, 
+          left: 4, 
+          zIndex: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <Checkbox
+            className="property-checkbox"
+            checked={selected}
+            onChange={onSelect}
+            icon={<CheckBoxOutlineBlankIcon sx={{ 
+              borderRadius: '50%', 
+              color: 'grey.400',
+              fontSize: 20 
+            }} />}
+            checkedIcon={<CheckBoxIcon sx={{ 
+              borderRadius: '50%', 
+              color: 'grey.400',
+              fontSize: 20 
+            }} />}
+            sx={{ 
+              color: 'grey.400',
+              '&.Mui-checked': {
+                color: 'grey.400',
+                opacity: 1,
+              },
+              '& .MuiSvgIcon-root': {
+                borderRadius: '50%',
+                fontSize: 20,
+              },
+              padding: 0,
+              '&:hover': {
+                backgroundColor: 'transparent'
+              }
+            }}
+          />
+        </Box>
+
         <IconButton
           onClick={handleMenuClick}
           sx={{
@@ -324,8 +378,13 @@ const Dashboard = () => {
   const { user } = useAuth();
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(null);
   const [selectedStatuses, setSelectedStatuses] = useState(['available']);
+  const [selectedProperties, setSelectedProperties] = useState([]);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
+  const [deleteProgress, setDeleteProgress] = useState(null);
 
   const fetchProperties = async () => {
     try {
@@ -355,6 +414,49 @@ const Dashboard = () => {
   const filteredProperties = properties.filter(property => 
     selectedStatuses.includes(property.status)
   );
+
+  const handleSelectProperty = (propertyId) => {
+    setSelectedProperties(prev => {
+      if (prev.includes(propertyId)) {
+        return prev.filter(id => id !== propertyId);
+      } else {
+        return [...prev, propertyId];
+      }
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedProperties.length === properties.length) {
+      setSelectedProperties([]);
+    } else {
+      setSelectedProperties(properties.map(p => p._id));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    setIsDeleting(true);
+    setDeleteError(null);
+    
+    try {
+        const result = await bulkDeleteProperties(selectedProperties, (current, total) => {
+            setDeleteProgress(`Deleting ${current} of ${total} properties...`);
+        });
+        
+        if (result.success) {
+            await fetchProperties(); // Refresh the properties list
+            setSelectedProperties([]); // Clear selection
+            setBulkDeleteDialogOpen(false);
+        } else {
+            setDeleteError(`Successfully deleted ${result.deletedCount} properties, but encountered ${result.errors.length} errors.`);
+        }
+    } catch (error) {
+        console.error('Bulk delete error:', error);
+        setDeleteError('Failed to delete properties. Please try again.');
+    } finally {
+        setIsDeleting(false);
+        setDeleteProgress(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -497,16 +599,112 @@ const Dashboard = () => {
           )}
 
           <Grid container spacing={3}>
-            {filteredProperties.map((property) => (
-              <Grid item key={property._id} xs={12} md={6}>
-                <PropertyCard 
+            {properties.map((property) => (
+              <Grid item xs={12} sm={6} md={4} key={property._id}>
+                <PropertyCard
                   property={property}
                   onStatusChange={fetchProperties}
                   onDelete={fetchProperties}
+                  selected={selectedProperties.includes(property._id)}
+                  onSelect={() => handleSelectProperty(property._id)}
                 />
               </Grid>
             ))}
           </Grid>
+
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              mt: 3,
+              position: 'sticky',
+              bottom: 16,
+              zIndex: 2
+            }}
+          >
+            {selectedProperties.length > 0 && (
+              <Button
+                variant="contained"
+                color="error"
+                onClick={() => setBulkDeleteDialogOpen(true)}
+                startIcon={<DeleteIcon />}
+                sx={{ 
+                  borderRadius: '20px',
+                  textTransform: 'none',
+                  px: 3,
+                  boxShadow: 3
+                }}
+              >
+                Delete Selected ({selectedProperties.length})
+              </Button>
+            )}
+            {properties.length > 0 && (
+              <Button
+                variant="outlined"
+                onClick={handleSelectAll}
+                sx={{ 
+                  borderRadius: '20px',
+                  textTransform: 'none',
+                  px: 3,
+                  ml: 'auto',
+                  backgroundColor: 'white',
+                  boxShadow: 1
+                }}
+              >
+                {selectedProperties.length === properties.length ? 'Deselect All' : 'Select All'}
+              </Button>
+            )}
+          </Box>
+
+          <Dialog
+            open={bulkDeleteDialogOpen}
+            onClose={() => !isDeleting && setBulkDeleteDialogOpen(false)}
+            PaperProps={{
+                sx: {
+                    borderRadius: '15px',
+                    p: 1
+                }
+            }}
+          >
+            <DialogContent>
+                {!isDeleting ? (
+                    <>
+                        <DialogContentText>
+                            Are you sure you want to delete {selectedProperties.length} listing{selectedProperties.length !== 1 ? 's' : ''}? This action cannot be undone.
+                        </DialogContentText>
+                        {deleteError && (
+                            <Alert severity="error" sx={{ mt: 2 }}>
+                                {deleteError}
+                            </Alert>
+                        )}
+                    </>
+                ) : (
+                    <Box sx={{ textAlign: 'center', py: 2 }}>
+                        <CircularProgress size={40} sx={{ mb: 2 }} />
+                        <DialogContentText>
+                            {deleteProgress || 'Deleting properties...'}
+                        </DialogContentText>
+                    </Box>
+                )}
+            </DialogContent>
+            {!isDeleting && (
+                <DialogActions>
+                    <Button 
+                        onClick={() => setBulkDeleteDialogOpen(false)} 
+                        disabled={isDeleting}
+                    >
+                        Cancel
+                    </Button>
+                    <Button 
+                        onClick={handleBulkDelete} 
+                        color="error"
+                        disabled={isDeleting}
+                    >
+                        Delete
+                    </Button>
+                </DialogActions>
+            )}
+          </Dialog>
         </StyledPaper>
       </Container>
     </Box>

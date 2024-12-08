@@ -89,4 +89,26 @@ userSchema.pre('deleteOne', { document: true }, async function(next) {
     }
 });
 
+// Pre-delete middleware to remove associated properties for broker users
+userSchema.pre('deleteOne', { document: true }, async function(next) {
+    try {
+        // Only delete properties if the user is a broker
+        if (this.role === 'broker') {
+            const Property = mongoose.model('Property');
+            
+            // Find all properties by this broker
+            const properties = await Property.find({ broker: this._id });
+            
+            // Delete each property
+            for (const property of properties) {
+                await Property.findByIdAndDelete(property._id);
+            }
+        }
+        next();
+    } catch (error) {
+        console.error('Error deleting associated properties:', error);
+        next(error);
+    }
+});
+
 module.exports = mongoose.model('User', userSchema); 
