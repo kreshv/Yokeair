@@ -20,18 +20,20 @@ app.use((req, res, next) => {
   next();
 });
 
-// CORS configuration
+// CORS configuration - more permissive
 app.use(cors({
-  origin: 'https://jolly-douhua-92a088.netlify.app',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token', 'Origin', 'Accept'],
+  origin: true, // Allow all origins
   credentials: true,
-  optionsSuccessStatus: 200
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token', 'Origin', 'Accept']
 }));
 
-// Handle preflight requests
-app.options('*', (req, res) => {
-  res.status(200).end();
+// Global middleware to set CORS headers
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-auth-token, Origin, Accept');
+  next();
 });
 
 app.use(express.json());
