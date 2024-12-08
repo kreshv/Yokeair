@@ -10,9 +10,6 @@ connectDB();
 // Import models for seeding
 const Feature = require('./models/Feature');
 
-// Enable pre-flight requests for all routes
-app.options('*', cors());
-
 // Detailed logging middleware
 app.use((req, res, next) => {
   console.log('Request Details:');
@@ -23,8 +20,19 @@ app.use((req, res, next) => {
   next();
 });
 
-// Simple CORS middleware
-app.use(cors());
+// CORS configuration
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'https://jolly-douhua-92a088.netlify.app');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, x-auth-token');
+  res.header('Access-Control-Allow-Credentials', true);
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  next();
+});
 
 app.use(express.json());
 
