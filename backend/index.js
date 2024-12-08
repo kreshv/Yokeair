@@ -56,12 +56,21 @@ app.use('/api/applications', applicationRoutes);
 
 // Catch-all route for debugging
 app.use('*', (req, res) => {
-  res.status(404).json({
-    message: 'Route not found',
-    requestedPath: req.originalUrl,
-    method: req.method
+    console.log('404 Not Found:', {
+      url: req.originalUrl,
+      method: req.method,
+      headers: req.headers,
+      params: req.params,
+      query: req.query
+    });
+    res.status(404).json({
+      message: 'Route not found',
+      requestedPath: req.originalUrl,
+      method: req.method,
+      baseUrl: req.baseUrl,
+      path: req.path
+    });
   });
-});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
