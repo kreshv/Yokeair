@@ -25,7 +25,7 @@ const propertySchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['studio', '1BR', '2BR', '3BR', '4BR+'],
+        enum: ['studio', '1BR', '2BR', '3BR', '4BR'],
         required: true
     },
     status: {
