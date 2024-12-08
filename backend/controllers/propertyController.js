@@ -2,6 +2,7 @@ const Property = require('../models/Property');
 const Building = require('../models/Building');
 const { cloudinary } = require('../config/cloudinary');
 const Feature = require('../models/Feature');
+const User = require('../models/User');
 
 exports.createProperty = async (req, res) => {
     try {
@@ -364,6 +365,12 @@ exports.deleteProperty = async (req, res) => {
 
             await Promise.all(deletePromises);
         }
+
+        // Remove property reference from all users' savedListings
+        await User.updateMany(
+            { savedListings: property._id },
+            { $pull: { savedListings: property._id } }
+        );
 
         await property.deleteOne();
         
