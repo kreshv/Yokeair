@@ -1,8 +1,4 @@
 {
-  "scripts": {
-    "install:backend": "cd backend && npm install",
-    "start:backend": "cd backend && node index.js"
-  },
   "dependencies": {
     "@hello-pangea/dnd": "^17.0.0",
     "cloudinary-react": "^1.8.1"
