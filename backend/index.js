@@ -28,15 +28,20 @@ app.use(cors({
       'https://yokeair.com', 
       'https://www.yokeair.com', 
       'http://localhost:5173',
-      'https://jolly-douhua-92a088.netlify.app'
+      'https://jolly-douhua-92a088.netlify.app',
+      null,  // Allow null origin for same-origin requests
+      undefined  // Allow undefined origin
     ];
+    
     console.log('Incoming Origin:', origin);
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.error('CORS Error for origin:', origin);
-      callback(new Error(`Not allowed by CORS: ${origin}`));
+    
+    // Always allow if origin is in the list or is null/undefined
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
     }
+    
+    console.error('CORS Error for origin:', origin);
+    return callback(new Error(`Not allowed by CORS: ${origin}`));
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Origin', 'X-Requested-With', 'Accept', 'x-auth-token'],
