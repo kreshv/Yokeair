@@ -10,14 +10,30 @@ connectDB();
 // Import models for seeding
 const Feature = require('./models/Feature');
 
+// Logging middleware
+app.use((req, res, next) => {
+  console.log(`Incoming request: ${req.method} ${req.path}`);
+  console.log('Headers:', req.headers);
+  next();
+});
+
 // Middleware
 app.use(cors({
-  origin: [
-    'https://yokeair.com', 
-    'https://www.yokeair.com', 
-    'http://localhost:5173',
-    'https://jolly-douhua-92a088.netlify.app'
-  ],
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      'https://yokeair.com', 
+      'https://www.yokeair.com', 
+      'http://localhost:5173',
+      'https://jolly-douhua-92a088.netlify.app'
+    ];
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Origin', 'X-Requested-With', 'Accept', 'x-auth-token'],
   credentials: true
 }));
 app.use(express.json());
