@@ -1,7 +1,8 @@
 {
   "scripts": {
     "install:backend": "cd backend && npm install",
-    "start:backend": "cd backend && node index.js"
+    "start:backend": "cd backend && node index.js",
+    "debug-env": "node debug-env.js"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^17.0.0",

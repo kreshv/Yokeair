@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: yokeair-backend
+    env: node
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: MONGODB_URI
+        sync: false  # This ensures the value is taken from Render's environment settings
+      - key: PORT
+        value: 5001
+

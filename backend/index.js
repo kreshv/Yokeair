@@ -1,4 +1,12 @@
-require('dotenv').config();
+console.log('Current working directory:', process.cwd());
+console.log('Environment variables:', JSON.stringify(process.env, null, 2));
+
+require('dotenv').config({
+  path: process.env.NODE_ENV === 'production' 
+    ? '/opt/render/project/src/backend/.env' 
+    : '.env'
+});
+
 console.log('MONGODB_URI from process.env:', process.env.MONGODB_URI);
 console.log('MONGODB_URI type:', typeof process.env.MONGODB_URI);
 
