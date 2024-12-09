@@ -1,47 +1,27 @@
 require('dotenv').config();
-
-// Fallback configuration
-if (!process.env.MONGODB_URI) {
-  console.warn('MONGODB_URI not found in .env. Using environment variables.');
-  process.env.MONGODB_URI = 
-    process.env.RENDER_MONGODB_URI || 
-    process.env.MONGODB_CONNECTION_STRING || 
-    'your-fallback-connection-string';
-}
+console.log('MONGODB_URI from process.env:', process.env.MONGODB_URI);
+console.log('MONGODB_URI type:', typeof process.env.MONGODB_URI);
 
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const app = express();
 
-// Explicitly specify the path to the .env file
-require('dotenv').config({ 
-  path: path.resolve(__dirname, '.env'),
-  debug: true  // This will log any errors in loading the .env file
-});
-
-// Log all environment variables for debugging
-console.log('ALL ENV VARIABLES:', process.env);
-
 // Explicit connection method
 const connectMongoose = async () => {
   try {
     const uri = process.env.MONGODB_URI;
-    
-    console.log('Connection URI:', uri ? 'URI provided' : 'No URI found');
-    
+    console.log('MONGODB_URI from process.env:', uri);
     if (!uri) {
-      throw new Error('No MongoDB URI available');
+      throw new Error('MONGODB_URI is not defined in .env file');
     }
-
+    console.log('Attempting to connect with URI:', uri);
+    
     await mongoose.connect(uri);
+    
     console.log('MongoDB connected successfully');
   } catch (error) {
-    console.error('MongoDB Connection Error:', {
-      message: error.message,
-      stack: error.stack,
-      environmentVariables: Object.keys(process.env)
-    });
+    console.error('MongoDB connection error:', error);
     process.exit(1);
   }
 };
