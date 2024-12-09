@@ -18,10 +18,10 @@ const app = express();
 // Explicit connection method
 const connectMongoose = async () => {
   try {
-    const uri = process.env.MONGODB_URI;
-    console.log('MONGODB_URI from process.env:', uri);
+    const uri = process.env.MONGODB_URI || process.env.MONGO_URI;
+    console.log('Detected URI:', uri);
     if (!uri) {
-      throw new Error('MONGODB_URI is not defined in .env file');
+      throw new Error('MongoDB connection URI is not defined');
     }
     console.log('Attempting to connect with URI:', uri);
     

@@ -6,7 +6,7 @@ services:
     startCommand: cd backend && npm start
     envVars:
       - key: MONGODB_URI
-        sync: false  # This ensures the value is taken from Render's environment settings
+        value: mongodb+srv://admin:kreshnik12345@cluster0.7mtse.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
       - key: PORT
         value: 5001
 
