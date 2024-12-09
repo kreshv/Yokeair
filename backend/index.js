@@ -11,6 +11,7 @@ const app = express();
 const connectMongoose = async () => {
   try {
     const uri = process.env.MONGODB_URI;
+    console.log('MONGODB_URI from process.env:', uri);
     if (!uri) {
       throw new Error('MONGODB_URI is not defined in .env file');
     }
