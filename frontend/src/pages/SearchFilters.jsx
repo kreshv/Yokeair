@@ -164,8 +164,8 @@ const SearchFilters = () => {
                             value={priceRange}
                             onChange={(e, newValue) => setPriceRange(newValue)}
                             valueLabelDisplay="auto"
-                            min={0}
-                            max={10000}
+                            min={2000}
+                            max={6000}
                             step={100}
                             valueLabelFormat={value => `$${value}`}
                         />

@@ -193,7 +193,7 @@ const PropertyCard = ({ property, onStatusChange, onDelete, selected, onSelect }
           sx={{
             position: 'absolute',
             top: 8,
-            right: 8
+            right: -2
           }}
         >
           <MoreVertIcon />

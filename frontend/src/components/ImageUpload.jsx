@@ -20,12 +20,17 @@ const ImageUpload = ({
         console.log('Selected files:', files);
         
         if (files && files.length > 0) {
+            console.log('Files length:', files.length);
+            if (files.length > 20) {
+                console.error('You can only upload a maximum of 20 images.');
+                return;
+            }
             setLoading(true);
             try {
                 // Upload files one by one
                 for (let i = 0; i < files.length; i++) {
                     const formData = new FormData();
-                    formData.append('images', files[i]);
+                    formData.append('image', files[i]);
                     console.log('Uploading file:', files[i].name);
                     await onUpload(formData);
                 }

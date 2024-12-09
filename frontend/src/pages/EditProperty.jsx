@@ -121,7 +121,7 @@ const EditProperty = () => {
     const handleImageUpload = async (formData) => {
         try {
             setError('');
-            const file = formData.get('images'); // Using 'images' as the field name
+            const file = formData.get('image'); // Ensure the field name matches
             
             if (!file) {
                 setError('No file selected');

@@ -41,7 +41,7 @@ const PropertyListing = () => {
     { value: 3, label: '3' },
     { value: 4, label: '4' }
   ];
-  const bathroomOptions = ['1', '1.5', '2', '2.5', '3', '3.5', '4'];
+  const bathroomOptions = ['1', '1.5', '2', '2.5', '3'];
 
   useEffect(() => {
     if (!user) {

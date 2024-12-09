@@ -110,12 +110,12 @@ router.post('/:id/images',
         next();
     },
     (req, res, next) => {
-        upload.array('image', 15)(req, res, (err) => {
+        upload.array('image', 20)(req, res, (err) => {
             if (err) {
                 console.error('Multer error:', err);
                 if (err.code === 'LIMIT_UNEXPECTED_FILE') {
                     return res.status(400).json({ 
-                        message: 'Maximum 15 images allowed per upload' 
+                        message: 'Maximum 20 images allowed per upload' 
                     });
                 }
                 if (err.code === 'LIMIT_FILE_SIZE') {
@@ -125,7 +125,7 @@ router.post('/:id/images',
                 }
                 if (err.code === 'LIMIT_FILE_COUNT') {
                     return res.status(400).json({ 
-                        message: 'Too many files. Maximum 15 images allowed' 
+                        message: 'Too many files. Maximum 20 images allowed' 
                     });
                 }
                 return res.status(500).json({ 
