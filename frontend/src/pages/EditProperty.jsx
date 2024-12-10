@@ -232,6 +232,11 @@ const EditProperty = () => {
                     <Typography variant="h5" sx={{ mb: 4, color: '#00008B' }}>
                         Edit Listing
                     </Typography>
+                    {property && (
+                        <Typography variant="subtitle1" sx={{ mb: 2, color: '#000' }}>
+                            {property.building.address.street} - Unit {property.unitNumber}
+                        </Typography>
+                    )}
 
                     {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
