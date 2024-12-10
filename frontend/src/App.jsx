@@ -1,4 +1,6 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { createTheme } from '@mui/material';
@@ -44,6 +46,24 @@ const theme = createTheme({
   },
 });
 
+const PageTransition = ({ children }) => {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={location.pathname}
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -50 }}
+        transition={{ duration: 0.3 }}
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
 function App() {
   return (
     <ThemeProvider theme={theme}>
@@ -51,26 +71,28 @@ function App() {
       <AuthProvider>
         <SnackbarProvider>
           <Router>
-            <Routes>
-              <Route path="/" element={<MainLayout />}>
-                <Route index element={<Home />} />
-                <Route path="/location-selector" element={<LocationSelector />} />
-                <Route path="/search-filters" element={<SearchFilters />} />
-                <Route path="/property-listing" element={<PropertyListing />} />
-                <Route path="/property-amenities" element={<PropertyAmenities />} />
-                <Route path="/apartments" element={<ApartmentList />} />
-                <Route path="/apartments/:id" element={<ApartmentDetail />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/my-applications" element={<MyApplications />} />
-                <Route path="/saved-listings" element={<SavedListings />} />
-                <Route path="/property-listing/:id" element={<EditProperty />} />
-              </Route>
-              <Route element={<AuthLayout />}>
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-              </Route>
-            </Routes>
+            <PageTransition>
+              <Routes>
+                <Route path="/" element={<MainLayout />}>
+                  <Route index element={<Home />} />
+                  <Route path="/location-selector" element={<LocationSelector />} />
+                  <Route path="/search-filters" element={<SearchFilters />} />
+                  <Route path="/property-listing" element={<PropertyListing />} />
+                  <Route path="/property-amenities" element={<PropertyAmenities />} />
+                  <Route path="/apartments" element={<ApartmentList />} />
+                  <Route path="/apartments/:id" element={<ApartmentDetail />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/my-applications" element={<MyApplications />} />
+                  <Route path="/saved-listings" element={<SavedListings />} />
+                  <Route path="/property-listing/:id" element={<EditProperty />} />
+                </Route>
+                <Route element={<AuthLayout />}>
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                </Route>
+              </Routes>
+            </PageTransition>
           </Router>
         </SnackbarProvider>
       </AuthProvider>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Box, Typography, Paper, CircularProgress, Alert, Grid } from '@mui/material';
+import { Box, Typography, Paper, CircularProgress, Alert, Grid, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { searchProperties } from '../utils/api'; // Import the searchProperties function
@@ -28,6 +28,10 @@ const Home = () => {
     fetchApartments();
   }, []);
 
+  const handleRefineSearch = () => {
+    navigate('/location-selector');
+  };
+
   if (loading) {
     return (
       <Box
@@ -52,7 +56,7 @@ const Home = () => {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundAttachment: 'fixed',
-        py: 4,
+        py: 5,
         mt: 0,
         display: 'flex',
         justifyContent: 'center',
@@ -62,7 +66,7 @@ const Home = () => {
       <Paper
         elevation={5}
         sx={{
-          p: 5,
+          p: 6,
           maxWidth: 1200,
           width: '90%',
           borderRadius: '25px',
@@ -75,13 +79,51 @@ const Home = () => {
             boxShadow: '0 16px 32px rgba(0, 0, 0, 0.4), 0 8px 16px rgba(255, 255, 255, 0.3)',
           },
           mt: 6,
+          position: 'relative',
         }}
       >
+        <Box 
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mb: 0,
+          }}
+        >
+          <div></div> {/* Empty div to push button to the right */}
+          <Button
+            variant="contained"
+            onClick={handleRefineSearch}
+            sx={{
+              px: 2,
+              py: 0.75,
+              fontSize: '0.875rem',
+              fontWeight: 400,
+              color: '#000',
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+              backgroundColor: 'rgba(255, 255, 255, 0.8)',
+              backdropFilter: 'blur(8px)',
+              borderRadius: '15px',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+              transition: 'all 0.3s ease-in-out',
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                transform: 'translateY(-4px)',
+                color: '#00008B',
+                boxShadow: '0 6px 8px rgba(0, 0, 0, 0.2)'
+              }
+            }}
+          >
+            Refine Search
+          </Button>
+        </Box>
+
         <Typography
           variant="h6"
           sx={{
             fontWeight: 530,
-            mb: 10,
+            mb: 15,
             color: '#FFFFFF',
             textTransform: 'uppercase',
             fontSize: '1.30rem',
