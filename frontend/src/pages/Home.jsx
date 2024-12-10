@@ -87,7 +87,19 @@ const Home = () => {
             fontSize: '1.30rem',
             textAlign: 'center',
             fontFamily: 'Raleway, sans-serif', // Apply Raleway font
-            textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)', // Add text shadow for 3D effect
+            textShadow: '3px 3px 6px rgba(0, 0, 0, 0.7)', // Enhanced text shadow for a stronger 3D effect
+            position: 'relative', // Position relative for pseudo-element
+            '&::after': {
+              content: '""',
+              position: 'absolute',
+              left: '50%',
+              bottom: '-2px', // Adjust position as needed
+              width: '80%', // Width of the underline
+              height: '1px', // Further reduced height for a thinner underline
+              backgroundColor: 'rgba(255, 255, 255, 0.5)', // Smooth, transparent color
+              transform: 'translateX(-50%)', // Center the underline
+              borderRadius: '1px', // Rounded edges for a smoother look
+            },
           }}
         >
           Apartments for Rent

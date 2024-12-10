@@ -12,6 +12,7 @@ import {
 import { getSavedListings } from '../../utils/api';
 import ApartmentCard from '../../components/ApartmentCard';
 import { useNavigate } from 'react-router-dom';
+import '@fontsource/raleway';
 
 const SavedListings = () => {
     const navigate = useNavigate();
@@ -78,7 +79,31 @@ const SavedListings = () => {
                         alignItems: 'center', 
                         mb: 4 
                     }}>
-                        <Typography variant="h6" sx={{ color: '#FFFFFF', textTransform: 'uppercase', fontSize: '1.25rem' }}>
+                        <Typography
+                            variant="h6"
+                            sx={{
+                                fontWeight: 530,
+                                mb: 10,
+                                color: '#FFFFFF',
+                                textTransform: 'uppercase',
+                                fontSize: '1.25rem',
+                                textAlign: 'center',
+                                fontFamily: 'Raleway, sans-serif',
+                                textShadow: '3px 3px 6px rgba(0, 0, 0, 0.7)',
+                                position: 'relative',
+                                '&::after': {
+                                    content: '""',
+                                    position: 'absolute',
+                                    left: '50%',
+                                    bottom: '-2px',
+                                    width: '80%',
+                                    height: '1px',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                                    transform: 'translateX(-50%)',
+                                    borderRadius: '1px',
+                                },
+                            }}
+                        >
                             Saved Listings
                         </Typography>
                         <Button 
