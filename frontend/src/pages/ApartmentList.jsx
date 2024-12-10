@@ -119,7 +119,7 @@ const ApartmentList = () => {
                                         letterSpacing: '1px',
                                         backgroundColor: 'rgba(255, 255, 255, 0.8)',
                                         backdropFilter: 'blur(8px)',
-                                        borderRadius: '20px',
+                                        borderRadius: '15px',
                                         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
                                         transition: 'all 0.3s ease-in-out',
                                         '&:hover': {
@@ -170,7 +170,7 @@ const ApartmentList = () => {
                                     letterSpacing: '1px',
                                     backgroundColor: 'rgba(255, 255, 255, 0.8)',
                                     backdropFilter: 'blur(8px)',
-                                    borderRadius: '20px',
+                                    borderRadius: '15px',
                                     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
                                     transition: 'all 0.3s ease-in-out',
                                     '&:hover': {

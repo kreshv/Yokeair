@@ -202,7 +202,7 @@ const Profile = () => {
                             startIcon={<EditIcon />}
                             onClick={handleEditClick}
                             sx={{
-                                borderRadius: '25px',
+                                borderRadius: '10px',
                                 backgroundColor: 'rgba(0, 0, 139, 0.1)',
                                 color: '#00008B',
                                 textTransform: 'none',
@@ -412,7 +412,7 @@ const Profile = () => {
                         sx={{
                             color: 'text.secondary',
                             textTransform: 'none',
-                            borderRadius: '20px',
+                            borderRadius: '10px',
                             px: 3,
                             border: '1px solid rgba(0, 0, 0, 0.23)',
                             '&:hover': {
@@ -430,7 +430,7 @@ const Profile = () => {
                             backgroundColor: 'rgba(0, 0, 139, 0.1)',
                             color: '#00008B',
                             textTransform: 'none',
-                            borderRadius: '20px',
+                            borderRadius: '10px',
                             px: 3,
                             '&:hover': {
                                 backgroundColor: 'rgba(0, 0, 139, 0.2)',

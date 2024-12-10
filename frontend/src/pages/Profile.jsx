@@ -285,7 +285,7 @@ const Profile = () => {
               startIcon={<EditIcon />}
               onClick={() => setOpen(true)}
               sx={{
-                borderRadius: '25px',
+                borderRadius: '10px',
                 backgroundColor: 'rgba(0, 0, 139, 0.1)',
                 color: '#00008B',
                 textTransform: 'none',

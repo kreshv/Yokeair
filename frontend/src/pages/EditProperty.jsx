@@ -305,8 +305,8 @@ const EditProperty = () => {
                         <Button
                             onClick={handleSubmit}
                             sx={{
-                                px: 4,
-                                py: 1.5,
+                                px: 2.5,
+                                py: 1,
                                 fontSize: '1rem',
                                 fontWeight: 400,
                                 color: '#000',
@@ -314,7 +314,7 @@ const EditProperty = () => {
                                 letterSpacing: '1px',
                                 backgroundColor: 'rgba(255, 255, 255, 0.8)',
                                 backdropFilter: 'blur(8px)',
-                                borderRadius: '20px',
+                                borderRadius: '15px',
                                 boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
                                 transition: 'all 0.3s ease-in-out',
                                 '&:hover': {

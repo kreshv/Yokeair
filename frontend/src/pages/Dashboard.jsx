@@ -495,7 +495,7 @@ const Dashboard = () => {
                   letterSpacing: '1px',
                   backgroundColor: 'rgba(255, 255, 255, 0.8)',
                   backdropFilter: 'blur(8px)',
-                  borderRadius: '20px',
+                  borderRadius: '15px',
                   boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
                   transition: 'all 0.3s ease-in-out',
                   '&:hover': {
@@ -515,8 +515,8 @@ const Dashboard = () => {
                 selected={selectedStatuses.includes('available')}
                 onClick={() => handleStatusToggle('available')}
                 sx={{
-                  px: 2,
-                  py: 1,
+                  px: 1.5,
+                  py: 0.5,
                   fontSize: '0.9rem',
                   fontWeight: 400,
                   color: '#000',
@@ -524,7 +524,7 @@ const Dashboard = () => {
                   letterSpacing: '1px',
                   backgroundColor: 'rgba(255, 255, 255, 0.8)',
                   backdropFilter: 'blur(8px)',
-                  borderRadius: '20px',
+                  borderRadius: '15px',
                   boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
                   transition: 'all 0.3s ease-in-out',
                   '&:hover': {
@@ -541,8 +541,8 @@ const Dashboard = () => {
                 selected={selectedStatuses.includes('in_contract')}
                 onClick={() => handleStatusToggle('in_contract')}
                 sx={{
-                  px: 2,
-                  py: 1,
+                  px: 1.5,
+                  py: 0.5,
                   fontSize: '0.9rem',
                   fontWeight: 400,
                   color: '#000',
@@ -550,7 +550,7 @@ const Dashboard = () => {
                   letterSpacing: '1px',
                   backgroundColor: 'rgba(255, 255, 255, 0.8)',
                   backdropFilter: 'blur(8px)',
-                  borderRadius: '20px',
+                  borderRadius: '15px',
                   boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
                   transition: 'all 0.3s ease-in-out',
                   '&:hover': {
@@ -567,8 +567,8 @@ const Dashboard = () => {
                 selected={selectedStatuses.includes('rented')}
                 onClick={() => handleStatusToggle('rented')}
                 sx={{
-                  px: 2,
-                  py: 1,
+                  px: 1.5,
+                  py: 0.5,
                   fontSize: '0.9rem',
                   fontWeight: 400,
                   color: '#000',
@@ -576,7 +576,7 @@ const Dashboard = () => {
                   letterSpacing: '1px',
                   backgroundColor: 'rgba(255, 255, 255, 0.8)',
                   backdropFilter: 'blur(8px)',
-                  borderRadius: '20px',
+                  borderRadius: '15px',
                   boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
                   transition: 'all 0.3s ease-in-out',
                   '&:hover': {
@@ -629,7 +629,7 @@ const Dashboard = () => {
                 onClick={() => setBulkDeleteDialogOpen(true)}
                 startIcon={<DeleteIcon />}
                 sx={{ 
-                  borderRadius: '20px',
+                  borderRadius: '15px',
                   textTransform: 'none',
                   px: 3,
                   boxShadow: 3
@@ -643,7 +643,7 @@ const Dashboard = () => {
                 variant="outlined"
                 onClick={handleSelectAll}
                 sx={{ 
-                  borderRadius: '20px',
+                  borderRadius: '15px',
                   textTransform: 'none',
                   px: 3,
                   ml: 'auto',

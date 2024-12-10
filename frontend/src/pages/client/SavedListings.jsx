@@ -94,7 +94,7 @@ const SavedListings = () => {
                                 letterSpacing: '1px',
                                 backgroundColor: 'rgba(255, 255, 255, 0.8)',
                                 backdropFilter: 'blur(8px)',
-                                borderRadius: '20px',
+                                borderRadius: '15px',
                                 boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
                                 transition: 'all 0.3s ease-in-out',
                                 '&:hover': {
@@ -125,8 +125,8 @@ const SavedListings = () => {
                         ))}
                         {listings.length === 0 && (
                             <Grid item xs={12}>
-                                <Typography textAlign="center" color="textSecondary">
-                                    No saved listings found
+                                <Typography textAlign="center" color="#FFFFFF">
+                                    No saved listings found.
                                 </Typography>
                             </Grid>
                         )}

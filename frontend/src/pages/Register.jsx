@@ -601,7 +601,7 @@ const Register = () => {
                 fontSize: '1rem',
                 fontWeight: 400,
                 backdropFilter: 'blur(8px)',
-                borderRadius: '20px',
+                borderRadius: '15px',
                 boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
                 transition: 'all 0.3s ease-in-out',
                 '&:hover': {
