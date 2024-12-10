@@ -130,7 +130,7 @@ const ApartmentList = () => {
                                         }
                                     }}
                                 >
-                                    Refine Search
+                                    Refine Listings
                                 </Button>
                             </Box>
                             <Box sx={{ display: 'flex', gap: 2, mb: 3, justifyContent: 'flex-end' }}>
@@ -181,7 +181,7 @@ const ApartmentList = () => {
                                     }
                                 }}
                             >
-                                Refine Search
+                                Refine Listings
                             </Button>
                         </Box>
                     )}

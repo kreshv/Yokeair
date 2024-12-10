@@ -137,7 +137,7 @@ const Home = () => {
                 }
               }}
             >
-              Refine Search
+              Refine Listings
             </Button>
           </Grid>
           <Grid item xs={12}>

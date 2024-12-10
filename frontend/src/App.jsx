@@ -4,26 +4,28 @@ import { motion } from 'framer-motion';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { createTheme } from '@mui/material';
+import React, { lazy, Suspense } from 'react';
+import CircularProgress from '@mui/material/CircularProgress';
 
 // Layouts
 import MainLayout from './layouts/MainLayout';
 import AuthLayout from './layouts/AuthLayout';
 
 // Pages
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import ApartmentList from './pages/ApartmentList';
-import ApartmentDetail from './pages/ApartmentDetail';
-import LocationSelector from './pages/LocationSelector';
-import PropertyListing from './pages/PropertyListing';
-import PropertyAmenities from './pages/PropertyAmenities';
-import Dashboard from './pages/Dashboard';
-import SearchFilters from './pages/SearchFilters';
-import Profile from './pages/client/Profile';
-import MyApplications from './pages/client/MyApplications';
-import SavedListings from './pages/client/SavedListings';
-import EditProperty from './pages/EditProperty';
+const Home = lazy(() => import('./pages/Home'));
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const ApartmentList = lazy(() => import('./pages/ApartmentList'));
+const ApartmentDetail = lazy(() => import('./pages/ApartmentDetail'));
+const LocationSelector = lazy(() => import('./pages/LocationSelector'));
+const PropertyListing = lazy(() => import('./pages/PropertyListing'));
+const PropertyAmenities = lazy(() => import('./pages/PropertyAmenities'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const SearchFilters = lazy(() => import('./pages/SearchFilters'));
+const Profile = lazy(() => import('./pages/client/Profile'));
+const MyApplications = lazy(() => import('./pages/client/MyApplications'));
+const SavedListings = lazy(() => import('./pages/client/SavedListings'));
+const EditProperty = lazy(() => import('./pages/EditProperty'));
 
 // Context
 import { AuthProvider } from './context/AuthContext';
@@ -47,21 +49,7 @@ const theme = createTheme({
 });
 
 const PageTransition = ({ children }) => {
-  const location = useLocation();
-
-  return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={location.pathname}
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -50 }}
-        transition={{ duration: 0.3 }}
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
-  );
+  return children;
 };
 
 function App() {
@@ -72,26 +60,28 @@ function App() {
         <SnackbarProvider>
           <Router>
             <PageTransition>
-              <Routes>
-                <Route path="/" element={<MainLayout />}>
-                  <Route index element={<Home />} />
-                  <Route path="/location-selector" element={<LocationSelector />} />
-                  <Route path="/search-filters" element={<SearchFilters />} />
-                  <Route path="/property-listing" element={<PropertyListing />} />
-                  <Route path="/property-amenities" element={<PropertyAmenities />} />
-                  <Route path="/apartments" element={<ApartmentList />} />
-                  <Route path="/apartments/:id" element={<ApartmentDetail />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/my-applications" element={<MyApplications />} />
-                  <Route path="/saved-listings" element={<SavedListings />} />
-                  <Route path="/property-listing/:id" element={<EditProperty />} />
-                </Route>
-                <Route element={<AuthLayout />}>
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
-                </Route>
-              </Routes>
+              <Suspense fallback={<CircularProgress />}>
+                <Routes>
+                  <Route path="/" element={<MainLayout />}>
+                    <Route index element={<Home />} />
+                    <Route path="/location-selector" element={<LocationSelector />} />
+                    <Route path="/search-filters" element={<SearchFilters />} />
+                    <Route path="/property-listing" element={<PropertyListing />} />
+                    <Route path="/property-amenities" element={<PropertyAmenities />} />
+                    <Route path="/apartments" element={<ApartmentList />} />
+                    <Route path="/apartments/:id" element={<ApartmentDetail />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/my-applications" element={<MyApplications />} />
+                    <Route path="/saved-listings" element={<SavedListings />} />
+                    <Route path="/property-listing/:id" element={<EditProperty />} />
+                  </Route>
+                  <Route element={<AuthLayout />}>
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+                  </Route>
+                </Routes>
+              </Suspense>
             </PageTransition>
           </Router>
         </SnackbarProvider>

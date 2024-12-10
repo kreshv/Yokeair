@@ -411,9 +411,9 @@ const Dashboard = () => {
     });
   };
 
-  const filteredProperties = properties.filter(property => 
-    selectedStatuses.includes(property.status)
-  );
+  const filteredProperties = selectedStatuses.length > 0 
+    ? properties.filter(property => selectedStatuses.includes(property.status))
+    : properties;
 
   const handleSelectProperty = (propertyId) => {
     setSelectedProperties(prev => {
@@ -426,10 +426,10 @@ const Dashboard = () => {
   };
 
   const handleSelectAll = () => {
-    if (selectedProperties.length === properties.length) {
+    if (selectedProperties.length === filteredProperties.length) {
       setSelectedProperties([]);
     } else {
-      setSelectedProperties(properties.map(p => p._id));
+      setSelectedProperties(filteredProperties.map(p => p._id));
     }
   };
 
@@ -599,7 +599,7 @@ const Dashboard = () => {
           )}
 
           <Grid container spacing={3}>
-            {properties.map((property) => (
+            {filteredProperties.map((property) => (
               <Grid item xs={12} sm={6} md={4} key={property._id}>
                 <PropertyCard
                   property={property}
@@ -638,7 +638,7 @@ const Dashboard = () => {
                 Delete Selected ({selectedProperties.length})
               </Button>
             )}
-            {properties.length > 0 && (
+            {filteredProperties.length > 0 && (
               <Button
                 variant="outlined"
                 onClick={handleSelectAll}
@@ -651,7 +651,7 @@ const Dashboard = () => {
                   boxShadow: 1
                 }}
               >
-                {selectedProperties.length === properties.length ? 'Deselect All' : 'Select All'}
+                {selectedProperties.length === filteredProperties.length ? 'Deselect All' : 'Select All'}
               </Button>
             )}
           </Box>
