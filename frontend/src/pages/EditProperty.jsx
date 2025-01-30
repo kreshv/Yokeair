@@ -66,9 +66,11 @@ const EditProperty = () => {
     const [price, setPrice] = useState('');
     const [squareFootage, setSquareFootage] = useState('');
     const [selectedFeatures, setSelectedFeatures] = useState([]);
+    const [selectedAmenities, setSelectedAmenities] = useState([]);
     const [images, setImages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [imagesToDelete, setImagesToDelete] = useState([]);
 
     const features = [
         'Balcony',
@@ -78,15 +80,62 @@ const EditProperty = () => {
         'Washer/Dryer'
     ];
 
+    const amenities = [
+        'Elevator',
+        'Gym',
+        'Rooftop',
+        'Storage',
+        'Bike room',
+        'Laundry in building',
+        'Lounge',
+        'Garage parking',
+        'Package room'
+    ];
+
     useEffect(() => {
         const fetchProperty = async () => {
             try {
                 const response = await getProperty(id);
                 const propertyData = response.data;
+                console.log('Fetched property data:', propertyData);
+                
+                // Set basic property data
                 setProperty(propertyData);
                 setPrice(formatPrice(propertyData.price));
-                setSquareFootage(propertyData.squareFootage || '');
-                setSelectedFeatures(propertyData.features.map(f => f.name));
+                setSquareFootage(propertyData.squareFootage?.toString() || '');
+                
+                // Set features
+                const featureNames = propertyData.features?.map(feature => feature.name) || [];
+                setSelectedFeatures(featureNames);
+                
+                // Set building amenities based on our predefined list
+                if (propertyData.building?.amenities && Array.isArray(propertyData.building.amenities)) {
+                    // Map amenity IDs to our predefined amenity names
+                    const amenityMap = {
+                        '67464cf55f89f9d6444286f7': 'Elevator',
+                        '67464cf55f89f9d6444286f8': 'Gym',
+                        '67464cf55f89f9d6444286f9': 'Rooftop',
+                        '67464cf55f89f9d6444286fa': 'Storage',
+                        '67464cf55f89f9d6444286fb': 'Bike room',
+                        '67464cf55f89f9d6444286fc': 'Laundry in building',
+                        '67464cf55f89f9d6444286fd': 'Lounge',
+                        '67464cf55f89f9d6444286fe': 'Garage parking',
+                        '67464cf55f89f9d6444286ff': 'Package room'
+                    };
+
+                    const amenityNames = propertyData.building.amenities
+                        .map(id => amenityMap[id])
+                        .filter(name => name); // Filter out any undefined mappings
+                    
+                    console.log('Mapped amenity names:', amenityNames);
+                    setSelectedAmenities(amenityNames);
+                } else {
+                    console.log('No building amenities found');
+                    setSelectedAmenities([]);
+                }
+                
+                // Set images
+                setImages(propertyData.images || []);
                 setLoading(false);
             } catch (err) {
                 console.error('Error fetching property:', err);
@@ -115,6 +164,14 @@ const EditProperty = () => {
             prev.includes(featureName)
                 ? prev.filter(name => name !== featureName)
                 : [...prev, featureName]
+        );
+    };
+
+    const handleAmenityToggle = (amenityName) => {
+        setSelectedAmenities(prev => 
+            prev.includes(amenityName)
+                ? prev.filter(name => name !== amenityName)
+                : [...prev, amenityName]
         );
     };
 
@@ -173,23 +230,35 @@ const EditProperty = () => {
         }
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (e) => {
+        e.preventDefault();
         try {
             const numericPrice = parseFloat(price.replace(/[^0-9.]/g, ''));
-            const response = await updateProperty(id, {
+            const numericSquareFootage = parseInt(squareFootage);
+
+            if (isNaN(numericPrice) || numericPrice <= 0) {
+                setError('Please enter a valid price');
+                return;
+            }
+
+            const updateData = {
                 price: numericPrice,
-                squareFootage: parseInt(squareFootage),
-                unitFeatures: selectedFeatures.map(name => ({ name }))
-            });
-            
-            // Add a success snackbar
+                squareFootage: numericSquareFootage || 0,
+                features: selectedFeatures,
+                buildingAmenities: selectedAmenities,
+                images: images.map(img => ({
+                    url: img.url,
+                    public_id: img.public_id
+                }))
+            };
+
+            const response = await updateProperty(id, updateData);
+            setProperty(response.data);
             showSnackbar('Property updated successfully', 'success');
             navigate('/dashboard');
-        } catch (err) {
-            console.error('Update property error:', err);
-            const errorMessage = err.response?.data?.message || 'Failed to update property';
-            setError(errorMessage);
-            showSnackbar(errorMessage, 'error');
+        } catch (error) {
+            console.error('Error updating property:', error);
+            setError('Failed to update property. Please try again.');
         }
     };
 
@@ -233,101 +302,135 @@ const EditProperty = () => {
                         Edit Listing
                     </Typography>
                     {property && (
-                        <Typography variant="subtitle1" sx={{ mb: 2, color: '#000' }}>
-                            {property.building.address.street} - Unit {property.unitNumber}
-                        </Typography>
+                        <>
+                            <Typography 
+                                variant="h4" 
+                                sx={{ 
+                                    mb: 3, 
+                                    color: '#000',
+                                    fontWeight: 350,
+                                    fontSize: '1.5rem'
+                                }}
+                            >
+                                {property.building.address.street} - Unit {property.unitNumber}
+                            </Typography>
+                            <Grid container spacing={2} sx={{ mb: 4 }}>
+                                <Grid item xs={6}>
+                                    <TextField
+                                        fullWidth
+                                        label="Price"
+                                        value={price}
+                                        onChange={handlePriceChange}
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                                            }
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <TextField
+                                        fullWidth
+                                        label="Square Footage"
+                                        value={squareFootage}
+                                        onChange={(e) => {
+                                            const value = e.target.value.replace(/[^0-9]/g, '');
+                                            setSquareFootage(value);
+                                        }}
+                                        type="text"
+                                        InputProps={{
+                                            inputMode: 'numeric',
+                                            pattern: '[0-9]*'
+                                        }}
+                                        sx={{
+                                            '& .MuiOutlinedInput-root': {
+                                                backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                                            }
+                                        }}
+                                    />
+                                </Grid>
+                            </Grid>
+                        </>
                     )}
 
                     {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
-                    <Grid container spacing={3} direction="column">
-                        <Grid item xs={12}>
-                            <TextField
-                                fullWidth
-                                label="Price"
-                                value={price}
-                                onChange={handlePriceChange}
-                                sx={{
-                                    mb: 1,
-                                    '& .MuiOutlinedInput-root': {
-                                        backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                                    }
-                                }}
-                            />
+                    <form onSubmit={handleSubmit}>
+                        <Grid container spacing={3}>
+                            <Grid item xs={12}>
+                                <Typography variant="h6" sx={{ mb: 2, color: '#00008B' }}>
+                                    Unit Features
+                                </Typography>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 4 }}>
+                                    {features.map((feature) => (
+                                        <FeatureButton
+                                            key={feature}
+                                            name={feature}
+                                            selected={selectedFeatures.includes(feature)}
+                                            onClick={() => handleFeatureToggle(feature)}
+                                        />
+                                    ))}
+                                </Box>
+                            </Grid>
+
+                            <Grid item xs={12}>
+                                <Typography variant="h6" sx={{ mb: 2, color: '#00008B' }}>
+                                    Building Amenities
+                                </Typography>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 4 }}>
+                                    {amenities.map((amenity) => (
+                                        <FeatureButton
+                                            key={amenity}
+                                            name={amenity}
+                                            selected={selectedAmenities.includes(amenity)}
+                                            onClick={() => handleAmenityToggle(amenity)}
+                                        />
+                                    ))}
+                                </Box>
+                            </Grid>
+
+                            <Grid item xs={12}>
+                                <ImageUpload
+                                    onUpload={handleImageUpload}
+                                    existingImages={property?.images || []}
+                                    onDelete={handleImageDelete}
+                                    onUpdateOrder={(newImages) => setImages(newImages)}
+                                    onError={(errorMessage) => {
+                                        setError(errorMessage);
+                                        showSnackbar(errorMessage, 'error');
+                                    }}
+                                />
+                            </Grid>
                         </Grid>
-                        <Grid item xs={12}>
-                            <TextField
-                                fullWidth
-                                label="Square Footage"
-                                value={squareFootage}
-                                onChange={(e) => setSquareFootage(e.target.value)}
-                                type="text"
-                                InputProps={{
-                                    inputProps: {
-                                        min: undefined,
-                                        step: undefined
-                                    }
-                                }}
+
+                        <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
+                            <Button
+                                type="submit"
                                 sx={{
-                                    mb: 1,
-                                    '& .MuiOutlinedInput-root': {
-                                        backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                                    px: 2.5,
+                                    py: 1,
+                                    fontSize: '1rem',
+                                    fontWeight: 400,
+                                    color: '#000',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '1px',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                                    backdropFilter: 'blur(8px)',
+                                    borderRadius: '15px',
+                                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                                    transition: 'all 0.3s ease-in-out',
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                        transform: 'translateY(-4px)',
+                                        color: '#00008B',
+                                        boxShadow: '0 6px 8px rgba(0, 0, 0, 0.2)'
                                     }
                                 }}
-                            />
-                        </Grid>
-                    </Grid>
-
-                    <Typography variant="h6" sx={{ mt: 4, mb: 2, color: '#00008B' }}>
-                        Unit Features
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 4 }}>
-                        {features.map((feature) => (
-                            <FeatureButton
-                                key={feature}
-                                name={feature}
-                                selected={selectedFeatures.includes(feature)}
-                                onClick={() => handleFeatureToggle(feature)}
-                            />
-                        ))}
-                    </Box>
-
-                    <Typography variant="h6" sx={{ mt: 4, mb: 2, color: '#00008B' }}>
-                        Property Images
-                    </Typography>
-                    <ImageUpload
-                        onUpload={handleImageUpload}
-                        onDelete={handleImageDelete}
-                        existingImages={property?.images || []}
-                    />
-
-                    <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
-                        <Button
-                            onClick={handleSubmit}
-                            sx={{
-                                px: 2.5,
-                                py: 1,
-                                fontSize: '1rem',
-                                fontWeight: 400,
-                                color: '#000',
-                                textTransform: 'uppercase',
-                                letterSpacing: '1px',
-                                backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                                backdropFilter: 'blur(8px)',
-                                borderRadius: '15px',
-                                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                                transition: 'all 0.3s ease-in-out',
-                                '&:hover': {
-                                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                                    transform: 'translateY(-4px)',
-                                    color: '#00008B',
-                                    boxShadow: '0 6px 8px rgba(0, 0, 0, 0.2)'
-                                }
-                            }}
-                        >
-                            Save Changes
-                        </Button>
-                    </Box>
+                            >
+                                Save Changes
+                            </Button>
+                        </Box>
+                    </form>
                 </Paper>
             </Container>
         </Box>

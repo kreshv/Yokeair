@@ -37,6 +37,12 @@ const propertySchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    squareFootage: {
+        type: Number,
+        required: false,
+        default: 0,
+        min: 0
+    },
     bedrooms: {
         type: Number,
         required: true
@@ -63,5 +69,20 @@ const propertySchema = new mongoose.Schema({
         default: []
     }
 });
+
+propertySchema.index({
+    'building.address.street': 1,
+    'building.address.borough': 1,
+    unitNumber: 1
+}, { unique: true });
+
+propertySchema.index({ price: 1 });
+propertySchema.index({ createdAt: -1 });
+propertySchema.index({ 'images.public_id': 1 });
+
+propertySchema.methods.removeImages = function(publicIds) {
+    this.images = this.images.filter(img => !publicIds.includes(img.public_id));
+    return this.save();
+};
 
 module.exports = mongoose.model('Property', propertySchema); 

@@ -1,10 +1,10 @@
+const path = require('path');
 console.log('Current working directory:', process.cwd());
-console.log('Environment variables:', JSON.stringify(process.env, null, 2));
 
 require('dotenv').config({
   path: process.env.NODE_ENV === 'production' 
-    ? '/opt/render/project/src/backend/.env' 
-    : '.env'
+    ? path.join(__dirname, '.env.production')
+    : path.join(__dirname, '.env.development')
 });
 
 console.log('MONGODB_URI from process.env:', process.env.MONGODB_URI);
@@ -13,6 +13,7 @@ console.log('MONGODB_URI type:', typeof process.env.MONGODB_URI);
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const securityHeaders = require('./middleware/securityHeaders');
 const app = express();
 
 // Explicit connection method
@@ -25,7 +26,13 @@ const connectMongoose = async () => {
     }
     console.log('Attempting to connect with URI:', uri);
     
-    await mongoose.connect(uri);
+    console.log('Connection URI:', uri);
+    
+    await mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 5000,
+      retryWrites: true,
+      w: 'majority'
+    });
     
     console.log('MongoDB connected successfully');
   } catch (error) {
@@ -50,8 +57,15 @@ app.use((req, res, next) => {
   next();
 });
 
-// CORS configuration
-app.use(cors());
+// Add proper CORS configuration
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
+app.use(securityHeaders);
 
 app.use(express.json());
 
@@ -113,9 +127,22 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5001;
 
+// Replace environment variable logging with simple connection status
+console.log('Initializing server...');
+console.log('Connecting to MongoDB...');
+
+mongoose.connect(process.env.MONGODB_URI)
+    .then(() => {
+        console.log('✓ MongoDB connected successfully');
+        return seedFeatures();
+    })
+    .then(() => {
+        console.log('✓ Features seeded successfully');
+    })
+    .catch((err) => {
+        console.error('MongoDB connection error:', err.message);
+    });
+
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    
-    // Seed features on startup
-    Feature.seedFeatures().catch(console.error);
+    console.log(`✓ Server running on port ${PORT}`);
 }); 

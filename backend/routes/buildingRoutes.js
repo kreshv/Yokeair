@@ -6,7 +6,7 @@ const {
     createBuilding,
     updateBuilding
 } = require('../controllers/buildingController');
-const auth = require('../middleware/auth');
+const { auth, checkBrokerRole } = require('../middleware/auth');
 
 // Get all buildings - Public
 router.get('/', getBuildings);
@@ -15,19 +15,9 @@ router.get('/', getBuildings);
 router.get('/:id', getBuilding);
 
 // Create building - Private (Broker only)
-router.post('/', auth, async (req, res, next) => {
-    if (req.user.role !== 'broker') {
-        return res.status(403).json({ message: 'Access denied. Broker only.' });
-    }
-    next();
-}, createBuilding);
+router.post('/', auth, checkBrokerRole, createBuilding);
 
 // Update building - Private (Broker only)
-router.put('/:id', auth, async (req, res, next) => {
-    if (req.user.role !== 'broker') {
-        return res.status(403).json({ message: 'Access denied. Broker only.' });
-    }
-    next();
-}, updateBuilding);
+router.put('/:id', auth, checkBrokerRole, updateBuilding);
 
 module.exports = router; 

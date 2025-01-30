@@ -24,8 +24,8 @@ import BookmarkIcon from '@mui/icons-material/Bookmark';
 import ApartmentDetailModal from './ApartmentDetailModal';
 import { saveListing, removeSavedListing, getSavedListings } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
-import { useSnackbar } from './Snackbar';
-import { useNavigate } from 'react-router-dom';
+import { useSnackbar } from '../context/SnackbarContext';
+import { useNavigate, useLocation } from 'react-router-dom';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 
@@ -37,15 +37,36 @@ const formatPrice = (price) => {
   }).format(price);
 };
 
-const ApartmentCard = ({ apartment, isSaved: initialSaved = false, showSaveButton = true }) => {
+const ApartmentCard = ({ apartment = {}, isSaved: initialSaved = false, showSaveButton = true }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
   const [isSaved, setIsSaved] = useState(initialSaved);
   const [saveError, setSaveError] = useState('');
   const { user } = useAuth();
-  const hasMultipleImages = apartment.images?.length > 1;
+  const hasMultipleImages = apartment?.images?.length > 1;
   const { showSnackbar } = useSnackbar();
+
+  // Check if this apartment should show modal based on URL
+  useEffect(() => {
+    const apartmentIdFromUrl = location.pathname.match(/\/apartments\/([^/]+)/)?.[1];
+    if (apartmentIdFromUrl === apartment._id) {
+      setModalOpen(true);
+    }
+  }, [location.pathname, apartment._id]);
+
+  const handleCardClick = () => {
+    // Update URL without full page reload
+    navigate(`/apartments/${apartment._id}`, { replace: true });
+    setModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    // Remove apartment ID from URL when closing modal
+    navigate('/', { replace: true });
+    setModalOpen(false);
+  };
 
   // Determine if save button should be shown
   const shouldShowSaveButton = (() => {
@@ -134,18 +155,18 @@ const ApartmentCard = ({ apartment, isSaved: initialSaved = false, showSaveButto
   };
 
   const {
-    _id,
-    images,
-    price,
-    bedrooms,
-    bathrooms,
-    squareFootage,
-    features,
-    status,
-    building,
-    neighborhood,
-    borough
-  } = apartment;
+    _id = '',
+    images = [],
+    price = 0,
+    bedrooms = 0,
+    bathrooms = 0,
+    squareFootage = 0,
+    features = [],
+    status = 'unavailable',
+    building = {},
+    neighborhood = '',
+    borough = ''
+  } = apartment || {};
 
   const imageUrl = images && images.length > 0 
     ? images[0].url 
@@ -171,7 +192,7 @@ const ApartmentCard = ({ apartment, isSaved: initialSaved = false, showSaveButto
             }
           }
         }}
-        onClick={() => setModalOpen(true)}
+        onClick={handleCardClick}
       >
         <Box sx={{ position: 'relative' }}>
           {images?.length > 0 ? (
@@ -304,7 +325,7 @@ const ApartmentCard = ({ apartment, isSaved: initialSaved = false, showSaveButto
 
       <ApartmentDetailModal
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={handleModalClose}
         apartment={apartment}
       />
     </>

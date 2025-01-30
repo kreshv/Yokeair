@@ -1,106 +1,94 @@
 import React, { useState } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, CircularProgress, Alert, Paper, Typography } from '@mui/material';
-import { deleteProperty } from '../utils/api';
-import { styled } from '@mui/material/styles';
+import { useNavigate, useLocation } from 'react-router-dom';
+import {
+    Card,
+    CardMedia,
+    CardContent,
+    Typography,
+    Box,
+    Chip
+} from '@mui/material';
+import PropertyDetail from '../pages/PropertyDetail';
 
-const StyledPropertyCard = styled(Paper)(({ theme }) => ({
-    padding: theme.spacing(3),
-    borderRadius: '15px',
-    background: 'rgba(255, 255, 255, 0.8)',
-    transition: 'all 0.2s ease-in-out',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    height: '100%',
-    position: 'relative',
-    '&:hover': {
-        transform: 'translateY(-2px)',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    },
-}));
+const PropertyCard = ({ property }) => {
+    const [modalOpen, setModalOpen] = useState(false);
+    const navigate = useNavigate();
+    const location = useLocation();
 
-const PropertyCard = ({ property, onStatusChange, onDelete, selected, onSelect }) => {
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [isDeleting, setIsDeleting] = useState(false);
-    const [deleteError, setDeleteError] = useState('');
+    const handleClick = () => {
+        // If we're on the homepage, show the modal
+        if (location.pathname === '/') {
+            setModalOpen(true);
+            // Update the URL without triggering a page reload
+            window.history.pushState({}, '', `/properties/${property._id}`);
+        } else {
+            // Otherwise, navigate to the property detail page
+            navigate(`/properties/${property._id}`);
+        }
+    };
 
-    const handleDeleteConfirm = async () => {
-        setIsDeleting(true);
-        setDeleteError('');
-        
-        try {
-            await deleteProperty(property._id);
-            setDeleteDialogOpen(false);
-            onDelete(); // Refresh the property list
-        } catch (error) {
-            setDeleteError('Failed to delete property. Please try again.');
-            console.error('Delete error:', error);
-        } finally {
-            setIsDeleting(false);
+    const handleCloseModal = () => {
+        setModalOpen(false);
+        // Restore the original URL when closing the modal
+        if (location.pathname === `/properties/${property._id}`) {
+            window.history.pushState({}, '', '/');
         }
     };
 
     return (
-        <StyledPropertyCard>
-            <Typography variant="h6" noWrap>
-                {property.building.address.street} - Unit {property.unitNumber}
-            </Typography>
-            <Typography noWrap>
-                {property.building.address.neighborhood}, {property.building.address.borough}
-            </Typography>
-            <Typography noWrap>
-                {property.bedrooms} BR | ${property.price}/month
-            </Typography>
-            <Typography 
-                sx={{ 
-                    color: property.status === 'available' ? 'success.main' : 
-                           property.status === 'in_contract' ? 'warning.main' : 'error.main',
-                    fontWeight: 'bold',
-                    marginTop: 'auto', // Pushes the status text to the bottom
-                    alignSelf: 'flex-end', // Aligns the status text to the right
+        <>
+            <Card 
+                onClick={handleClick}
+                sx={{
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s ease-in-out',
+                    '&:hover': {
+                        transform: 'scale(1.02)'
+                    }
                 }}
             >
-                {formatStatus(property.status)}
-            </Typography>
+                <CardMedia
+                    component="img"
+                    height="200"
+                    image={property.images?.[0]?.url || '/placeholder.jpg'}
+                    alt={`${property.building.address.street} Unit ${property.unitNumber}`}
+                />
+                <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                        {property.building.address.street} - Unit {property.unitNumber}
+                    </Typography>
+                    <Typography variant="h6" color="primary" gutterBottom>
+                        ${property.price.toLocaleString()}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                        {property.bedrooms} BR | {property.bathrooms} Bath
+                        {property.squareFootage > 0 && ` | ${property.squareFootage} sq ft`}
+                    </Typography>
+                    <Box sx={{ mt: 1 }}>
+                        <Typography variant="body2" color="text.secondary">
+                            {property.building.address.neighborhood}, {property.building.address.borough}
+                        </Typography>
+                    </Box>
+                    <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {property.features?.slice(0, 3).map(feature => (
+                            <Chip
+                                key={feature.name}
+                                label={feature.name}
+                                size="small"
+                                sx={{ mr: 0.5 }}
+                            />
+                        ))}
+                    </Box>
+                </CardContent>
+            </Card>
 
-            <Dialog
-                open={deleteDialogOpen}
-                onClose={() => !isDeleting && setDeleteDialogOpen(false)}
-            >
-                <DialogTitle>Delete Listing</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        Are you sure you want to delete this listing? This action cannot be undone.
-                        All associated images will also be deleted.
-                    </DialogContentText>
-                    {deleteError && (
-                        <Alert severity="error" sx={{ mt: 2 }}>
-                            {deleteError}
-                        </Alert>
-                    )}
-                </DialogContent>
-                <DialogActions>
-                    <Button 
-                        onClick={() => setDeleteDialogOpen(false)} 
-                        disabled={isDeleting}
-                    >
-                        Cancel
-                    </Button>
-                    <Button 
-                        onClick={handleDeleteConfirm} 
-                        color="error"
-                        disabled={isDeleting}
-                    >
-                        {isDeleting ? (
-                            <CircularProgress size={24} color="inherit" />
-                        ) : (
-                            'Delete'
-                        )}
-                    </Button>
-                </DialogActions>
-            </Dialog>
-        </StyledPropertyCard>
+            {modalOpen && (
+                <PropertyDetail
+                    isModal={true}
+                    onClose={handleCloseModal}
+                />
+            )}
+        </>
     );
 };
 

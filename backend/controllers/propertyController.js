@@ -3,9 +3,18 @@ const Building = require('../models/Building');
 const { upload, cloudinary } = require('../config/cloudinary');
 const Feature = require('../models/Feature');
 const User = require('../models/User');
+const mongoose = require('mongoose');
+const Amenity = require('../models/Amenity');
 
 exports.createProperty = async (req, res) => {
     try {
+        // Add input validation
+        if (!req.body.address || !req.body.borough) {
+            return res.status(400).json({ 
+                message: 'Missing required fields: address and borough' 
+            });
+        }
+
         console.log('Received property data:', req.body);
 
         const {
@@ -121,86 +130,99 @@ exports.createProperty = async (req, res) => {
     } catch (error) {
         console.error('Error creating property:', error);
         res.status(500).json({
-            message: 'Error creating property listing',
-            error: error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            message: 'Server Error',
+            error: process.env.NODE_ENV === 'development' 
+                ? error.message 
+                : 'Internal server error'
         });
     }
 };
 
 exports.updateProperty = async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    
     try {
-        const { buildingAmenities, unitFeatures, price, squareFootage } = req.body;
-        const propertyId = req.params.id;
-
-        // Find the property
-        const property = await Property.findById(propertyId);
+        const { price, squareFootage, features, buildingAmenities, images } = req.body;
+        
+        // Find property
+        let property = await Property.findById(req.params.id)
+            .populate('building')
+            .populate('features')
+            .session(session);
+        
         if (!property) {
+            await session.abortTransaction();
             return res.status(404).json({ message: 'Property not found' });
         }
 
-        // Check if user is the broker of this property
-        if (property.broker.toString() !== req.user.id) {
-            return res.status(403).json({ message: 'Not authorized to update this property' });
-        }
-
-        // Update building amenities if provided
-        if (buildingAmenities && buildingAmenities.length > 0) {
-            const building = await Building.findById(property.building);
-            if (building) {
-                building.amenities = buildingAmenities;
-                await building.save();
-            }
-        }
-
-        // Update property features
-        if (unitFeatures && unitFeatures.length > 0) {
-            // Find or create features
-            const featurePromises = unitFeatures.map(async (featureData) => {
-                let feature = await Feature.findOne({ 
-                    name: featureData.name, 
-                    category: 'Unit Feature' 
-                });
-                
+        // Update basic fields
+        if (price !== undefined) property.price = price;
+        if (squareFootage !== undefined) property.squareFootage = squareFootage;
+        
+        // Update features
+        if (features) {
+            const featureIds = await Promise.all(features.map(async name => {
+                let feature = await Feature.findOne({ name }).session(session);
                 if (!feature) {
-                    feature = new Feature({ 
-                        name: featureData.name, 
-                        category: 'Unit Feature' 
-                    });
-                    await feature.save();
+                    feature = await Feature.create([{ 
+                        name,
+                        category: 'Unit Feature'
+                    }], { session });
+                    feature = feature[0];
                 }
-                
                 return feature._id;
-            });
-
-            property.features = await Promise.all(featurePromises);
-        } else {
-            // If no features are provided, clear existing features
-            property.features = [];
+            }));
+            property.features = featureIds;
         }
 
-        // Update price if provided
-        if (price !== undefined) {
-            property.price = price;
+        // Update building amenities
+        if (buildingAmenities && property.building) {
+            const amenityIds = await Promise.all(buildingAmenities.map(async name => {
+                let amenity = await Amenity.findOne({ name, type: 'building' }).session(session);
+                if (!amenity) {
+                    amenity = await Amenity.create([{
+                        name,
+                        type: 'building'
+                    }], { session });
+                    amenity = amenity[0];
+                }
+                return amenity._id;
+            }));
+
+            // Update building amenities
+            await Building.findByIdAndUpdate(
+                property.building._id,
+                { amenities: amenityIds },
+                { session }
+            );
         }
 
-        // Update square footage if provided
-        if (squareFootage !== undefined) {
-            property.squareFootage = squareFootage;
+        // Update images
+        if (images) {
+            property.images = images;
         }
 
-        await property.save();
+        // Save and populate
+        await property.save({ session });
+        await property.populate([
+            {
+                path: 'building',
+                populate: {
+                    path: 'amenities'
+                }
+            },
+            'features'
+        ]);
 
-        // Populate the updated property
-        await property.populate(['building', 'features']);
-
+        await session.commitTransaction();
         res.json(property);
     } catch (error) {
+        await session.abortTransaction();
         console.error('Error updating property:', error);
-        res.status(500).json({
-            message: 'Error updating property',
-            error: error.message
-        });
+        res.status(500).json({ message: 'Failed to update property' });
+    } finally {
+        session.endSession();
     }
 };
 
@@ -209,7 +231,11 @@ exports.getBrokerProperties = async (req, res) => {
         const properties = await Property.find({ broker: req.user.id })
             .populate({
                 path: 'building',
-                select: 'name address amenities'
+                select: 'name address amenities',
+                populate: {
+                    path: 'amenities',
+                    select: 'name type'
+                }
             })
             .populate('features')
             .sort('-createdAt');
@@ -401,74 +427,58 @@ exports.deleteProperty = async (req, res) => {
 
 exports.uploadImages = async (req, res) => {
     try {
-        // Check if files were uploaded
-        if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
-            return res.status(400).json({ message: 'No images uploaded' });
-        }
-
-        // Validate file types
-        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-        const invalidFiles = req.files.filter(file => !allowedTypes.includes(file.mimetype));
-        if (invalidFiles.length > 0) {
-            return res.status(400).json({ 
-                message: `Invalid file type(s): ${invalidFiles.map(f => f.originalname).join(', ')}. Only JPG, PNG, and WebP files are allowed.` 
+        if (!req.files || req.files.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'No files uploaded'
             });
         }
 
-        const propertyId = req.params.id;
-        const property = await Property.findById(propertyId);
-
+        const property = await Property.findById(req.params.id);
         if (!property) {
-            return res.status(404).json({ message: 'Property not found' });
+            return res.status(404).json({
+                success: false,
+                message: 'Property not found'
+            });
         }
 
-        // Check if this broker owns the property
-        if (property.broker.toString() !== req.user.id) {
-            return res.status(403).json({ message: 'Not authorized to modify this property' });
-        }
+        const uploadPromises = req.files.map(async (file) => {
+            try {
+                const result = await cloudinary.uploader.upload(file.path, {
+                    folder: 'yoke_properties',
+                    transformation: [
+                        { width: 2000, height: 2000, crop: 'limit', quality: 'auto:best' },
+                        { fetch_format: 'auto' }
+                    ]
+                });
 
-        // Initialize images array if it doesn't exist
-        if (!property.images) {
-            property.images = [];
-        }
-
-        // Process the uploaded files
-        const imageData = req.files.map(file => ({
-            url: file.path,
-            public_id: file.filename
-        }));
-
-        // Add new images to the property
-        property.images = property.images.concat(imageData);
-        
-        // Save the updated property
-        await property.save();
-
-        // Return only the newly uploaded images
-        res.json({ 
-            message: 'Images uploaded successfully',
-            images: imageData
+                return {
+                    url: result.secure_url,
+                    public_id: result.public_id
+                };
+            } catch (error) {
+                console.error('Error uploading to Cloudinary:', error);
+                throw error;
+            }
         });
 
+        const uploadedImages = await Promise.all(uploadPromises);
+
+        // Add new images to existing ones
+        property.images = [...(property.images || []), ...uploadedImages];
+        await property.save();
+
+        res.json({
+            success: true,
+            message: 'Images uploaded successfully',
+            data: property.images
+        });
     } catch (error) {
-        console.error('Error in uploadImages:', error);
-        
-        // Delete uploaded files if there was an error
-        if (req.files && Array.isArray(req.files)) {
-            for (const file of req.files) {
-                try {
-                    if (file.filename) {
-                        await deleteImage(file.filename);
-                    }
-                } catch (deleteError) {
-                    console.error('Error deleting file after upload failure:', deleteError);
-                }
-            }
-        }
-        
-        res.status(500).json({ 
+        console.error('Upload error:', error);
+        res.status(500).json({
+            success: false,
             message: 'Failed to upload images',
-            error: error.message 
+            error: error.message
         });
     }
 };
@@ -522,5 +532,35 @@ exports.bulkDeleteProperties = async (req, res) => {
             error: error.message,
             stack: error.stack
         });
+    }
+};
+
+exports.getProperty = async (req, res) => {
+    try {
+        // First, get the property with basic population
+        const property = await Property.findById(req.params.id)
+            .populate('features', 'name')
+            .populate({
+                path: 'building',
+                populate: {
+                    path: 'amenities',
+                    model: 'Amenity',
+                    select: 'name type'
+                }
+            })
+            .lean();
+
+        if (!property) {
+            return res.status(404).json({ message: 'Property not found' });
+        }
+
+        console.log('Property with populated amenities:', property.building?.amenities);
+        res.json(property);
+    } catch (error) {
+        console.error('Error fetching property:', error);
+        if (error.kind === 'ObjectId') {
+            return res.status(404).json({ message: 'Property not found' });
+        }
+        res.status(500).json({ message: 'Error fetching property' });
     }
 }; 

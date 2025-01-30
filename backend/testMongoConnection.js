@@ -11,10 +11,7 @@ async function testConnection() {
     console.log('MONGODB_URI:', MONGODB_URI);
     console.log('MONGODB_URI type:', typeof MONGODB_URI);
 
-    await mongoose.connect(MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(MONGODB_URI);
     
     console.log('MongoDB connected successfully');
     await mongoose.connection.close();

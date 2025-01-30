@@ -4,6 +4,7 @@ const API_BASE_URL = 'https://yokeair.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 10000, // 10-second timeout
   headers: {
     'Content-Type': 'application/json'
   }
@@ -56,7 +57,7 @@ export const deleteProperty = async (propertyId) => {
         throw error;
     }
 };
-export const uploadPropertyImages = async (propertyId, formData) => {
+export const uploadPropertyImages = async (propertyId, formData, onProgress) => {
     try {
         // Validate that we have a FormData object
         if (!(formData instanceof FormData)) {
@@ -74,44 +75,37 @@ export const uploadPropertyImages = async (propertyId, formData) => {
             throw new Error('Please select a maximum of 15 images at a time');
         }
 
-        // Validate each file
-        const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-
-        for (const file of files) {
-            // Check file size
-            if (file.size > MAX_FILE_SIZE) {
-                throw new Error(`File ${file.name} is too large. Maximum size is 5MB`);
-            }
-
-            // Check file type
-            const fileType = file.type || '';
-            const fileExtension = file.name.split('.').pop().toLowerCase();
-            const isValidType = allowedTypes.includes(fileType) || 
-                              ['jpg', 'jpeg', 'png', 'webp'].includes(fileExtension);
-
-            if (!isValidType) {
-                throw new Error(`File ${file.name} is not a supported image type. Please use JPG, PNG, or WebP files.`);
-            }
-        }
+        // Log the upload attempt
+        console.log(`Attempting to upload ${files.length} files to property ${propertyId}`);
 
         // Upload all files in one request
         const response = await api.post(`/properties/${propertyId}/images`, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             },
-            timeout: 60000,
+            timeout: 60000, // 60 second timeout for large uploads
             maxBodyLength: Infinity,
             maxContentLength: Infinity,
             onUploadProgress: (progressEvent) => {
                 const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
                 console.log('Upload progress:', percentCompleted + '%');
+                if (onProgress) {
+                    onProgress(percentCompleted);
+                }
             }
         });
+
+        // Log the response
+        console.log('Upload response:', response.data);
+
+        if (!response.data.success && !response.data.images) {
+            throw new Error(response.data.message || 'Upload failed');
+        }
 
         return response.data;
     } catch (error) {
         console.error('Error in uploadPropertyImages:', error);
+        
         if (error.code === 'ECONNABORTED') {
             throw new Error('Upload timed out. Please try again.');
         }
@@ -184,5 +178,8 @@ export const bulkDeleteProperties = async (propertyIds, onProgress) => {
         errors
     };
 };
+
+// Add cancellation token support
+export const createCancelToken = () => axios.CancelToken.source();
 
 export default api; 

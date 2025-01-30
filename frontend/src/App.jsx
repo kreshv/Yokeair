@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { motion } from 'framer-motion';
 import { ThemeProvider } from '@mui/material/styles';
@@ -26,10 +26,11 @@ const Profile = lazy(() => import('./pages/client/Profile'));
 const MyApplications = lazy(() => import('./pages/client/MyApplications'));
 const SavedListings = lazy(() => import('./pages/client/SavedListings'));
 const EditProperty = lazy(() => import('./pages/EditProperty'));
+const PropertyDetail = lazy(() => import('./pages/PropertyDetail'));
 
 // Context
 import { AuthProvider } from './context/AuthContext';
-import { SnackbarProvider } from './components/Snackbar';
+import { SnackbarProvider } from './context/SnackbarContext';
 
 const theme = createTheme({
   palette: {
@@ -52,7 +53,7 @@ const PageTransition = ({ children }) => {
   return children;
 };
 
-function App() {
+const App = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -64,17 +65,18 @@ function App() {
                 <Routes>
                   <Route path="/" element={<MainLayout />}>
                     <Route index element={<Home />} />
+                    <Route path="/apartments/:id" element={<Home />} />
                     <Route path="/location-selector" element={<LocationSelector />} />
                     <Route path="/search-filters" element={<SearchFilters />} />
                     <Route path="/property-listing" element={<PropertyListing />} />
                     <Route path="/property-amenities" element={<PropertyAmenities />} />
                     <Route path="/apartments" element={<ApartmentList />} />
-                    <Route path="/apartments/:id" element={<ApartmentDetail />} />
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/my-applications" element={<MyApplications />} />
                     <Route path="/saved-listings" element={<SavedListings />} />
                     <Route path="/property-listing/:id" element={<EditProperty />} />
+                    <Route path="/properties/:id" element={<PropertyDetail />} />
                   </Route>
                   <Route element={<AuthLayout />}>
                     <Route path="/login" element={<Login />} />
@@ -88,6 +90,6 @@ function App() {
       </AuthProvider>
     </ThemeProvider>
   );
-}
+};
 
 export default App;

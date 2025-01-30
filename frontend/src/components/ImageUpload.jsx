@@ -9,7 +9,8 @@ const ImageUpload = ({
     onUpload, 
     existingImages = [], 
     onDelete = () => {}, 
-    onUpdateOrder = () => {} 
+    onUpdateOrder = () => {},
+    onError = () => {}
 }) => {
     const [loading, setLoading] = useState(false);
     const fileInputRef = useRef(null);
@@ -19,28 +20,54 @@ const ImageUpload = ({
         const files = event.target.files;
         console.log('Selected files:', files);
         
-        if (files && files.length > 0) {
-            console.log('Files length:', files.length);
-            if (files.length > 20) {
-                console.error('You can only upload a maximum of 20 images.');
+        if (!files || files.length === 0) {
+            console.error('No files selected');
+            onError('Please select at least one image');
+            return;
+        }
+
+        if (files.length > 20) {
+            console.error('You can only upload a maximum of 20 images.');
+            onError('You can only upload a maximum of 20 images');
+            return;
+        }
+
+        // Validate file types and sizes
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        const maxSize = 5 * 1024 * 1024; // 5MB
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            if (!allowedTypes.includes(file.type)) {
+                onError(`File "${file.name}" is not a supported image type. Please use JPG, PNG, or WebP files.`);
                 return;
             }
-            setLoading(true);
-            try {
-                // Upload files one by one
-                for (let i = 0; i < files.length; i++) {
-                    const formData = new FormData();
-                    formData.append('image', files[i]);
-                    console.log('Uploading file:', files[i].name);
-                    await onUpload(formData);
-                }
-            } catch (error) {
-                console.error('Upload error:', error);
-            } finally {
-                setLoading(false);
+            if (file.size > maxSize) {
+                onError(`File "${file.name}" is too large. Maximum size is 5MB.`);
+                return;
             }
-        } else {
-            console.log('No files selected');
+        }
+
+        try {
+            // Create a single FormData object for all files
+            const formData = new FormData();
+            Array.from(files).forEach((file, index) => {
+                formData.append('image', file);
+                console.log(`Appending file ${index}:`, file.name);
+            });
+            
+            console.log('FormData created with files:', formData.getAll('image').length);
+            
+            // Pass the files to parent component
+            await onUpload(formData);
+            
+            // Clear the file input
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            onError(error.message || 'Failed to process images');
         }
     };
 
@@ -55,6 +82,16 @@ const ImageUpload = ({
         const [removed] = reorderedImages.splice(result.source.index, 1);
         reorderedImages.splice(result.destination.index, 0, removed);
         onUpdateOrder(reorderedImages);
+    };
+
+    const handleDeleteImage = (index) => {
+        const newImages = [...existingImages];
+        const deletedImage = newImages.splice(index, 1)[0];
+        
+        // Notify parent of deletion
+        onDelete(deletedImage.public_id);
+        
+        onUpdateOrder(newImages);
     };
 
     const getImageUrl = (image) => {
@@ -145,7 +182,7 @@ const ImageUpload = ({
                                                 }}
                                             />
                                             <IconButton
-                                                onClick={() => onDelete(image)}
+                                                onClick={() => handleDeleteImage(index)}
                                                 sx={{
                                                     position: 'absolute',
                                                     top: 4,

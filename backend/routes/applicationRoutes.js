@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth');
+const { auth, checkBrokerRole, checkClientRole } = require('../middleware/auth');
 const { 
     submitApplication,
     getUserApplications,
@@ -12,44 +12,24 @@ const {
 const upload = require('../middleware/upload');
 
 // Submit new application - Private (Client only)
-router.post('/', auth, async (req, res, next) => {
-    if (req.user.role !== 'client') {
-        return res.status(403).json({ message: 'Only clients can submit applications' });
-    }
-    next();
-}, submitApplication);
+router.post('/', auth, checkClientRole, submitApplication);
 
 // Get user's applications - Private (Client)
-router.get('/my-applications', auth, getUserApplications);
+router.get('/my-applications', auth, checkClientRole, getUserApplications);
 
 // Get applications for broker's properties - Private (Broker only)
-router.get('/broker-applications', auth, async (req, res, next) => {
-    if (req.user.role !== 'broker') {
-        return res.status(403).json({ message: 'Access denied. Broker only.' });
-    }
-    next();
-}, getBrokerApplications);
+router.get('/broker-applications', auth, checkBrokerRole, getBrokerApplications);
 
 // Get application by ID - Private
 router.get('/:id', auth, getApplicationById);
 
 // Update application status - Private (Broker only)
-router.patch('/:id/status', auth, async (req, res, next) => {
-    if (req.user.role !== 'broker') {
-        return res.status(403).json({ message: 'Access denied. Broker only.' });
-    }
-    next();
-}, updateApplicationStatus);
+router.patch('/:id/status', auth, checkBrokerRole, updateApplicationStatus);
 
 // Upload document - Private (Client only)
 router.post('/:id/documents', 
     auth, 
-    async (req, res, next) => {
-        if (req.user.role !== 'client') {
-            return res.status(403).json({ message: 'Only clients can upload documents' });
-        }
-        next();
-    },
+    checkClientRole,
     upload.single('document'),
     uploadDocument
 );

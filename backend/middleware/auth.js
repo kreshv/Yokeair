@@ -21,4 +21,20 @@ const auth = (req, res, next) => {
     }
 };
 
-module.exports = auth; 
+const checkBrokerRole = (req, res, next) => {
+    if (req.user && req.user.role === 'broker') {
+        next();
+    } else {
+        res.status(403).json({ message: 'Access denied. Broker only.' });
+    }
+};
+
+const checkClientRole = (req, res, next) => {
+    if (req.user && req.user.role === 'client') {
+        next();
+    } else {
+        res.status(403).json({ message: 'Access denied. Client only.' });
+    }
+};
+
+module.exports = { auth, checkBrokerRole, checkClientRole }; 

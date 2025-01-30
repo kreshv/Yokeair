@@ -7,7 +7,8 @@ import {
   Button, 
   MenuItem,
   Typography,
-  Alert
+  Alert,
+  CircularProgress
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { getLocations, checkUnitAvailability, createProperty, uploadPropertyImages } from '../utils/api';
@@ -32,6 +33,8 @@ const PropertyListing = () => {
   const [submitError, setSubmitError] = useState('');
   const [images, setImages] = useState([]);
   const [imageError, setImageError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const boroughs = ['Manhattan', 'Brooklyn', 'Queens', 'Bronx', 'Staten Island'];
   const bedroomOptions = [
@@ -114,6 +117,8 @@ const PropertyListing = () => {
         return;
     }
 
+    setSubmitError('');
+
     const propertyData = {
         ...formData,
         bedrooms: parseInt(formData.bedrooms),
@@ -125,14 +130,17 @@ const PropertyListing = () => {
 
     if (user) {
         try {
+            // Create property
             const propertyResponse = await createProperty({
                 ...propertyData,
                 broker: user.id
             });
             
+            const propertyId = propertyResponse.data._id;
+            
             navigate('/property-amenities', { 
                 state: { 
-                    propertyId: propertyResponse.data._id,
+                    propertyId,
                     userId: user.id,
                     images: images
                 }
@@ -179,26 +187,48 @@ const PropertyListing = () => {
   const handleImageUpload = async (formData) => {
     try {
         console.log('PropertyListing: handleImageUpload called');
-        const files = formData.getAll('images');
+        const files = formData.getAll('image');
         console.log('PropertyListing: Files to upload:', files);
         
         if (files && files.length > 0) {
+            // Store the files temporarily
             setImages(prev => [...prev, ...files]);
             setImageError('');
-            console.log('PropertyListing: Images state updated');
+            console.log('PropertyListing: Images stored temporarily');
         } else {
             console.log('PropertyListing: No files in FormData');
             setImageError('No files selected');
         }
     } catch (error) {
         console.error('PropertyListing: Image upload error:', error);
-        setImageError('Failed to upload images');
+        setImageError(error.message || 'Failed to upload images');
     }
   };
 
   const handleImageDelete = (imageToDelete) => {
     setImages(prev => prev.filter(img => img !== imageToDelete));
   };
+
+  // Add loading overlay component
+  const LoadingOverlay = () => (
+    <Box
+      sx={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 9999,
+      }}
+    >
+      <CircularProgress size={60} sx={{ color: 'white' }} />
+    </Box>
+  );
 
   return (
     <Box
@@ -214,6 +244,7 @@ const PropertyListing = () => {
         overflowY: 'auto'
       }}
     >
+      {loading && <LoadingOverlay />}
       <Container maxWidth="sm">
         <Paper 
           elevation={5}
@@ -384,19 +415,17 @@ const PropertyListing = () => {
             />
           </Box>
 
-          <Box sx={{ mt: 3 }}>
-            <Typography variant="h6" sx={{ mb: 2, color: '#00008B' }}>
-              Property Images
-            </Typography>
+          <Box sx={{ mb: 3 }}>
             <ImageUpload
-              onUpload={handleImageUpload}
-              existingImages={images}
-              onDelete={handleImageDelete}
+                onUpload={handleImageUpload}
+                existingImages={images}
+                onDelete={handleImageDelete}
+                onError={setImageError}
             />
             {imageError && (
-              <Typography color="error" sx={{ mt: 1 }}>
-                {imageError}
-              </Typography>
+                <Typography color="error" variant="body2" sx={{ mt: 1 }}>
+                    {imageError}
+                </Typography>
             )}
           </Box>
         </Paper>

@@ -1,19 +1,54 @@
 import axios from 'axios';
 
-const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL, // Use the environment variable
+const API_URL = 'http://localhost:5000/api';
+
+// Configure axios with default headers
+axios.interceptors.request.use(config => {
+    const token = localStorage.getItem('token');
+    if (token) {
+        config.headers['x-auth-token'] = token;
+    }
+    return config;
 });
 
-export const fetchData = async () => {
-    const response = await api.get('/your-endpoint'); // Adjust the endpoint as needed
-    return response.data;
+// Property endpoints
+export const getProperty = async (id) => {
+    try {
+        const response = await axios.get(`${API_URL}/properties/${id}`);
+        return response;
+    } catch (error) {
+        throw error.response?.data || error.message;
+    }
 };
 
-export const uploadPropertyImages = async (id, formData) => {
-    const response = await api.post(`/properties/${id}/images`, formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
-    });
-    return response.data;
+export const updateProperty = async (id, data) => {
+    try {
+        const response = await axios.put(`${API_URL}/properties/${id}`, data);
+        return response;
+    } catch (error) {
+        throw error.response?.data || error.message;
+    }
+};
+
+export const uploadPropertyImages = async (propertyId, formData, onProgress) => {
+    try {
+        const response = await axios.post(
+            `${API_URL}/properties/${propertyId}/images`,
+            formData,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                },
+                onUploadProgress: progressEvent => {
+                    if (onProgress) {
+                        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                        onProgress(percentCompleted);
+                    }
+                }
+            }
+        );
+        return response;
+    } catch (error) {
+        throw error.response?.data || error.message;
+    }
 }; 
