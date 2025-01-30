@@ -16,6 +16,39 @@ const mongoose = require('mongoose');
 const securityHeaders = require('./middleware/securityHeaders');
 const app = express();
 
+// Import models for seeding
+const Feature = require('./models/Feature');
+
+// Seed features function
+const seedFeatures = async () => {
+  try {
+    // Check if features already exist
+    const count = await Feature.countDocuments();
+    if (count > 0) {
+      console.log('Features already seeded, skipping...');
+      return;
+    }
+
+    // Default features to seed
+    const defaultFeatures = [
+      { name: 'Hardwood Floors', type: 'apartment' },
+      { name: 'Stainless Steel Appliances', type: 'apartment' },
+      { name: 'Central Air', type: 'apartment' },
+      { name: 'In-Unit Washer/Dryer', type: 'apartment' },
+      { name: 'Dishwasher', type: 'apartment' },
+      { name: 'Walk-In Closet', type: 'apartment' },
+      { name: 'Balcony', type: 'apartment' },
+      { name: 'High Ceilings', type: 'apartment' }
+    ];
+
+    await Feature.insertMany(defaultFeatures);
+    console.log('Features seeded successfully');
+  } catch (error) {
+    console.error('Error seeding features:', error);
+    // Don't throw the error, just log it
+  }
+};
+
 // Explicit connection method
 const connectMongoose = async () => {
   try {
@@ -35,17 +68,21 @@ const connectMongoose = async () => {
     });
     
     console.log('MongoDB connected successfully');
+    
+    // Seed features after successful connection
+    await seedFeatures();
+    
   } catch (error) {
     console.error('MongoDB connection error:', error);
-    process.exit(1);
+    // Don't exit process in production
+    if (process.env.NODE_ENV !== 'production') {
+      process.exit(1);
+    }
   }
 };
 
 // Call the connection function
 connectMongoose();
-
-// Import models for seeding
-const Feature = require('./models/Feature');
 
 // Detailed logging middleware
 app.use((req, res, next) => {
@@ -127,21 +164,9 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5001;
 
-// Replace environment variable logging with simple connection status
+// Initialize server
 console.log('Initializing server...');
 console.log('Connecting to MongoDB...');
-
-mongoose.connect(process.env.MONGODB_URI)
-    .then(() => {
-        console.log('✓ MongoDB connected successfully');
-        return seedFeatures();
-    })
-    .then(() => {
-        console.log('✓ Features seeded successfully');
-    })
-    .catch((err) => {
-        console.error('MongoDB connection error:', err.message);
-    });
 
 app.listen(PORT, () => {
     console.log(`✓ Server running on port ${PORT}`);
