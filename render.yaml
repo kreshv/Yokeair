@@ -3,10 +3,26 @@ services:
     name: yokeair-backend
     env: node
     buildCommand: cd backend && npm install
-    startCommand: cd backend && npm start
+    startCommand: cd backend && npm run start
     envVars:
       - key: MONGODB_URI
         value: mongodb+srv://admin:kreshnik12345@cluster0.7mtse.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+      - key: JWT_SECRET
+        value: 2d74a2e8f1c6b9453ae7d85f4b3a90c6e1d8f7b2a5c9e4
+      - key: EMAIL_USERNAME
+        value: Yokeair@gmail.com
+      - key: EMAIL_PASSWORD
+        value: gqtjsnvhswpbmxvx
+      - key: FRONTEND_URL
+        value: https://jolly-douhua-92a088.netlify.app
+      - key: CLOUDINARY_CLOUD_NAME
+        value: deywdn3g4
+      - key: CLOUDINARY_API_KEY
+        value: 515656386823227
+      - key: CLOUDINARY_API_SECRET
+        value: jIbn34Dlu7fZga-S96h2PZXqc2Y
+      - key: NODE_ENV
+        value: production
       - key: PORT
-        value: 5001
+        value: 10000
 
