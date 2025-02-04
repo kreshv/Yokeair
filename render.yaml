@@ -3,7 +3,7 @@ services:
     name: yokeair-backend
     env: node
     buildCommand: cd backend && npm install
-    startCommand: cd backend && npm run start
+    startCommand: cd backend && npm start
     envVars:
       - key: MONGODB_URI
         value: mongodb+srv://admin:kreshnik12345@cluster0.7mtse.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
