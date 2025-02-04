@@ -8,7 +8,8 @@ import {
   MenuItem,
   Typography,
   Alert,
-  CircularProgress
+  CircularProgress,
+  Grid
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { getLocations, checkUnitAvailability, createProperty, uploadPropertyImages } from '../utils/api';
@@ -415,7 +416,7 @@ const PropertyListing = () => {
             />
           </Box>
 
-          <Box sx={{ mb: 3 }}>
+          <Grid item xs={12} sx={{ mt: 4 }}>
             <ImageUpload
                 onUpload={handleImageUpload}
                 existingImages={images}
@@ -427,7 +428,7 @@ const PropertyListing = () => {
                     {imageError}
                 </Typography>
             )}
-          </Box>
+          </Grid>
         </Paper>
       </Container>
 

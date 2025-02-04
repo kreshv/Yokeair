@@ -344,24 +344,16 @@ const Register = () => {
       };
 
       const response = await register(userData);
-      login(response.data.token);
-
-      if (!formData.isBroker && location.state?.fromSave) {
-        const returnTo = location.state?.returnTo;
-        const listingId = returnTo?.split('/').pop();
-        
-        if (listingId) {
-          try {
-            await saveListing(listingId);
-          } catch (saveError) {
-            console.error('Failed to save listing:', saveError);
-          }
-        }
-        
-        navigate('/');
-      } else if (formData.isBroker && fromShowcasing) {
-        navigate('/property-listing');
-      } else {
+      if (response.data.token) {
+        login(response.data.token);
+        // Send verification email
+        await resendVerificationEmail();
+        // Show success message
+        setSnackbar({
+          open: true,
+          message: 'Registration successful! Please check your email for verification.',
+          severity: 'success'
+        });
         navigate('/');
       }
     } catch (err) {
@@ -439,7 +431,15 @@ const Register = () => {
             </Alert>
           )}
 
-          <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <Box 
+            component="form"
+            onSubmit={handleSubmit}
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2
+            }}
+          >
             <Box sx={{ display: 'flex', gap: 2 }}>
               <TextField
                 fullWidth
@@ -587,7 +587,7 @@ const Register = () => {
               label="This is a Brokerage Account"
             />
 
-            <Button 
+            <Button
               type="submit"
               variant="contained"
               size="large"

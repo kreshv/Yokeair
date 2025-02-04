@@ -32,10 +32,18 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['client', 'broker'],
+        enum: ['client', 'broker', 'admin'],
         required: true,
         default: 'client'
     },
+    isEmailVerified: {
+        type: Boolean,
+        default: false
+    },
+    emailVerificationToken: String,
+    emailVerificationExpires: Date,
+    passwordResetToken: String,
+    passwordResetExpires: Date,
     profilePicture: {
         type: String,
         default: null

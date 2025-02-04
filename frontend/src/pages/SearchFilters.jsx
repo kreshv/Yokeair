@@ -13,7 +13,7 @@ import {
     Divider
 } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getAmenities } from '../utils/api';
+import { getAmenities, getUnitFeatures } from '../utils/api';
 
 const AmenityButton = ({ name, selected, onClick }) => (
     <Button
@@ -69,6 +69,7 @@ const SearchFilters = () => {
     const [selectedAmenities, setSelectedAmenities] = useState([]);
     const [selectedFeatures, setSelectedFeatures] = useState([]);
     const [amenities, setAmenities] = useState({ building: [], unit: [] });
+    const [unitFeatures, setUnitFeatures] = useState([]);
 
     useEffect(() => {
         const fetchAmenities = async () => {
@@ -84,6 +85,18 @@ const SearchFilters = () => {
         };
 
         fetchAmenities();
+    }, []);
+
+    useEffect(() => {
+        const fetchUnitFeatures = async () => {
+            try {
+                const response = await getUnitFeatures();
+                setUnitFeatures(response.data);
+            } catch (error) {
+                console.error('Error fetching unit features:', error);
+            }
+        };
+        fetchUnitFeatures();
     }, []);
 
     const handleSearch = () => {
@@ -233,7 +246,7 @@ const SearchFilters = () => {
                         Unit Features
                     </Typography>
                     <Box sx={{ pl: 2, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                        {amenities.unit.map((feature) => (
+                        {unitFeatures.map((feature) => (
                             <AmenityButton
                                 key={feature._id}
                                 name={feature.name}

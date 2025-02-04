@@ -1,10 +1,12 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://yokeair.onrender.com/api';
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://yokeair.onrender.com/api'
+  : 'http://localhost:5001/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000, // 10-second timeout
+  timeout: 30000, // Increased timeout for production
   headers: {
     'Content-Type': 'application/json'
   }
@@ -43,7 +45,7 @@ export const checkUnitAvailability = (address, borough, unitNumber) =>
   api.get('/properties/check-unit', { params: { address, borough, unitNumber } });
 export const checkEmailAvailability = (email) => 
   api.get('/auth/check-email', { params: { email } });
-export const getBrokerProperties = () => api.get('/properties/broker');
+export const getBrokerProperties = () => api.get('/properties');
 export const searchProperties = (params) => 
   api.get('/properties/search', { params });
 export const updatePropertyStatus = (propertyId, status) => 
@@ -77,9 +79,17 @@ export const uploadPropertyImages = async (propertyId, formData, onProgress) => 
 
         // Log the upload attempt
         console.log(`Attempting to upload ${files.length} files to property ${propertyId}`);
+        console.log('Files to upload:', files.map(f => ({ name: f.name, type: f.type, size: f.size })));
+
+        // Create a new FormData instance to ensure proper structure
+        const newFormData = new FormData();
+        files.forEach((file, index) => {
+            console.log(`Appending file ${index}:`, file.name);
+            newFormData.append('image', file);
+        });
 
         // Upload all files in one request
-        const response = await api.post(`/properties/${propertyId}/images`, formData, {
+        const response = await api.post(`/properties/${propertyId}/images`, newFormData, {
             headers: {
                 'Content-Type': 'multipart/form-data'
             },
@@ -105,6 +115,11 @@ export const uploadPropertyImages = async (propertyId, formData, onProgress) => 
         return response.data;
     } catch (error) {
         console.error('Error in uploadPropertyImages:', error);
+        console.error('Error details:', {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status
+        });
         
         if (error.code === 'ECONNABORTED') {
             throw new Error('Upload timed out. Please try again.');
@@ -138,7 +153,7 @@ export const removeSavedListing = (propertyId) => api.delete(`/users/saved-listi
 export const getProperty = (id) => api.get(`/properties/${id}`);
 export const updateProperty = async (propertyId, updateData) => {
     try {
-        const response = await api.patch(`/properties/${propertyId}`, updateData);
+        const response = await api.put(`/properties/${propertyId}`, updateData);
         return response.data;
     } catch (error) {
         console.error('Error updating property:', error);
@@ -151,8 +166,8 @@ export const updateProfilePicture = async (imageUrl) => {
     return response.data;
 };
 export const deleteUserAccount = () => api.delete('/users/account');
-export const resetPassword = async (passwordData) => {
-    const response = await api.put('/users/reset-password', passwordData);
+export const resetPassword = async (token, newPassword) => {
+    const response = await api.post(`/auth/reset-password/${token}`, { password: newPassword });
     return response.data;
 };
 export const bulkDeleteProperties = async (propertyIds, onProgress) => {
@@ -181,5 +196,31 @@ export const bulkDeleteProperties = async (propertyIds, onProgress) => {
 
 // Add cancellation token support
 export const createCancelToken = () => axios.CancelToken.source();
+
+// Add export for getUnitFeatures API call
+export const getUnitFeatures = () => api.get('/features/unit');
+
+export const verifyEmail = async (token) => {
+    const response = await api.get(`/auth/verify-email/${token}`);
+    return response.data;
+};
+
+export const resendVerificationEmail = async () => {
+    const response = await api.post('/auth/send-verification');
+    return response.data;
+};
+
+export const requestPasswordReset = async (email) => {
+    const response = await api.post('/auth/forgot-password', { email });
+    return response.data;
+};
+
+export const changePassword = async (currentPassword, newPassword) => {
+    const response = await api.post('/auth/change-password', {
+        currentPassword,
+        newPassword
+    });
+    return response.data;
+};
 
 export default api; 

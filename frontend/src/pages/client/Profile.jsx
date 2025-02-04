@@ -20,6 +20,7 @@ import {
 import { Edit as EditIcon, Save as SaveIcon, Cancel as CancelIcon, PhotoCamera } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import { updateUserProfile, updateProfilePicture } from '../../utils/api';
+import ChangePasswordDialog from '../../components/ChangePasswordDialog';
 
 const Profile = () => {
     const { user, updateUser } = useAuth();
@@ -34,6 +35,7 @@ const Profile = () => {
     const [success, setSuccess] = useState('');
     const cloudinaryRef = useRef();
     const widgetRef = useRef();
+    const [changePasswordOpen, setChangePasswordOpen] = useState(false);
 
     const handleEditClick = () => {
         setFormData({
@@ -290,6 +292,20 @@ const Profile = () => {
                             </Grid>
                         )}
                     </Grid>
+
+                    <Button
+                        variant="contained"
+                        onClick={() => setChangePasswordOpen(true)}
+                        sx={{
+                            mt: 2,
+                            backgroundColor: 'rgba(0, 0, 139, 0.8)',
+                            '&:hover': {
+                                backgroundColor: 'rgba(0, 0, 139, 0.9)'
+                            }
+                        }}
+                    >
+                        Change Password
+                    </Button>
                 </Paper>
             </Container>
 
@@ -441,6 +457,11 @@ const Profile = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            <ChangePasswordDialog
+                open={changePasswordOpen}
+                onClose={() => setChangePasswordOpen(false)}
+            />
         </Box>
     );
 };

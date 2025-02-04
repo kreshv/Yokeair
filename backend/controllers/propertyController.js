@@ -162,18 +162,24 @@ exports.updateProperty = async (req, res) => {
         
         // Update features
         if (features) {
-            const featureIds = await Promise.all(features.map(async name => {
-                let feature = await Feature.findOne({ name }).session(session);
-                if (!feature) {
-                    feature = await Feature.create([{ 
-                        name,
-                        category: 'Unit Feature'
-                    }], { session });
-                    feature = feature[0];
-                }
-                return feature._id;
-            }));
-            property.features = featureIds;
+            // If features is an array of IDs, use them directly
+            if (features.every(f => mongoose.Types.ObjectId.isValid(f))) {
+                property.features = features;
+            } else {
+                // If features is an array of names, create/find features
+                const featureIds = await Promise.all(features.map(async name => {
+                    let feature = await Feature.findOne({ name }).session(session);
+                    if (!feature) {
+                        feature = await Feature.create([{ 
+                            name,
+                            category: 'Unit Feature'
+                        }], { session });
+                        feature = feature[0];
+                    }
+                    return feature._id;
+                }));
+                property.features = featureIds;
+            }
         }
 
         // Update building amenities

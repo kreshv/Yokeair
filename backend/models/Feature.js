@@ -1,27 +1,27 @@
 const mongoose = require('mongoose');
 
-const FeatureSchema = new mongoose.Schema({
+const featureSchema = new mongoose.Schema({
     name: {
         type: String,
-        required: true,
-        trim: true,
-        unique: true
-    },
-    description: {
-        type: String,
-        trim: true
+        required: true
     },
     category: {
         type: String,
-        enum: ['Amenity', 'Unit Feature', 'Building Feature'],
-        default: 'Unit Feature'
+        required: true,
+        enum: ['Unit Feature']
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    updatedAt: {
+        type: Date,
+        default: Date.now
     }
-}, {
-    timestamps: true
 });
 
 // Seed initial features if they don't exist
-FeatureSchema.statics.seedFeatures = async function() {
+featureSchema.statics.seedFeatures = async function() {
     const features = [
         { name: 'Balcony', category: 'Unit Feature' },
         { name: 'Terrace', category: 'Unit Feature' },
@@ -44,6 +44,4 @@ FeatureSchema.statics.seedFeatures = async function() {
     }
 };
 
-const Feature = mongoose.model('Feature', FeatureSchema);
-
-module.exports = Feature; 
+module.exports = mongoose.model('Feature', featureSchema); 

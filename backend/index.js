@@ -19,36 +19,6 @@ const app = express();
 // Import models for seeding
 const Feature = require('./models/Feature');
 
-// Seed features function
-const seedFeatures = async () => {
-  try {
-    // Check if features already exist
-    const count = await Feature.countDocuments();
-    if (count > 0) {
-      console.log('Features already seeded, skipping...');
-      return;
-    }
-
-    // Default features to seed
-    const defaultFeatures = [
-      { name: 'Hardwood Floors', type: 'apartment' },
-      { name: 'Stainless Steel Appliances', type: 'apartment' },
-      { name: 'Central Air', type: 'apartment' },
-      { name: 'In-Unit Washer/Dryer', type: 'apartment' },
-      { name: 'Dishwasher', type: 'apartment' },
-      { name: 'Walk-In Closet', type: 'apartment' },
-      { name: 'Balcony', type: 'apartment' },
-      { name: 'High Ceilings', type: 'apartment' }
-    ];
-
-    await Feature.insertMany(defaultFeatures);
-    console.log('Features seeded successfully');
-  } catch (error) {
-    console.error('Error seeding features:', error);
-    // Don't throw the error, just log it
-  }
-};
-
 // Explicit connection method
 const connectMongoose = async () => {
   try {
@@ -69,8 +39,8 @@ const connectMongoose = async () => {
     
     console.log('MongoDB connected successfully');
     
-    // Seed features after successful connection
-    await seedFeatures();
+    // Seed features using the model's seeding function
+    await Feature.seedFeatures();
     
   } catch (error) {
     console.error('MongoDB connection error:', error);
@@ -94,9 +64,11 @@ app.use((req, res, next) => {
   next();
 });
 
-// Add proper CORS configuration
+// Update CORS configuration to allow both development and production domains
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: process.env.NODE_ENV === 'production'
+    ? ['https://yokeair.com', 'https://www.yokeair.com', 'https://jolly-douhua-92a088.netlify.app']
+    : ['http://localhost:3000', 'http://localhost:5173'],
   credentials: true,
   optionsSuccessStatus: 200
 };
@@ -134,6 +106,9 @@ app.use('/api/properties', propertyRoutes);
 app.use('/api/amenities', amenityRoutes);
 app.use('/api/locations', locationRoutes);
 app.use('/api/applications', applicationRoutes);
+
+// After other route registrations, add:
+app.use('/api/features', require('./routes/features'));
 
 // Catch-all route for debugging
 app.use('*', (req, res) => {

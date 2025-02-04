@@ -64,27 +64,11 @@ exports.validateProperty = [
 ];
 
 exports.validateRegistration = [
-    check('firstName')
-        .trim()
-        .notEmpty()
-        .withMessage('First name is required'),
-    check('lastName')
-        .trim()
-        .notEmpty()
-        .withMessage('Last name is required'),
-    check('email')
-        .isEmail()
-        .withMessage('Please include a valid email'),
-    check('phone')
-        .trim()
-        .notEmpty()
-        .withMessage('Phone number is required'),
-    check('password')
-        .isLength({ min: 6 })
-        .withMessage('Password must be at least 6 characters long'),
-    check('role')
-        .isIn(['client', 'broker'])
-        .withMessage('Invalid role specified')
+    check('firstName', 'First name is required').not().isEmpty(),
+    check('lastName', 'Last name is required').not().isEmpty(),
+    check('email', 'Please include a valid email').isEmail(),
+    check('password', 'Please enter a password with 6 or more characters').isLength({ min: 6 }),
+    check('phone', 'Please enter a valid phone number').matches(/^\+?1?\d{10,11}$/)
 ];
 
 // Middleware to check validation results

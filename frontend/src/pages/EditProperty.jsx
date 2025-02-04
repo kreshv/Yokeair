@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import { getProperty, updateProperty, uploadPropertyImages } from '../utils/api';
 import ImageUpload from '../components/ImageUpload';
-import { useSnackbar } from '../components/Snackbar';
+import { useSnackbar } from '../context/SnackbarContext';
 
 const FeatureButton = ({ name, selected, onClick }) => (
     <Button
@@ -70,6 +70,7 @@ const EditProperty = () => {
     const [images, setImages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [uploading, setUploading] = useState(false);
     const [imagesToDelete, setImagesToDelete] = useState([]);
 
     const features = [
@@ -110,23 +111,7 @@ const EditProperty = () => {
                 
                 // Set building amenities based on our predefined list
                 if (propertyData.building?.amenities && Array.isArray(propertyData.building.amenities)) {
-                    // Map amenity IDs to our predefined amenity names
-                    const amenityMap = {
-                        '67464cf55f89f9d6444286f7': 'Elevator',
-                        '67464cf55f89f9d6444286f8': 'Gym',
-                        '67464cf55f89f9d6444286f9': 'Rooftop',
-                        '67464cf55f89f9d6444286fa': 'Storage',
-                        '67464cf55f89f9d6444286fb': 'Bike room',
-                        '67464cf55f89f9d6444286fc': 'Laundry in building',
-                        '67464cf55f89f9d6444286fd': 'Lounge',
-                        '67464cf55f89f9d6444286fe': 'Garage parking',
-                        '67464cf55f89f9d6444286ff': 'Package room'
-                    };
-
-                    const amenityNames = propertyData.building.amenities
-                        .map(id => amenityMap[id])
-                        .filter(name => name); // Filter out any undefined mappings
-                    
+                    const amenityNames = propertyData.building.amenities.map(amenity => amenity.name);
                     console.log('Mapped amenity names:', amenityNames);
                     setSelectedAmenities(amenityNames);
                 } else {
@@ -178,6 +163,7 @@ const EditProperty = () => {
     const handleImageUpload = async (formData) => {
         try {
             setError('');
+            setUploading(true);
             const file = formData.get('image'); // Ensure the field name matches
             
             if (!file) {
@@ -193,35 +179,41 @@ const EditProperty = () => {
             }
 
             // Upload the file
-            await uploadPropertyImages(id, formData);
+            const uploadResponse = await uploadPropertyImages(id, formData);
 
-            // Refresh property data to show new images
-            const response = await getProperty(id);
-            setProperty(response.data);
-            
+            // Check if the response has updated images
+            if (uploadResponse && uploadResponse.data && uploadResponse.data.images) {
+                setImages(uploadResponse.data.images);
+                setProperty(prev => ({ ...prev, images: uploadResponse.data.images }));
+            } else {
+                // Fallback: Refresh property data to get new images
+                const response = await getProperty(id);
+                setProperty(response.data);
+                setImages(response.data.images || []);
+            }
         } catch (error) {
             console.error('Upload error:', error);
             setError(error.message || 'Failed to upload images');
+        } finally {
+            setUploading(false);
         }
     };
 
     const handleImageDelete = async (imageToDelete) => {
         try {
-            // Remove the image from the property
-            const updatedImages = property.images.filter(image => 
+            // Immediately remove the image from the local state for instant UI update
+            const updatedImages = images.filter(image => 
                 image.url !== imageToDelete.url && image.public_id !== imageToDelete.public_id
             );
 
-            // Update the property with the filtered images
-            const response = await updateProperty(id, {
-                images: updatedImages
-            });
-
-            // Update the local state
+            setImages(updatedImages);
             setProperty(prevProperty => ({
                 ...prevProperty,
                 images: updatedImages
             }));
+            
+            // Update the property with the filtered images in the backend
+            await updateProperty(id, { images: updatedImages });
 
             showSnackbar('Image deleted successfully', 'success');
         } catch (err) {
@@ -392,7 +384,7 @@ const EditProperty = () => {
                             <Grid item xs={12}>
                                 <ImageUpload
                                     onUpload={handleImageUpload}
-                                    existingImages={property?.images || []}
+                                    existingImages={images}
                                     onDelete={handleImageDelete}
                                     onUpdateOrder={(newImages) => setImages(newImages)}
                                     onError={(errorMessage) => {
@@ -400,6 +392,11 @@ const EditProperty = () => {
                                         showSnackbar(errorMessage, 'error');
                                     }}
                                 />
+                                {uploading && (
+                                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                                        <CircularProgress />
+                                    </Box>
+                                )}
                             </Grid>
                         </Grid>
 

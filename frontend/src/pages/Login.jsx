@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import { login } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -151,6 +152,21 @@ const Login = () => {
                 }
               }}
             />
+
+            <Box sx={{ mt: 2, textAlign: 'right' }}>
+                <Link 
+                    to="/forgot-password"
+                    style={{ 
+                        color: '#00008B',
+                        textDecoration: 'none',
+                        '&:hover': {
+                            textDecoration: 'underline'
+                        }
+                    }}
+                >
+                    Forgot Password?
+                </Link>
+            </Box>
 
             <Button 
               type="submit"

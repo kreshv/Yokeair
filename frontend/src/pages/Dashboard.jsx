@@ -224,7 +224,7 @@ const PropertyCard = ({ property, onStatusChange, onDelete, selected, onSelect }
             }
           }}
         >
-          <MenuItem onClick={() => navigate(`/property-listing/${property._id}`)}>Edit</MenuItem>
+          <MenuItem onClick={() => navigate(`/edit-property/${property._id}`)}>Edit</MenuItem>
           <MenuItem onClick={handleStatusMenuClick}>Change Status</MenuItem>
           <MenuItem onClick={handleDeleteClick} sx={{ color: 'error.main' }}>
             Delete

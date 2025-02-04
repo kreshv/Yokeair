@@ -27,6 +27,9 @@ const MyApplications = lazy(() => import('./pages/client/MyApplications'));
 const SavedListings = lazy(() => import('./pages/client/SavedListings'));
 const EditProperty = lazy(() => import('./pages/EditProperty'));
 const PropertyDetail = lazy(() => import('./pages/PropertyDetail'));
+const EmailVerification = lazy(() => import('./pages/EmailVerification'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 
 // Context
 import { AuthProvider } from './context/AuthContext';
@@ -75,8 +78,11 @@ const App = () => {
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/my-applications" element={<MyApplications />} />
                     <Route path="/saved-listings" element={<SavedListings />} />
-                    <Route path="/property-listing/:id" element={<EditProperty />} />
+                    <Route path="/edit-property/:id" element={<EditProperty />} />
                     <Route path="/properties/:id" element={<PropertyDetail />} />
+                    <Route path="/verify-email/:token" element={<EmailVerification />} />
+                    <Route path="/reset-password/:token" element={<ResetPassword />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
                   </Route>
                   <Route element={<AuthLayout />}>
                     <Route path="/login" element={<Login />} />

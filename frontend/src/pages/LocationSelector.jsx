@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Box, Button, Container, Typography, Paper, CircularProgress, Collapse } from '@mui/material';
+import { Box, Button, Container, Typography, Paper, CircularProgress, Collapse, IconButton } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { getLocations } from '../utils/api';
+import { ArrowForwardIos } from '@mui/icons-material';
 
 const BoroughButton = ({ borough, selected, onClick }) => (
   <Button
@@ -234,39 +235,69 @@ const LocationSelector = () => {
             </Box>
           ))}
         </Box>
+
+        {/* Move the animated instruction text here */}
+        <Typography 
+          variant="h6" 
+          sx={{
+            color: 'rgba(255, 255, 255, 0.7)',
+            mb: 4,
+            fontSize: '1rem',
+            animation: 'fadeUpDown 3.5s forwards',
+            opacity: 0,
+            transform: 'translateY(20px)',
+            '@keyframes fadeUpDown': {
+              '0%': { 
+                opacity: 0,
+                transform: 'translateY(20px)'
+              },
+              '30%': { 
+                opacity: 1,
+                transform: 'translateY(0)'
+              },
+              '70%': { 
+                opacity: 1,
+                transform: 'translateY(0)'
+              },
+              '100%': { 
+                opacity: 0,
+                transform: 'translateY(-20px)'
+              }
+            }
+          }}
+        >
+          Click on boroughs and select neighborhoods
+        </Typography>
       </Container>
 
       {/* Updated Search Button */}
-      <Button
-        variant="contained"
-        onClick={handleNext}
-        sx={{
-          position: 'absolute',
-          bottom: 32,
-          right: 32,
-          px: 3,
-          py: 1,
-          fontSize: '1rem',
-          fontWeight: 400,
-          color: '#000',
-          textTransform: 'uppercase',
-          letterSpacing: '1px',
-          backgroundColor: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(8px)',
-          borderRadius: '15px',
-          zIndex: 1000,
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          transition: 'all 0.3s ease-in-out',
-          '&:hover': {
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            transform: 'translateY(-4px)',
-            color: '#00008B',
-            boxShadow: '0 6px 8px rgba(0, 0, 0, 0.2)'
-          }
-        }}
-      >
-        Next
-      </Button>
+      <Box sx={{ 
+        position: 'fixed',
+        bottom: '50%', // Center vertically
+        right: '16px', // Keep it on the right side
+        transform: 'translateY(50%)' // Adjust for exact centering
+      }}>
+        <IconButton 
+          onClick={handleNext}
+          sx={{
+            backgroundColor: 'transparent',
+            color: 'white',
+            padding: '16px',
+            borderRadius: '50%', // Default circular shape
+            transform: 'scale(1.2)',
+            transition: 'all 0.2s ease-in-out',
+            '&:hover': {
+              transform: 'scale(1.3) translateX(8px)', // Move right by 8px
+              backgroundColor: 'transparent',
+              borderRadius: '8px', // Change to rectangular shape on hover
+              width: '60px', // Set specific width for rectangle
+              height: '60px' // Set specific height for rectangle
+            }
+          }}
+        >
+          <ArrowForwardIos sx={{ fontSize: '1.5rem' }} />
+        </IconButton>
+      </Box>
     </Box>
   );
 };

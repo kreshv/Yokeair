@@ -13,7 +13,7 @@ import {
   CircularProgress
 } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { getAmenities, updateProperty, uploadPropertyImages } from '../utils/api';
+import { getAmenities, updateProperty, uploadPropertyImages, getUnitFeatures } from '../utils/api';
 
 const AmenityButton = ({ name, selected, onClick }) => (
   <Button
@@ -70,6 +70,7 @@ const PropertyAmenities = () => {
     building: [],
     unit: []
   });
+  const [unitFeatures, setUnitFeatures] = useState([]);
   const [selectedAmenities, setSelectedAmenities] = useState({
     building: [],
     unit: []
@@ -81,24 +82,27 @@ const PropertyAmenities = () => {
       return;
     }
 
-    const fetchAmenities = async () => {
+    const fetchData = async () => {
       try {
-        const response = await getAmenities();
-        const buildingAmenities = response.data.filter(a => a.type === 'building');
-        const unitAmenities = response.data.filter(a => a.type === 'unit');
+        const [amenitiesResponse, unitFeaturesResponse] = await Promise.all([
+          getAmenities(),
+          getUnitFeatures()
+        ]);
         
         setAmenities({
-          building: buildingAmenities,
-          unit: unitAmenities
+          building: amenitiesResponse.data.filter(a => a.type === 'building'),
+          unit: []
         });
+        setUnitFeatures(unitFeaturesResponse.data);
         setLoading(false);
       } catch (err) {
-        setError('Failed to load amenities');
+        console.error('Error fetching data:', err);
+        setError('Failed to load amenities and features');
         setLoading(false);
       }
     };
 
-    fetchAmenities();
+    fetchData();
   }, [propertyId, userId, navigate]);
 
   const handleAmenityChange = (type, amenityId) => {
@@ -116,14 +120,18 @@ const PropertyAmenities = () => {
     setUploadProgress(0);
     
     try {
+        console.log('Submitting property update for ID:', propertyId);
+        const updateData = {
+            buildingAmenities: selectedAmenities.building.map(id => {
+                const amenity = amenities.building.find(a => a._id === id);
+                return amenity.name;
+            }),
+            features: selectedAmenities.unit
+        };
+        console.log('Update data:', updateData);
+
         // First update the property with amenities
-        await updateProperty(propertyId, {
-            buildingAmenities: selectedAmenities.building,
-            unitFeatures: selectedAmenities.unit.map(id => {
-                const feature = amenities.unit.find(a => a._id === id);
-                return { name: feature.name };
-            })
-        });
+        await updateProperty(propertyId, updateData);
 
         // If there are images, upload them
         if (location.state?.images && location.state.images.length > 0) {
@@ -269,16 +277,16 @@ const PropertyAmenities = () => {
 
           <Divider sx={{ my: 3 }} />
 
-          <Typography variant="h6" sx={{ mb: 2, mt: 3, color: '#00008B' }}>
+          <Typography variant="h6" sx={{ mt: 2, mb: 1, color: '#00008B' }}>
             Unit Features
           </Typography>
           <Box sx={{ pl: 2, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-            {amenities.unit.map((amenity) => (
+            {unitFeatures.map((feature) => (
               <AmenityButton
-                key={amenity._id}
-                name={amenity.name}
-                selected={selectedAmenities.unit.includes(amenity._id)}
-                onClick={() => handleAmenityChange('unit', amenity._id)}
+                key={feature._id}
+                name={feature.name}
+                selected={selectedAmenities.unit.includes(feature._id)}
+                onClick={() => handleAmenityChange('unit', feature._id)}
               />
             ))}
           </Box>

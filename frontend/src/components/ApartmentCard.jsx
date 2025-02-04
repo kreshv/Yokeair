@@ -284,36 +284,39 @@ const ApartmentCard = ({ apartment = {}, isSaved: initialSaved = false, showSave
           </Box>
 
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 2 }}>
-            {apartment.building?.amenities?.length > 0 ? (
-              apartment.building.amenities.map((amenity) => (
-                <Chip
-                  key={amenity._id}
-                  label={amenity.name}
-                  size="small"
-                  variant="outlined"
-                  sx={{ 
-                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                    '& .MuiChip-label': {
-                      fontSize: '0.75rem'
-                    }
-                  }}
-                />
-              ))
-            ) : apartment.features?.length > 0 ? (
-              apartment.features.map((feature) => (
-                <Chip
-                  key={feature._id}
-                  label={feature.name}
-                  size="small"
-                  variant="outlined"
-                  sx={{ 
-                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                    '& .MuiChip-label': {
-                      fontSize: '0.75rem'
-                    }
-                  }}
-                />
-              ))
+            {(apartment.building?.amenities?.length > 0 || apartment.features?.length > 0) ? (
+              <>
+                {/* Building Amenities */}
+                {apartment.building?.amenities?.map((amenity) => (
+                  <Chip
+                    key={amenity._id}
+                    label={amenity.name}
+                    size="small"
+                    variant="outlined"
+                    sx={{ 
+                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                      '& .MuiChip-label': {
+                        fontSize: '0.75rem'
+                      }
+                    }}
+                  />
+                ))}
+                {/* Unit Features */}
+                {apartment.features?.map((feature) => (
+                  <Chip
+                    key={feature._id}
+                    label={feature.name}
+                    size="small"
+                    variant="outlined"
+                    sx={{ 
+                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                      '& .MuiChip-label': {
+                        fontSize: '0.75rem'
+                      }
+                    }}
+                  />
+                ))}
+              </>
             ) : (
               <Typography variant="body2" color="text.secondary">
                 No amenities or features available
