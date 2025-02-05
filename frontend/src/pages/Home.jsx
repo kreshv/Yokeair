@@ -17,17 +17,10 @@ const Home = () => {
   useEffect(() => {
     const fetchApartments = async () => {
       try {
-        console.log('Fetching apartments...');
-        const response = await searchProperties({ status: 'available' });
-        console.log('Search response:', response);
-        
-        // Handle both array response and object with data property
-        const apartmentsData = Array.isArray(response) ? response : response?.data || [];
-        console.log('Setting apartments:', apartmentsData);
-        setApartments(apartmentsData);
+        const response = await searchProperties({});
+        setApartments(response.data);
         setLoading(false);
       } catch (err) {
-        console.error('Failed to load apartments:', err);
         setError('Failed to load apartments');
         setLoading(false);
       }
@@ -135,21 +128,6 @@ const Home = () => {
                   />
                 </Grid>
               ))}
-              {apartments.length === 0 && (
-                <Grid item xs={12}>
-                  <Box sx={{ 
-                    display: 'flex', 
-                    justifyContent: 'center', 
-                    alignItems: 'center',
-                    minHeight: '50vh',
-                    width: '100%'
-                  }}>
-                    <Typography variant="h6" sx={{ color: '#FFFFFF' }}>
-                      No properties available at the moment.
-                    </Typography>
-                  </Box>
-                </Grid>
-              )}
             </Grid>
           </Grid>
         </Grid>

@@ -5,25 +5,26 @@ exports.searchBrokers = async (req, res) => {
     try {
         const { search } = req.query;
         
-        let query = {
-            role: 'broker' // Only search for users with broker role
-        };
-        
-        if (search) {
-            const searchRegex = new RegExp(search, 'i');
-            query.$or = [
-                { firstName: searchRegex },
-                { lastName: searchRegex },
-                { email: searchRegex },
-                { phone: searchRegex }
-            ];
+        if (!search) {
+            return res.status(400).json({ message: 'Search query is required' });
         }
 
-        const brokers = await User.find(query)
-            .select('-password') // Exclude password field
-            .sort({ firstName: 1, lastName: 1 });
-            
-        res.json({ data: brokers });
+        // Create a case-insensitive regex for the search term
+        const searchRegex = new RegExp(search, 'i');
+
+        // Find brokers that match the search criteria
+        const brokers = await User.find({
+            role: 'broker',
+            $or: [
+                { firstName: searchRegex },
+                { lastName: searchRegex },
+                { email: searchRegex }
+            ]
+        })
+        .select('-password') // Exclude password from results
+        .sort({ firstName: 1, lastName: 1 }); // Sort by name
+
+        res.json(brokers);
     } catch (error) {
         console.error('Broker search error:', error);
         res.status(500).json({ message: 'Error searching brokers' });

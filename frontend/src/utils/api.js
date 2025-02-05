@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://yokeair.onrender.com/api'
+  : 'http://localhost:5001/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -46,16 +48,9 @@ export const checkEmailAvailability = (email) =>
 export const getBrokerProperties = () => api.get('/properties');
 export const searchProperties = async (params) => {
     try {
-        // If there's a search parameter, ensure it's included in the request
-        const searchParams = { ...params };
-        if (params.search) {
-            searchParams.search = params.search;
-        }
-        
-        const response = await api.get('/properties/search', { params: searchParams });
-        return Array.isArray(response.data) ? { data: response.data } : response.data;
+        const response = await api.get('/properties/search', { params });
+        return response;
     } catch (error) {
-        console.error('Property search error:', error);
         throw error;
     }
 };
@@ -258,16 +253,6 @@ export const searchBrokerages = async (params) => {
         const response = await api.get('/brokers/search', { params });
         return response;
     } catch (error) {
-        throw error;
-    }
-};
-
-export const searchBrokers = async (params) => {
-    try {
-        const response = await api.get('/brokers/search', { params });
-        return response.data;
-    } catch (error) {
-        console.error('Broker search error:', error);
         throw error;
     }
 };
