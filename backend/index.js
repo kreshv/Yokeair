@@ -92,25 +92,22 @@ app.get('/api/test', (req, res) => {
 });
 
 // Import routes
-const authRoutes = require('./routes/authRoutes');
-const userRoutes = require('./routes/userRoutes');
-const propertyRoutes = require('./routes/propertyRoutes');
-const amenityRoutes = require('./routes/amenityRoutes');
-const locationRoutes = require('./routes/locationRoutes');
-const applicationRoutes = require('./routes/applicationRoutes');
+const authRoutes = require('./routes/auth');
+const propertyRoutes = require('./routes/properties');
+const applicationRoutes = require('./routes/applications');
+const userRoutes = require('./routes/users');
+const amenityRoutes = require('./routes/amenities');
+const featureRoutes = require('./routes/features');
 const brokerRoutes = require('./routes/brokers');
 
-// Routes
+// Register routes
 app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
 app.use('/api/properties', propertyRoutes);
-app.use('/api/amenities', amenityRoutes);
-app.use('/api/locations', locationRoutes);
 app.use('/api/applications', applicationRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/amenities', amenityRoutes);
+app.use('/api/features', featureRoutes);
 app.use('/api/brokers', brokerRoutes);
-
-// After other route registrations, add:
-app.use('/api/features', require('./routes/features'));
 
 // Catch-all route for debugging
 app.use('*', (req, res) => {

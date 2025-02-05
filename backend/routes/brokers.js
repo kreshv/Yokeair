@@ -2,7 +2,37 @@ const express = require('express');
 const router = express.Router();
 const Property = require('../models/Property');
 const User = require('../models/User');
-const { searchBrokers } = require('../controllers/brokerController');
+
+// Search brokers - Public
+router.get('/search', async (req, res) => {
+    try {
+        const { search } = req.query;
+        
+        if (!search) {
+            return res.status(400).json({ message: 'Search query is required' });
+        }
+
+        // Create a case-insensitive regex for the search term
+        const searchRegex = new RegExp(search, 'i');
+
+        // Find brokers that match the search criteria
+        const brokers = await User.find({
+            role: 'broker',
+            $or: [
+                { firstName: searchRegex },
+                { lastName: searchRegex },
+                { email: searchRegex }
+            ]
+        })
+        .select('-password') // Exclude password from results
+        .sort({ firstName: 1, lastName: 1 }); // Sort by name
+
+        res.json(brokers);
+    } catch (error) {
+        console.error('Broker search error:', error);
+        res.status(500).json({ message: 'Error searching brokers' });
+    }
+});
 
 // GET /api/brokers/:brokerId/listings
 router.get('/:brokerId/listings', async (req, res) => {
@@ -55,8 +85,5 @@ router.get('/:brokerId/listings', async (req, res) => {
         res.status(500).json({ message: 'Server error while fetching broker listings' });
     }
 });
-
-// Search brokers - Public
-router.get('/search', searchBrokers);
 
 module.exports = router; 
