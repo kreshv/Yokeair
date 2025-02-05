@@ -17,9 +17,19 @@ const Home = () => {
   useEffect(() => {
     const fetchApartments = async () => {
       try {
+        console.log('Fetching apartments...');
         const response = await searchProperties({ status: 'available' });
-        setApartments(response.data || []);
-        setLoading(false);
+        console.log('Search response:', response);
+        if (response && response.data) {
+          console.log('Setting apartments:', response.data);
+          setApartments(response.data);
+          setLoading(false);
+        } else {
+          console.error('Invalid response structure:', response);
+          setApartments([]);
+          setError('Failed to load apartments');
+          setLoading(false);
+        }
       } catch (err) {
         console.error('Failed to load apartments:', err);
         setError('Failed to load apartments');
