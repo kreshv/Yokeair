@@ -4,6 +4,9 @@ const Property = require('../models/Property');
 const User = require('../models/User');
 const { searchBrokers } = require('../controllers/brokerController');
 
+// Search brokers - Public
+router.get('/search', searchBrokers);
+
 // GET /api/brokers/:brokerId/listings
 router.get('/:brokerId/listings', async (req, res) => {
     try {
@@ -55,8 +58,5 @@ router.get('/:brokerId/listings', async (req, res) => {
         res.status(500).json({ message: 'Server error while fetching broker listings' });
     }
 });
-
-// Search brokers - Public
-router.get('/search', searchBrokers);
 
 module.exports = router; 
