@@ -20,16 +20,41 @@ exports.searchBrokers = async (req, res) => {
             $or: [
                 { firstName: searchRegex },
                 { lastName: searchRegex },
-                { email: searchRegex }
+                { email: searchRegex },
+                // Add a combined name search
+                {
+                    $expr: {
+                        $regexMatch: {
+                            input: { $concat: ['$firstName', ' ', '$lastName'] },
+                            regex: searchRegex
+                        }
+                    }
+                }
             ]
         })
-        .select('-password') // Exclude password from results
+        .select('-password -emailVerificationToken -emailVerificationExpires -passwordResetToken -passwordResetExpires') // Exclude sensitive fields
         .sort({ firstName: 1, lastName: 1 }); // Sort by name
 
         console.log(`Found ${brokers.length} brokers for search: ${search}`);
-        res.json(brokers);
+        
+        // Transform broker data for response
+        const formattedBrokers = brokers.map(broker => ({
+            _id: broker._id,
+            firstName: broker.firstName,
+            lastName: broker.lastName,
+            email: broker.email,
+            phone: broker.phone,
+            profilePicture: broker.profilePicture,
+            fullName: `${broker.firstName} ${broker.lastName}`
+        }));
+
+        res.json(formattedBrokers);
     } catch (error) {
         console.error('Broker search error:', error);
-        res.status(500).json({ message: 'Error searching brokers' });
+        console.error('Error stack:', error.stack);
+        res.status(500).json({ 
+            message: 'Error searching brokers',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 }; 

@@ -4,8 +4,20 @@ const Property = require('../models/Property');
 const User = require('../models/User');
 const { searchBrokers } = require('../controllers/brokerController');
 
-// Search brokers - Public
-router.get('/search', searchBrokers);
+// Debug middleware for broker routes
+router.use((req, res, next) => {
+    console.log('\nBroker Route Request:');
+    console.log('URL:', req.url);
+    console.log('Method:', req.method);
+    console.log('Query:', req.query);
+    next();
+});
+
+// Search brokers - Public (must be before :brokerId routes)
+router.get('/search', async (req, res) => {
+    console.log('Broker search endpoint hit with query:', req.query);
+    await searchBrokers(req, res);
+});
 
 // GET /api/brokers/:brokerId/listings
 router.get('/:brokerId/listings', async (req, res) => {
