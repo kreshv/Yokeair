@@ -24,6 +24,16 @@ export default defineConfig({
           mui: ['@mui/material', '@mui/icons-material'],
         }
       }
+    },
+    chunkSizeWarningLimit: 1000,
+    assetsInlineLimit: 4096,
+    cssCodeSplit: true,
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true
+      }
     }
   },
   optimizeDeps: {
