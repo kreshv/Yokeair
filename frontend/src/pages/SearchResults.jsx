@@ -47,18 +47,16 @@ const SearchResults = () => {
             setError('');
             try {
                 // Search for both apartments and brokerages in parallel
-                const [propertiesResponse, brokeragesResponse] = await Promise.all([
+                const [apartmentsResponse, brokeragesResponse] = await Promise.all([
                     searchProperties({ search: searchQuery }),
                     searchBrokerages({ search: searchQuery })
                 ]);
 
-                setApartments(propertiesResponse.data || []);
-                setBrokerages(brokeragesResponse.data || []);
+                setApartments(apartmentsResponse.data);
+                setBrokerages(brokeragesResponse.data);
             } catch (err) {
                 console.error('Search error:', err);
-                setError(err.response?.data?.message || 'Failed to fetch search results. Please try again.');
-                setApartments([]);
-                setBrokerages([]);
+                setError('Failed to fetch search results');
             } finally {
                 setLoading(false);
             }
@@ -66,10 +64,6 @@ const SearchResults = () => {
 
         if (searchQuery) {
             fetchResults();
-        } else {
-            setApartments([]);
-            setBrokerages([]);
-            setLoading(false);
         }
     }, [location.search]);
 

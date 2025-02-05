@@ -261,12 +261,80 @@ exports.getBrokerProperties = async (req, res) => {
 
 exports.searchProperties = async (req, res) => {
     try {
-        const { search } = req.query;
+        const { 
+            search, 
+            neighborhoods, 
+            boroughs, 
+            amenities, 
+            features,
+            bedrooms,
+            bathrooms,
+            minPrice,
+            maxPrice
+        } = req.query;
         
-        console.log('Property search query:', req.query);
+        let query = {};
+        
+        // Handle location-based filters
+        if (neighborhoods && neighborhoods.length > 0) {
+            const neighborhoodArray = Array.isArray(neighborhoods) 
+                ? neighborhoods 
+                : [neighborhoods];
+            query.neighborhood = { $in: neighborhoodArray };
+        }
 
-        let query = { status: 'available' };
+        if (boroughs && boroughs.length > 0) {
+            const boroughArray = Array.isArray(boroughs) 
+                ? boroughs 
+                : [boroughs];
+            query.borough = { $in: boroughArray };
+        }
 
+        // Handle building amenity filters
+        if (amenities && amenities.length > 0) {
+            const amenityArray = Array.isArray(amenities) 
+                ? amenities 
+                : [amenities];
+            
+            // Find buildings that have all the specified amenities
+            const buildingsWithAmenities = await Building.find({
+                amenities: { $all: amenityArray }
+            }).select('_id');
+
+            // Add building filter to query
+            query.building = { 
+                $in: buildingsWithAmenities.map(b => b._id) 
+            };
+        }
+
+        // Handle unit feature filters
+        if (features && features.length > 0) {
+            const featureArray = Array.isArray(features) 
+                ? features 
+                : [features];
+            
+            // Find properties that have all the specified features
+            query.features = { $all: featureArray };
+        }
+
+        // Handle bedrooms filter
+        if (bedrooms && bedrooms !== 'any') {
+            query.bedrooms = parseInt(bedrooms);
+        }
+
+        // Handle bathrooms filter
+        if (bathrooms && bathrooms !== 'any') {
+            query.bathrooms = parseFloat(bathrooms);
+        }
+
+        // Handle price range filter
+        if (minPrice || maxPrice) {
+            query.price = {};
+            if (minPrice) query.price.$gte = parseInt(minPrice);
+            if (maxPrice) query.price.$lte = parseInt(maxPrice);
+        }
+        
+        // Handle text search if provided
         if (search) {
             const searchRegex = new RegExp(search, 'i');
             
@@ -274,23 +342,28 @@ exports.searchProperties = async (req, res) => {
             const matchingBuildings = await Building.find({
                 $or: [
                     { 'address.street': searchRegex },
-                    { 'address.borough': searchRegex },
-                    { 'address.neighborhood': searchRegex }
+                    { 'address.city': searchRegex }
                 ]
             }).select('_id');
 
             const buildingIds = matchingBuildings.map(b => b._id);
 
-            // Add search criteria to the query
-            query.$or = [
-                { building: { $in: buildingIds } },
-                { borough: searchRegex },
-                { neighborhood: searchRegex },
-                { unitNumber: searchRegex }
-            ];
+            // Combine search criteria with existing query using $and to preserve other filters
+            const searchQuery = {
+                $or: [
+                    { building: { $in: buildingIds } },
+                    { borough: searchRegex },
+                    { neighborhood: searchRegex },
+                    { unitNumber: searchRegex }
+                ]
+            };
+
+            query = query.hasOwnProperty('$and') 
+                ? { ...query, $and: [...query.$and, searchQuery] }
+                : { ...query, ...searchQuery };
         }
 
-        console.log('Final property search query:', JSON.stringify(query, null, 2));
+        console.log('Final query:', JSON.stringify(query, null, 2));
 
         // Find properties based on query
         const properties = await Property.find(query)
@@ -303,7 +376,6 @@ exports.searchProperties = async (req, res) => {
             .populate('features')
             .sort({ createdAt: -1 });
 
-        console.log(`Found ${properties.length} properties for search: ${search || 'no search term'}`);
         res.json(properties);
     } catch (error) {
         console.error('Property search error:', error);

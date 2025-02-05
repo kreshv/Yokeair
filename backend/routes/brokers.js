@@ -4,32 +4,10 @@ const Property = require('../models/Property');
 const User = require('../models/User');
 const { searchBrokers } = require('../controllers/brokerController');
 
-// Debug middleware for broker routes
-router.use((req, res, next) => {
-    console.log('\nBroker Route Request:');
-    console.log('URL:', req.url);
-    console.log('Method:', req.method);
-    console.log('Query:', req.query);
-    console.log('Path:', req.path);
-    next();
-});
-
-// Search brokers - Public (must be before :brokerId routes)
-router.get('/search', async (req, res, next) => {
-    try {
-        console.log('Broker search endpoint hit with query:', req.query);
-        await searchBrokers(req, res);
-    } catch (error) {
-        console.error('Error in broker search route:', error);
-        next(error);
-    }
-});
-
 // GET /api/brokers/:brokerId/listings
 router.get('/:brokerId/listings', async (req, res) => {
     try {
         const { brokerId } = req.params;
-        console.log('Fetching listings for broker:', brokerId);
 
         // Find the broker
         const broker = await User.findOne({ _id: brokerId, role: 'broker' });
@@ -48,8 +26,6 @@ router.get('/:brokerId/listings', async (req, res) => {
             })
             .populate('features')
             .sort({ createdAt: -1 });
-
-        console.log(`Found ${properties.length} properties for broker ${brokerId}`);
 
         // Format the properties to include formatted address and amenity/feature names
         const formattedProperties = properties.map(property => {
@@ -80,13 +56,7 @@ router.get('/:brokerId/listings', async (req, res) => {
     }
 });
 
-// Error handling middleware
-router.use((err, req, res, next) => {
-    console.error('Broker route error:', err);
-    res.status(500).json({
-        message: 'Internal server error in broker routes',
-        error: process.env.NODE_ENV === 'development' ? err.message : undefined
-    });
-});
+// Search brokers - Public
+router.get('/search', searchBrokers);
 
 module.exports = router; 

@@ -51,16 +51,6 @@ export const searchProperties = async (params) => {
         const response = await api.get('/properties/search', { params });
         return response;
     } catch (error) {
-        console.error('Search properties error:', error);
-        throw error;
-    }
-};
-export const searchBrokerages = async (params) => {
-    try {
-        const response = await api.get('/brokers/search', { params });
-        return response;
-    } catch (error) {
-        console.error('Search brokerages error:', error);
         throw error;
     }
 };
@@ -257,5 +247,14 @@ export const getSquareFootage = async (propertyId) => {
 
 // Add new function to get broker's public listings
 export const getBrokerPublicListings = (brokerId) => api.get(`/brokers/${brokerId}/listings`);
+
+export const searchBrokerages = async (params) => {
+    try {
+        const response = await api.get('/brokers/search', { params });
+        return response;
+    } catch (error) {
+        throw error;
+    }
+};
 
 export default api; 

@@ -56,27 +56,26 @@ connectMongoose();
 
 // Detailed logging middleware
 app.use((req, res, next) => {
-    console.log('\nIncoming Request:');
-    console.log('Method:', req.method);
-    console.log('URL:', req.url);
-    console.log('Path:', req.path);
-    console.log('Query:', req.query);
-    console.log('Origin:', req.get('origin'));
-    console.log('Headers:', req.headers);
-    next();
+  console.log('Request Details:');
+  console.log('Method:', req.method);
+  console.log('Path:', req.path);
+  console.log('Origin:', req.get('origin'));
+  console.log('Headers:', req.headers);
+  next();
 });
 
 // Update CORS configuration to allow both development and production domains
 const corsOptions = {
-    origin: process.env.NODE_ENV === 'production'
-        ? ['https://yokeair.com', 'https://www.yokeair.com', 'https://jolly-douhua-92a088.netlify.app', 'https://yokeair.onrender.com']
-        : ['http://localhost:3000', 'http://localhost:5173'],
-    credentials: true,
-    optionsSuccessStatus: 200
+  origin: process.env.NODE_ENV === 'production'
+    ? ['https://yokeair.com', 'https://www.yokeair.com', 'https://jolly-douhua-92a088.netlify.app']
+    : ['http://localhost:3000', 'http://localhost:5173'],
+  credentials: true,
+  optionsSuccessStatus: 200
 };
 
 app.use(cors(corsOptions));
 app.use(securityHeaders);
+
 app.use(express.json());
 
 // Basic route tests
