@@ -17,10 +17,11 @@ const Home = () => {
   useEffect(() => {
     const fetchApartments = async () => {
       try {
-        const response = await searchProperties({});
-        setApartments(response.data);
+        const response = await searchProperties({ status: 'available' });
+        setApartments(response.data || []);
         setLoading(false);
       } catch (err) {
+        console.error('Failed to load apartments:', err);
         setError('Failed to load apartments');
         setLoading(false);
       }
@@ -128,6 +129,21 @@ const Home = () => {
                   />
                 </Grid>
               ))}
+              {apartments.length === 0 && (
+                <Grid item xs={12}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    alignItems: 'center',
+                    minHeight: '50vh',
+                    width: '100%'
+                  }}>
+                    <Typography variant="h6" sx={{ color: '#FFFFFF' }}>
+                      No properties available at the moment.
+                    </Typography>
+                  </Box>
+                </Grid>
+              )}
             </Grid>
           </Grid>
         </Grid>
