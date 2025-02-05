@@ -1,42 +1,14 @@
+const express = require('express');
 const router = express.Router();
+const Property = require('../models/Property');
+const Building = require('../models/Building');
+const { searchProperties } = require('../controllers/propertyController');
 
 // ... existing imports and middleware ...
 
 // Search properties
-router.get('/search', async (req, res) => {
-    try {
-        const { search } = req.query;
-        let query = {};
+router.get('/search', searchProperties);
 
-        // Add search criteria if search parameter is present
-        if (search) {
-            const searchRegex = new RegExp(search, 'i');
-            query.$or = [
-                { 'building.address.street': searchRegex },
-                { 'building.address.city': searchRegex },
-                { borough: searchRegex },
-                { neighborhood: searchRegex },
-                { unitNumber: searchRegex }
-            ];
-        }
+// ... existing routes ...
 
-        // Find properties that match the search criteria
-        const properties = await Property.find(query)
-            .populate('building')
-            .populate('features')
-            .populate({
-                path: 'building',
-                populate: {
-                    path: 'amenities'
-                }
-            })
-            .sort({ createdAt: -1 });
-
-        res.json(properties);
-    } catch (error) {
-        console.error('Property search error:', error);
-        res.status(500).json({ message: 'Error searching properties' });
-    }
-});
-
-// ... existing routes ... 
+module.exports = router; 

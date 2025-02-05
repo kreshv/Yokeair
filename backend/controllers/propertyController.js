@@ -287,10 +287,8 @@ exports.searchProperties = async (req, res) => {
             const searchRegex = new RegExp(search, 'i');
             query.$or = [
                 { 'building.address.street': searchRegex },
-                { 'building.address.neighborhood': searchRegex },
-                { 'building.address.borough': searchRegex },
-                { neighborhood: searchRegex },
                 { borough: searchRegex },
+                { neighborhood: searchRegex },
                 { unitNumber: searchRegex }
             ];
         }
@@ -300,14 +298,18 @@ exports.searchProperties = async (req, res) => {
             const neighborhoodArray = Array.isArray(neighborhoods) 
                 ? neighborhoods 
                 : neighborhoods.split(',');
-            query.neighborhood = { $in: neighborhoodArray };
+            query.neighborhood = { 
+                $in: neighborhoodArray.map(n => new RegExp(n.trim(), 'i')) 
+            };
         }
 
         if (boroughs) {
             const boroughArray = Array.isArray(boroughs) 
                 ? boroughs 
                 : boroughs.split(',');
-            query.borough = { $in: boroughArray };
+            query.borough = { 
+                $in: boroughArray.map(b => new RegExp(b.trim(), 'i')) 
+            };
         }
 
         // Handle numeric filters
@@ -334,10 +336,12 @@ exports.searchProperties = async (req, res) => {
             
             // Find buildings with all specified amenities
             const buildingsWithAmenities = await Building.find({
-                amenities: { $all: amenityArray }
+                'amenities.name': { 
+                    $in: amenityArray.map(a => new RegExp(a.trim(), 'i')) 
+                }
             }).select('_id');
 
-            query.building = { 
+            query['building'] = { 
                 $in: buildingsWithAmenities.map(b => b._id) 
             };
         }
@@ -347,7 +351,9 @@ exports.searchProperties = async (req, res) => {
             const featureArray = Array.isArray(features) 
                 ? features 
                 : features.split(',');
-            query.features = { $all: featureArray };
+            query['features.name'] = { 
+                $in: featureArray.map(f => new RegExp(f.trim(), 'i')) 
+            };
         }
 
         console.log('Final query:', JSON.stringify(query, null, 2));
