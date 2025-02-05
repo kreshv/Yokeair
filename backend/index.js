@@ -67,7 +67,7 @@ app.use((req, res, next) => {
 // Update CORS configuration to allow both development and production domains
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
-    ? ['https://yokeair.com', 'https://www.yokeair.com', 'https://jolly-douhua-92a088.netlify.app']
+    ? ['https://yokeair.com', 'https://www.yokeair.com', 'https://jolly-douhua-92a088.netlify.app', 'https://yokeair.onrender.com']
     : ['http://localhost:3000', 'http://localhost:5173'],
   credentials: true,
   optionsSuccessStatus: 200
