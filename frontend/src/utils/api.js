@@ -252,6 +252,7 @@ export const searchBrokerages = async (params) => {
         const response = await api.get('/brokers/search', { params });
         return response;
     } catch (error) {
+        console.error('Broker search error:', error);
         throw error;
     }
 };

@@ -273,6 +273,8 @@ exports.searchProperties = async (req, res) => {
             maxPrice
         } = req.query;
         
+        console.log('Received search params:', req.query);
+        
         let query = { status: 'available' };
         
         // Handle text search if provided
@@ -283,7 +285,8 @@ exports.searchProperties = async (req, res) => {
             const matchingBuildings = await Building.find({
                 $or: [
                     { 'address.street': searchRegex },
-                    { 'address.city': searchRegex }
+                    { 'address.neighborhood': searchRegex },
+                    { 'address.borough': searchRegex }
                 ]
             }).select('_id');
 
