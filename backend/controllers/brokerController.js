@@ -22,7 +22,7 @@ exports.searchBrokers = async (req, res) => {
             .select('-password') // Exclude password field
             .sort({ firstName: 1, lastName: 1 });
             
-        res.json(brokers);
+        res.json({ data: brokers });
     } catch (error) {
         console.error('Error in searchBrokers:', error);
         res.status(500).json({ message: 'Error searching brokers', error: error.message });

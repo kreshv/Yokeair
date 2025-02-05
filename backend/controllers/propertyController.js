@@ -286,23 +286,13 @@ exports.searchProperties = async (req, res) => {
         if (search) {
             const searchRegex = new RegExp(search, 'i');
             query.$or = [
+                { 'building.address.street': searchRegex },
+                { 'building.address.neighborhood': searchRegex },
+                { 'building.address.borough': searchRegex },
                 { neighborhood: searchRegex },
                 { borough: searchRegex },
                 { unitNumber: searchRegex }
             ];
-
-            // Also search in building addresses
-            const matchingBuildings = await Building.find({
-                $or: [
-                    { 'address.street': searchRegex },
-                    { 'address.neighborhood': searchRegex },
-                    { 'address.borough': searchRegex }
-                ]
-            }).select('_id');
-
-            if (matchingBuildings.length > 0) {
-                query.$or.push({ building: { $in: matchingBuildings.map(b => b._id) } });
-            }
         }
 
         // Handle location filters
@@ -375,7 +365,7 @@ exports.searchProperties = async (req, res) => {
             .sort({ createdAt: -1 });
 
         console.log(`Found ${properties.length} properties`);
-        res.json(properties);
+        res.json({ data: properties });
     } catch (error) {
         console.error('Error in searchProperties:', error);
         res.status(500).json({ 
