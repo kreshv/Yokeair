@@ -10,11 +10,12 @@ exports.searchBrokers = async (req, res) => {
         };
         
         if (search) {
+            const searchRegex = new RegExp(search, 'i');
             query.$or = [
-                { firstName: { $regex: search, $options: 'i' } },
-                { lastName: { $regex: search, $options: 'i' } },
-                { email: { $regex: search, $options: 'i' } },
-                { phone: { $regex: search, $options: 'i' } }
+                { firstName: searchRegex },
+                { lastName: searchRegex },
+                { email: searchRegex },
+                { phone: searchRegex }
             ];
         }
 
@@ -24,7 +25,7 @@ exports.searchBrokers = async (req, res) => {
             
         res.json({ data: brokers });
     } catch (error) {
-        console.error('Error in searchBrokers:', error);
-        res.status(500).json({ message: 'Error searching brokers', error: error.message });
+        console.error('Broker search error:', error);
+        res.status(500).json({ message: 'Error searching brokers' });
     }
 }; 
