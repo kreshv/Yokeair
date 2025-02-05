@@ -7,25 +7,22 @@ const User = require('../models/User');
 router.get('/search', async (req, res) => {
     try {
         const { search } = req.query;
+        let query = { role: 'broker' };
         
-        if (!search) {
-            return res.status(400).json({ message: 'Search query is required' });
-        }
-
-        // Create a case-insensitive regex for the search term
-        const searchRegex = new RegExp(search, 'i');
-
-        // Find brokers that match the search criteria
-        const brokers = await User.find({
-            role: 'broker',
-            $or: [
+        if (search) {
+            // Create a case-insensitive regex for the search term
+            const searchRegex = new RegExp(search, 'i');
+            query.$or = [
                 { firstName: searchRegex },
                 { lastName: searchRegex },
                 { email: searchRegex }
-            ]
-        })
-        .select('-password') // Exclude password from results
-        .sort({ firstName: 1, lastName: 1 }); // Sort by name
+            ];
+        }
+
+        // Find brokers that match the search criteria
+        const brokers = await User.find(query)
+            .select('-password') // Exclude password from results
+            .sort({ firstName: 1, lastName: 1 }); // Sort by name
 
         res.json(brokers);
     } catch (error) {
