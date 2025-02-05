@@ -16,7 +16,7 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    sourcemap: process.env.NODE_ENV !== 'production',
     rollupOptions: {
       output: {
         manualChunks: {
@@ -29,7 +29,8 @@ export default defineConfig({
     assetsInlineLimit: 4096,
     cssCodeSplit: true,
     minify: 'esbuild',
-    target: 'esnext'
+    target: 'es2020',
+    emptyOutDir: true
   },
   optimizeDeps: {
     include: ['@hello-pangea/dnd'],
