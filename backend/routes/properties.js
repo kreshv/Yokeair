@@ -6,33 +6,31 @@ const router = express.Router();
 router.get('/search', async (req, res) => {
     try {
         const { search } = req.query;
-        
-        if (!search) {
-            return res.status(400).json({ message: 'Search query is required' });
-        }
+        let query = {};
 
-        // Create a case-insensitive regex for the search term
-        const searchRegex = new RegExp(search, 'i');
-
-        // Find properties that match the search criteria
-        const properties = await Property.find({
-            $or: [
+        // Add search criteria if search parameter is present
+        if (search) {
+            const searchRegex = new RegExp(search, 'i');
+            query.$or = [
                 { 'building.address.street': searchRegex },
                 { 'building.address.city': searchRegex },
                 { borough: searchRegex },
                 { neighborhood: searchRegex },
                 { unitNumber: searchRegex }
-            ]
-        })
-        .populate('building')
-        .populate('features')
-        .populate({
-            path: 'building',
-            populate: {
-                path: 'amenities'
-            }
-        })
-        .sort({ createdAt: -1 });
+            ];
+        }
+
+        // Find properties that match the search criteria
+        const properties = await Property.find(query)
+            .populate('building')
+            .populate('features')
+            .populate({
+                path: 'building',
+                populate: {
+                    path: 'amenities'
+                }
+            })
+            .sort({ createdAt: -1 });
 
         res.json(properties);
     } catch (error) {

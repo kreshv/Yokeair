@@ -3,6 +3,7 @@ const router = express.Router();
 const Property = require('../models/Property');
 const User = require('../models/User');
 const { searchBrokers } = require('../controllers/brokerController');
+const Broker = require('../models/Broker');
 
 // GET /api/brokers/:brokerId/listings
 router.get('/:brokerId/listings', async (req, res) => {
@@ -56,7 +57,33 @@ router.get('/:brokerId/listings', async (req, res) => {
     }
 });
 
-// Search brokers - Public
-router.get('/search', searchBrokers);
+// Search brokers
+router.get('/search', async (req, res) => {
+    try {
+        const { search } = req.query;
+        let query = {};
+
+        // Add search criteria if search parameter is present
+        if (search) {
+            const searchRegex = new RegExp(search, 'i');
+            query.$or = [
+                { name: searchRegex },
+                { email: searchRegex },
+                { phone: searchRegex },
+                { company: searchRegex }
+            ];
+        }
+
+        // Find brokers that match the search criteria
+        const brokers = await Broker.find(query)
+            .select('-password') // Exclude password field
+            .sort({ name: 1 });
+
+        res.json(brokers);
+    } catch (error) {
+        console.error('Broker search error:', error);
+        res.status(500).json({ message: 'Error searching brokers' });
+    }
+});
 
 module.exports = router; 
