@@ -6,6 +6,8 @@
 [build.environment]
   NODE_VERSION = "18"
   NPM_FLAGS = "--legacy-peer-deps"
+  VITE_API_URL = "https://yokeair.onrender.com/api"
+  NODE_ENV = "production"
 
 [[redirects]]
   from = "/*"
@@ -22,6 +24,9 @@
 [build.processing.js]
   bundle = true
   minify = true
+
+[build.processing.html]
+  pretty_urls = true
 
 [build.processing.images]
   compress = true 
