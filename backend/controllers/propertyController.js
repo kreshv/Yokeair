@@ -263,42 +263,47 @@ exports.searchProperties = async (req, res) => {
     try {
         const { search } = req.query;
         
-        if (!search) {
-            return res.status(400).json({ message: 'Search query is required' });
-        }
+        console.log('Property search query:', req.query);
 
-        const searchRegex = new RegExp(search, 'i');
-        
-        // First, find buildings that match the search criteria
-        const matchingBuildings = await Building.find({
-            $or: [
-                { 'address.street': searchRegex },
-                { 'address.borough': searchRegex },
-                { 'address.neighborhood': searchRegex }
-            ]
-        }).select('_id');
+        let query = { status: 'available' };
 
-        const buildingIds = matchingBuildings.map(b => b._id);
+        if (search) {
+            const searchRegex = new RegExp(search, 'i');
+            
+            // First, find buildings that match the search criteria
+            const matchingBuildings = await Building.find({
+                $or: [
+                    { 'address.street': searchRegex },
+                    { 'address.borough': searchRegex },
+                    { 'address.neighborhood': searchRegex }
+                ]
+            }).select('_id');
 
-        // Find properties that match either building or direct property fields
-        const properties = await Property.find({
-            $or: [
+            const buildingIds = matchingBuildings.map(b => b._id);
+
+            // Add search criteria to the query
+            query.$or = [
                 { building: { $in: buildingIds } },
                 { borough: searchRegex },
                 { neighborhood: searchRegex },
                 { unitNumber: searchRegex }
-            ]
-        })
-        .populate({
-            path: 'building',
-            populate: {
-                path: 'amenities'
-            }
-        })
-        .populate('features')
-        .sort({ createdAt: -1 });
+            ];
+        }
 
-        console.log(`Found ${properties.length} properties for search: ${search}`);
+        console.log('Final property search query:', JSON.stringify(query, null, 2));
+
+        // Find properties based on query
+        const properties = await Property.find(query)
+            .populate({
+                path: 'building',
+                populate: {
+                    path: 'amenities'
+                }
+            })
+            .populate('features')
+            .sort({ createdAt: -1 });
+
+        console.log(`Found ${properties.length} properties for search: ${search || 'no search term'}`);
         res.json(properties);
     } catch (error) {
         console.error('Property search error:', error);

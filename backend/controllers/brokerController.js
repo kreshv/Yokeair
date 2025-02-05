@@ -5,19 +5,13 @@ exports.searchBrokers = async (req, res) => {
     try {
         const { search } = req.query;
         
-        if (!search) {
-            return res.status(400).json({ message: 'Search query is required' });
-        }
+        console.log('Broker search query:', req.query);
 
-        console.log('Searching brokers with query:', search);
+        let query = { role: 'broker' };
 
-        // Create a case-insensitive regex for the search term
-        const searchRegex = new RegExp(search, 'i');
-
-        // Find brokers that match the search criteria
-        const brokers = await User.find({
-            role: 'broker',
-            $or: [
+        if (search) {
+            const searchRegex = new RegExp(search, 'i');
+            query.$or = [
                 { firstName: searchRegex },
                 { lastName: searchRegex },
                 { email: searchRegex },
@@ -30,12 +24,17 @@ exports.searchBrokers = async (req, res) => {
                         }
                     }
                 }
-            ]
-        })
-        .select('-password -emailVerificationToken -emailVerificationExpires -passwordResetToken -passwordResetExpires') // Exclude sensitive fields
-        .sort({ firstName: 1, lastName: 1 }); // Sort by name
+            ];
+        }
 
-        console.log(`Found ${brokers.length} brokers for search: ${search}`);
+        console.log('Final broker search query:', JSON.stringify(query, null, 2));
+
+        // Find brokers that match the search criteria
+        const brokers = await User.find(query)
+            .select('-password -emailVerificationToken -emailVerificationExpires -passwordResetToken -passwordResetExpires') // Exclude sensitive fields
+            .sort({ firstName: 1, lastName: 1 }); // Sort by name
+
+        console.log(`Found ${brokers.length} brokers for search: ${search || 'no search term'}`);
         
         // Transform broker data for response
         const formattedBrokers = brokers.map(broker => ({
