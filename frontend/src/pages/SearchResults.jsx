@@ -56,17 +56,19 @@ const SearchResults = () => {
             try {
                 // Construct query parameters
                 const queryParams = {
-                    ...(searchQuery && { search: searchQuery }),
-                    ...(neighborhoods && { neighborhoods }),
-                    ...(boroughs && { boroughs }),
-                    ...(bedrooms && { bedrooms }),
-                    ...(bathrooms && { bathrooms }),
-                    ...(minPrice && { minPrice }),
-                    ...(maxPrice && { maxPrice }),
-                    ...(amenities && { amenities }),
-                    ...(features && { features }),
                     status: 'available'
                 };
+
+                // Only add parameters that are present
+                if (searchQuery) queryParams.search = searchQuery;
+                if (neighborhoods) queryParams.neighborhoods = neighborhoods;
+                if (boroughs) queryParams.boroughs = boroughs;
+                if (bedrooms) queryParams.bedrooms = bedrooms;
+                if (bathrooms) queryParams.bathrooms = bathrooms;
+                if (minPrice) queryParams.minPrice = minPrice;
+                if (maxPrice) queryParams.maxPrice = maxPrice;
+                if (amenities) queryParams.amenities = amenities;
+                if (features) queryParams.features = features;
 
                 // Search for both apartments and brokers in parallel
                 const [propertiesData, brokersData] = await Promise.all([

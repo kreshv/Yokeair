@@ -61,25 +61,27 @@ router.get('/:brokerId/listings', async (req, res) => {
 router.get('/search', async (req, res) => {
     try {
         const { search } = req.query;
-        let query = {};
+        let query = {
+            role: 'broker' // Only search for users with broker role
+        };
 
         // Add search criteria if search parameter is present
         if (search) {
             const searchRegex = new RegExp(search, 'i');
             query.$or = [
-                { name: searchRegex },
+                { firstName: searchRegex },
+                { lastName: searchRegex },
                 { email: searchRegex },
-                { phone: searchRegex },
-                { company: searchRegex }
+                { phone: searchRegex }
             ];
         }
 
         // Find brokers that match the search criteria
-        const brokers = await Broker.find(query)
+        const brokers = await User.find(query)
             .select('-password') // Exclude password field
-            .sort({ name: 1 });
+            .sort({ firstName: 1, lastName: 1 });
 
-        res.json(brokers);
+        res.json({ data: brokers });
     } catch (error) {
         console.error('Broker search error:', error);
         res.status(500).json({ message: 'Error searching brokers' });

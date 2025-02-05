@@ -46,8 +46,14 @@ export const checkEmailAvailability = (email) =>
 export const getBrokerProperties = () => api.get('/properties');
 export const searchProperties = async (params) => {
     try {
-        const response = await api.get('/properties/search', { params });
-        return response.data;
+        // If there's a search parameter, ensure it's included in the request
+        const searchParams = { ...params };
+        if (params.search) {
+            searchParams.search = params.search;
+        }
+        
+        const response = await api.get('/properties/search', { params: searchParams });
+        return Array.isArray(response.data) ? { data: response.data } : response.data;
     } catch (error) {
         console.error('Property search error:', error);
         throw error;
