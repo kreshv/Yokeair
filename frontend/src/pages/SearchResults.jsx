@@ -7,12 +7,11 @@ import {
     CircularProgress,
     Alert,
     Button,
-    Divider,
     Paper
 } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
 import ApartmentCard from '../components/ApartmentCard';
-import { searchProperties, searchBrokerages } from '../utils/api';
+import { searchProperties, searchBrokers } from '../utils/api';
 import { LocationOnOutlined, Phone, Email } from '@mui/icons-material';
 import SortButton from '../components/SortButton';
 
@@ -40,31 +39,52 @@ const SearchResults = () => {
     };
 
     useEffect(() => {
-        const searchQuery = new URLSearchParams(location.search).get('search');
+        const searchParams = new URLSearchParams(location.search);
+        const searchQuery = searchParams.get('search');
+        const neighborhoods = searchParams.get('neighborhoods');
+        const boroughs = searchParams.get('boroughs');
+        const bedrooms = searchParams.get('bedrooms');
+        const bathrooms = searchParams.get('bathrooms');
+        const minPrice = searchParams.get('minPrice');
+        const maxPrice = searchParams.get('maxPrice');
+        const amenities = searchParams.get('amenities');
+        const features = searchParams.get('features');
         
         const fetchResults = async () => {
             setLoading(true);
             setError('');
             try {
-                // Search for both apartments and brokerages in parallel
-                const [apartmentsResponse, brokeragesResponse] = await Promise.all([
-                    searchProperties({ search: searchQuery }),
-                    searchBrokerages({ search: searchQuery })
+                // Construct query parameters
+                const queryParams = {
+                    ...(searchQuery && { search: searchQuery }),
+                    ...(neighborhoods && { neighborhoods }),
+                    ...(boroughs && { boroughs }),
+                    ...(bedrooms && { bedrooms }),
+                    ...(bathrooms && { bathrooms }),
+                    ...(minPrice && { minPrice }),
+                    ...(maxPrice && { maxPrice }),
+                    ...(amenities && { amenities }),
+                    ...(features && { features }),
+                    status: 'available'
+                };
+
+                // Search for both apartments and brokers in parallel
+                const [apartmentsResponse, brokersResponse] = await Promise.all([
+                    searchProperties(queryParams),
+                    searchQuery ? searchBrokers({ search: searchQuery }) : { data: [] }
                 ]);
 
                 setApartments(apartmentsResponse.data);
-                setBrokerages(brokeragesResponse.data);
+                setBrokerages(brokersResponse.data);
             } catch (err) {
                 console.error('Search error:', err);
-                setError('Failed to fetch search results');
+                setError(err.response?.data?.message || 'Failed to fetch search results');
             } finally {
                 setLoading(false);
             }
         };
 
-        if (searchQuery) {
-            fetchResults();
-        }
+        fetchResults();
     }, [location.search]);
 
     const handleBrokerageClick = (brokerId) => {
@@ -114,13 +134,13 @@ const SearchResults = () => {
                                 textShadow: '0 0 10px rgba(255, 255, 255, 0.5)'
                             }}
                         >
-                            Matching Brokerages
+                            Matching Brokers
                         </Typography>
                         <Grid container spacing={3}>
-                            {brokerages.map((brokerage) => (
-                                <Grid item xs={12} sm={6} md={4} key={brokerage._id}>
+                            {brokerages.map((broker) => (
+                                <Grid item xs={12} sm={6} md={4} key={broker._id}>
                                     <Paper
-                                        onClick={() => handleBrokerageClick(brokerage._id)}
+                                        onClick={() => handleBrokerageClick(broker._id)}
                                         sx={{
                                             p: 3,
                                             borderRadius: '15px',
@@ -134,18 +154,18 @@ const SearchResults = () => {
                                         }}
                                     >
                                         <Typography variant="h6" gutterBottom>
-                                            {brokerage.firstName} {brokerage.lastName}
+                                            {broker.firstName} {broker.lastName}
                                         </Typography>
                                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                                             <Email sx={{ mr: 1, fontSize: '0.9rem', color: 'text.secondary' }} />
                                             <Typography variant="body2" color="text.secondary">
-                                                {brokerage.email}
+                                                {broker.email}
                                             </Typography>
                                         </Box>
                                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                             <Phone sx={{ mr: 1, fontSize: '0.9rem', color: 'text.secondary' }} />
                                             <Typography variant="body2" color="text.secondary">
-                                                {brokerage.phone}
+                                                {broker.phone}
                                             </Typography>
                                         </Box>
                                     </Paper>
@@ -155,7 +175,7 @@ const SearchResults = () => {
                     </Box>
                 )}
 
-                {/* Apartments Section */}
+                {/* Properties Section */}
                 {apartments.length > 0 && (
                     <Box>
                         <Box sx={{ 
@@ -171,10 +191,10 @@ const SearchResults = () => {
                                     fontWeight: 500,
                                     textTransform: 'uppercase',
                                     fontSize: '1.1rem',
-                                    textShadow: '0 0 10px rgba(255, 255, 255, 0.15)'
+                                    textShadow: '0 0 10px rgba(255, 255, 255, 0.5)'
                                 }}
                             >
-                                Matching Properties
+                                Matching Properties ({apartments.length})
                             </Typography>
                             <SortButton onSort={handleSort} />
                         </Box>
@@ -197,7 +217,13 @@ const SearchResults = () => {
                         flexDirection: 'column',
                         gap: 2
                     }}>
-                        <Typography variant="h6" sx={{ color: '#FFFFFF' }}>
+                        <Typography 
+                            variant="h6" 
+                            sx={{ 
+                                color: '#FFFFFF',
+                                textShadow: '0 0 10px rgba(255, 255, 255, 0.5)'
+                            }}
+                        >
                             No results found
                         </Typography>
                         <Button
