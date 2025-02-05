@@ -273,33 +273,7 @@ exports.searchProperties = async (req, res) => {
             maxPrice
         } = req.query;
         
-        console.log('Received search params:', req.query);
-        
-        let query = { status: 'available' };
-        
-        // Handle text search if provided
-        if (search) {
-            const searchRegex = new RegExp(search, 'i');
-            
-            // First, find buildings that match the search criteria
-            const matchingBuildings = await Building.find({
-                $or: [
-                    { 'address.street': searchRegex },
-                    { 'address.neighborhood': searchRegex },
-                    { 'address.borough': searchRegex }
-                ]
-            }).select('_id');
-
-            const buildingIds = matchingBuildings.map(b => b._id);
-
-            // Add search criteria to the query
-            query.$or = [
-                { building: { $in: buildingIds } },
-                { borough: searchRegex },
-                { neighborhood: searchRegex },
-                { unitNumber: searchRegex }
-            ];
-        }
+        let query = {};
         
         // Handle location-based filters
         if (neighborhoods && neighborhoods.length > 0) {
@@ -358,6 +332,35 @@ exports.searchProperties = async (req, res) => {
             query.price = {};
             if (minPrice) query.price.$gte = parseInt(minPrice);
             if (maxPrice) query.price.$lte = parseInt(maxPrice);
+        }
+        
+        // Handle text search if provided
+        if (search) {
+            const searchRegex = new RegExp(search, 'i');
+            
+            // First, find buildings that match the search criteria
+            const matchingBuildings = await Building.find({
+                $or: [
+                    { 'address.street': searchRegex },
+                    { 'address.city': searchRegex }
+                ]
+            }).select('_id');
+
+            const buildingIds = matchingBuildings.map(b => b._id);
+
+            // Combine search criteria with existing query using $and to preserve other filters
+            const searchQuery = {
+                $or: [
+                    { building: { $in: buildingIds } },
+                    { borough: searchRegex },
+                    { neighborhood: searchRegex },
+                    { unitNumber: searchRegex }
+                ]
+            };
+
+            query = query.hasOwnProperty('$and') 
+                ? { ...query, $and: [...query.$and, searchQuery] }
+                : { ...query, ...searchQuery };
         }
 
         console.log('Final query:', JSON.stringify(query, null, 2));

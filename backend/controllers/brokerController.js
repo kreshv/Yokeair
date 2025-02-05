@@ -1,28 +1,29 @@
-const Broker = require('../models/Broker');
+const User = require('../models/User');
 
 // Search brokers
 exports.searchBrokers = async (req, res) => {
     try {
         const { search } = req.query;
         
-        console.log('Received broker search query:', search);
-        
         if (!search) {
-            return res.json([]);
+            return res.status(400).json({ message: 'Search query is required' });
         }
 
+        // Create a case-insensitive regex for the search term
         const searchRegex = new RegExp(search, 'i');
-        
-        const brokers = await Broker.find({
+
+        // Find brokers that match the search criteria
+        const brokers = await User.find({
+            role: 'broker',
             $or: [
                 { firstName: searchRegex },
                 { lastName: searchRegex },
-                { email: searchRegex },
-                { brokerage: searchRegex }
+                { email: searchRegex }
             ]
-        });
+        })
+        .select('-password') // Exclude password from results
+        .sort({ firstName: 1, lastName: 1 }); // Sort by name
 
-        console.log(`Found ${brokers.length} matching brokers`);
         res.json(brokers);
     } catch (error) {
         console.error('Broker search error:', error);
