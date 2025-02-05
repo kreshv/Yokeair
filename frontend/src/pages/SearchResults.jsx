@@ -69,13 +69,13 @@ const SearchResults = () => {
                 };
 
                 // Search for both apartments and brokers in parallel
-                const [apartmentsResponse, brokersResponse] = await Promise.all([
+                const [propertiesData, brokersData] = await Promise.all([
                     searchProperties(queryParams),
                     searchQuery ? searchBrokers({ search: searchQuery }) : { data: [] }
                 ]);
 
-                setApartments(apartmentsResponse.data);
-                setBrokerages(brokersResponse.data);
+                setApartments(propertiesData.data || []);
+                setBrokerages(brokersData.data || []);
             } catch (err) {
                 console.error('Search error:', err);
                 setError(err.response?.data?.message || 'Failed to fetch search results');
