@@ -1,6 +1,6 @@
 [build]
   base = "frontend"
-  command = "npm ci && npm run build"
+  command = "npm install && npm run build"
   publish = "dist"
 
 [build.environment]
@@ -8,6 +8,7 @@
   NPM_VERSION = "10.2.4"
   VITE_API_URL = "https://yokeair.onrender.com/api"
   NODE_ENV = "production"
+  CI = "false"
 
 [[redirects]]
   from = "/*"
