@@ -15,7 +15,8 @@ import {
   BedOutlined, 
   BathtubOutlined, 
   SquareFootOutlined,
-  LocationOnOutlined
+  LocationOnOutlined,
+  Edit as EditIcon
 } from '@mui/icons-material';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
@@ -57,27 +58,68 @@ const ApartmentCard = ({ apartment = {}, isSaved: initialSaved = false, showSave
   }, [location.pathname, apartment._id]);
 
   const handleCardClick = () => {
-    // Update URL without full page reload
-    navigate(`/apartments/${apartment._id}`, { replace: true });
+    // Always update the URL to show the apartment ID
+    const currentState = location.state;  // Preserve any existing state (like search filters)
+    navigate(`/apartments/${apartment._id}`, { 
+      replace: true,
+      state: {
+        ...currentState,
+        previousPath: location.pathname,  // Store the previous path
+        scrollPosition: window.scrollY    // Store the scroll position
+      }
+    });
     setModalOpen(true);
   };
 
   const handleModalClose = () => {
-    // Remove apartment ID from URL when closing modal
-    navigate('/', { replace: true });
+    const previousPath = location.state?.previousPath || '/';
+    const scrollPosition = location.state?.scrollPosition || 0;
+    
+    // Remove the apartment ID from URL but preserve any search state
+    const currentState = { ...location.state };
+    delete currentState.previousPath;
+    delete currentState.scrollPosition;
+    
+    navigate(previousPath, { 
+      replace: true,
+      state: currentState
+    });
+    
     setModalOpen(false);
+    
+    // Restore scroll position after a short delay to allow for render
+    setTimeout(() => {
+      window.scrollTo(0, scrollPosition);
+    }, 100);
+  };
+
+  // Determine if edit button should be shown
+  const shouldShowEditButton = (() => {
+    // Only show edit button if user is a broker and the listing belongs to them
+    return user?.role === 'broker' && apartment?.brokerId === user?._id;
+  })();
+
+  const handleEditClick = (e) => {
+    e.stopPropagation();
+    // Store the current path to return to after editing
+    localStorage.setItem('returnPath', location.pathname);
+    // Store any existing state (like search filters)
+    if (location.state) {
+      localStorage.setItem('returnState', JSON.stringify(location.state));
+    }
+    navigate(`/edit-property/${apartment._id}`);
   };
 
   // Determine if save button should be shown
   const shouldShowSaveButton = (() => {
-    // If no user is logged in, don't show save button
-    if (!user) return false;
+    // If showSaveButton prop is false, don't show the button
+    if (!showSaveButton) return false;
     
-    // If user is a broker, don't show save button
-    if (user.role === 'broker') return false;
+    // If user is logged in and is a broker, don't show save button
+    if (user && user.role === 'broker') return false;
     
-    // If user is a client, show save button
-    return user.role === 'client';
+    // Show save button for non-logged-in users and clients
+    return true;
   })();
 
   // Check if apartment is saved when component mounts
@@ -125,12 +167,12 @@ const ApartmentCard = ({ apartment = {}, isSaved: initialSaved = false, showSave
     e.stopPropagation();
     
     if (!user) {
-      navigate('/register', { 
-        state: { 
-          returnTo: window.location.pathname,
-          fromSave: true 
-        }
-      });
+      // Store the apartment ID they tried to save
+      localStorage.setItem('pendingSave', apartment._id);
+      // Store the current path to return to
+      localStorage.setItem('returnPath', location.pathname);
+      // Redirect to register
+      navigate('/register');
       return;
     }
 
@@ -200,10 +242,85 @@ const ApartmentCard = ({ apartment = {}, isSaved: initialSaved = false, showSave
               <CardMedia
                 component="img"
                 height="200"
-                image={imageUrl}
+                image={images[currentImageIndex].url}
                 alt={`${bedrooms} bedroom apartment in ${neighborhood}`}
                 sx={{ objectFit: 'cover' }}
               />
+              {hasMultipleImages && (
+                <>
+                  <IconButton
+                    onClick={handlePrevImage}
+                    sx={{
+                      position: 'absolute',
+                      left: 8,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      opacity: 0,
+                      transition: 'all 0.3s ease-in-out',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                      },
+                      width: 30,
+                      height: 30,
+                      '& .MuiSvgIcon-root': {
+                        fontSize: '1.2rem',
+                      },
+                      '.MuiCard-root:hover &': {
+                        opacity: 1
+                      }
+                    }}
+                  >
+                    <NavigateBeforeIcon />
+                  </IconButton>
+                  <IconButton
+                    onClick={handleNextImage}
+                    sx={{
+                      position: 'absolute',
+                      right: 8,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      opacity: 0,
+                      transition: 'all 0.3s ease-in-out',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                      },
+                      width: 30,
+                      height: 30,
+                      '& .MuiSvgIcon-root': {
+                        fontSize: '1.2rem',
+                      },
+                      '.MuiCard-root:hover &': {
+                        opacity: 1
+                      }
+                    }}
+                  >
+                    <NavigateNextIcon />
+                  </IconButton>
+                </>
+              )}
+              {shouldShowEditButton && (
+                <IconButton
+                  onClick={handleEditClick}
+                  sx={{
+                    position: 'absolute',
+                    top: 8,
+                    right: shouldShowSaveButton ? 48 : 8,
+                    backgroundColor: 'rgba(128, 128, 128, 0.7)',
+                    transition: 'all 0.3s ease-in-out',
+                    '&:hover': {
+                      backgroundColor: 'rgba(128, 128, 128, 0.9)',
+                      transform: 'scale(1.1)'
+                    },
+                    '& .MuiSvgIcon-root': {
+                      color: 'white'
+                    }
+                  }}
+                >
+                  <EditIcon sx={{ fontSize: '1.2rem' }} />
+                </IconButton>
+              )}
               {shouldShowSaveButton && (
                 <IconButton
                   onClick={(e) => {
@@ -261,18 +378,47 @@ const ApartmentCard = ({ apartment = {}, isSaved: initialSaved = false, showSave
             )}
           </Box>
 
-          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <BedOutlined fontSize="small" />
-              <Typography variant="body2">{bedrooms === 0 ? 'Studio' : `${bedrooms} bed`}</Typography>
+          <Box 
+            sx={{ 
+                display: 'flex', 
+                gap: 1, 
+                mb: 2,
+                flexWrap: 'nowrap',
+                minWidth: 0,
+                '& > *': {
+                    flex: '0 0 auto'
+                }
+            }}
+          >
+            <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 0.5,
+                whiteSpace: 'nowrap',
+                minWidth: 0
+            }}>
+                <BedOutlined fontSize="small" />
+                <Typography variant="body2" noWrap>{bedrooms === 0 ? 'Studio' : `${bedrooms} bed`}</Typography>
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <BathtubOutlined fontSize="small" />
-              <Typography variant="body2">{bathrooms} bath</Typography>
+            <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 0.5,
+                whiteSpace: 'nowrap',
+                minWidth: 0
+            }}>
+                <BathtubOutlined fontSize="small" />
+                <Typography variant="body2" noWrap>{bathrooms} bath</Typography>
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <SquareFootOutlined fontSize="small" />
-              <Typography variant="body2">{squareFootage} ft²</Typography>
+            <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 0.5,
+                whiteSpace: 'nowrap',
+                minWidth: 0
+            }}>
+                <SquareFootOutlined fontSize="small" />
+                <Typography variant="body2" noWrap>{squareFootage} ft²</Typography>
             </Box>
           </Box>
 

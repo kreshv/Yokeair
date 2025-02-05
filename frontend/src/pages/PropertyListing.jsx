@@ -9,12 +9,14 @@ import {
   Typography,
   Alert,
   CircularProgress,
-  Grid
+  Grid,
+  IconButton
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { getLocations, checkUnitAvailability, createProperty, uploadPropertyImages } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import ImageUpload from '../components/ImageUpload';
+import { ArrowForwardIos } from '@mui/icons-material';
 
 const PropertyListing = () => {
   const navigate = useNavigate();
@@ -28,6 +30,7 @@ const PropertyListing = () => {
     unitNumber: '',
     bedrooms: '',
     bathrooms: '',
+    squareFootage: '',
     price: ''
   });
   const [errors, setErrors] = useState({});
@@ -107,6 +110,7 @@ const PropertyListing = () => {
     if (!formData.unitNumber) newErrors.unitNumber = 'Unit number is required';
     if (!formData.bedrooms && formData.bedrooms !== 0) newErrors.bedrooms = 'Bedrooms is required';
     if (!formData.bathrooms) newErrors.bathrooms = 'Bathrooms is required';
+    if (!formData.squareFootage) newErrors.squareFootage = 'Square footage is required';
     if (!formData.price) newErrors.price = 'Price is required';
 
     setErrors(newErrors);
@@ -124,6 +128,7 @@ const PropertyListing = () => {
         ...formData,
         bedrooms: parseInt(formData.bedrooms),
         bathrooms: parseFloat(formData.bathrooms),
+        squareFootage: parseInt(formData.squareFootage),
         price: formData.price.replace(/[^0-9.]/g, ''),
         buildingAmenities: [],
         unitFeatures: []
@@ -400,6 +405,18 @@ const PropertyListing = () => {
 
             <TextField
               fullWidth
+              label="Square Footage"
+              name="squareFootage"
+              value={formData.squareFootage}
+              onChange={handleInputChange}
+              variant="outlined"
+              error={!!errors.squareFootage}
+              helperText={errors.squareFootage}
+              sx={textFieldStyle}
+            />
+
+            <TextField
+              fullWidth
               label="Price"
               name="price"
               value={formData.price}
@@ -422,6 +439,7 @@ const PropertyListing = () => {
                 existingImages={images}
                 onDelete={handleImageDelete}
                 onError={setImageError}
+                onUpdateOrder={(newImages) => setImages(newImages)}
             />
             {imageError && (
                 <Typography color="error" variant="body2" sx={{ mt: 1 }}>
@@ -433,36 +451,33 @@ const PropertyListing = () => {
       </Container>
 
       {/* Next Button */}
-      <Button
-        variant="contained"
-        onClick={handleNext}
-        sx={{
-          position: 'fixed',
-          bottom: 32,
-          right: 32,
-          px: 3,
-          py: 1.5,
-          fontSize: '1rem',
-          fontWeight: 400,
-          color: '#000',
-          textTransform: 'uppercase',
-          letterSpacing: '1px',
-          backgroundColor: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(8px)',
-          borderRadius: '20px',
-          zIndex: 1000,
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          transition: 'all 0.3s ease-in-out',
-          '&:hover': {
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            transform: 'translateY(-4px)',
-            color: '#00008B',
-            boxShadow: '0 6px 8px rgba(0, 0, 0, 0.2)'
-          }
-        }}
-      >
-        Next
-      </Button>
+      <Box sx={{ 
+        position: 'fixed',
+        bottom: '50%',
+        right: '16px',
+        transform: 'translateY(50%)'
+      }}>
+        <IconButton 
+          onClick={handleNext}
+          sx={{
+            backgroundColor: 'transparent',
+            color: 'white',
+            padding: '16px',
+            borderRadius: '50%',
+            transform: 'scale(1.2)',
+            transition: 'all 0.2s ease-in-out',
+            '&:hover': {
+              transform: 'scale(1.3) translateX(8px)',
+              backgroundColor: 'transparent',
+              borderRadius: '8px',
+              width: '60px',
+              height: '60px'
+            }
+          }}
+        >
+          <ArrowForwardIos sx={{ fontSize: '1.5rem' }} />
+        </IconButton>
+      </Box>
     </Box>
   );
 };

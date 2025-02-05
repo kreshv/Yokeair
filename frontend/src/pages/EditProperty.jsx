@@ -247,7 +247,19 @@ const EditProperty = () => {
             const response = await updateProperty(id, updateData);
             setProperty(response.data);
             showSnackbar('Property updated successfully', 'success');
-            navigate('/dashboard');
+            
+            // Get the return path and state from localStorage
+            const returnPath = localStorage.getItem('returnPath');
+            const returnState = localStorage.getItem('returnState');
+            
+            // Clear the stored paths
+            localStorage.removeItem('returnPath');
+            localStorage.removeItem('returnState');
+            
+            // Navigate back to the previous page with the stored state
+            navigate(returnPath || '/dashboard', {
+                state: returnState ? JSON.parse(returnState) : undefined
+            });
         } catch (error) {
             console.error('Error updating property:', error);
             setError('Failed to update property. Please try again.');

@@ -25,6 +25,7 @@ exports.createProperty = async (req, res) => {
             bedrooms,
             bathrooms,
             price,
+            squareFootage,
             buildingAmenities,
             unitFeatures,
             broker
@@ -97,6 +98,7 @@ exports.createProperty = async (req, res) => {
         const parsedBedrooms = parseInt(bedrooms);
         const parsedBathrooms = parseFloat(bathrooms);
         const parsedPrice = parseFloat(price.toString().replace(/[^0-9.]/g, ''));
+        const parsedSquareFootage = parseInt(squareFootage);
 
         // Check for existing unit in the building
         const existingUnit = await Property.findOne({
@@ -120,6 +122,7 @@ exports.createProperty = async (req, res) => {
             price: parsedPrice,
             bedrooms: parsedBedrooms,
             bathrooms: parsedBathrooms,
+            squareFootage: parsedSquareFootage,
             features: unitFeatures || [],
             broker
         });
@@ -258,91 +261,124 @@ exports.getBrokerProperties = async (req, res) => {
 
 exports.searchProperties = async (req, res) => {
     try {
-        const {
-            neighborhoods,
-            boroughs,
-            minPrice,
-            maxPrice,
+        const { 
+            search, 
+            neighborhoods, 
+            boroughs, 
+            amenities, 
+            features,
             bedrooms,
             bathrooms,
-            amenities,
-            features
+            minPrice,
+            maxPrice
         } = req.query;
-
-        console.log('Received search params:', { 
-            neighborhoods, boroughs, bedrooms, bathrooms, amenities, features 
-        });
-
-        let query = { status: 'available' };
-
-        // Neighborhood filter
+        
+        let query = {};
+        
+        // Handle location-based filters
         if (neighborhoods && neighborhoods.length > 0) {
-            const neighborhoodArray = Array.isArray(neighborhoods) ? neighborhoods : [neighborhoods];
+            const neighborhoodArray = Array.isArray(neighborhoods) 
+                ? neighborhoods 
+                : [neighborhoods];
             query.neighborhood = { $in: neighborhoodArray };
         }
 
-        // Borough filter
         if (boroughs && boroughs.length > 0) {
-            const boroughArray = Array.isArray(boroughs) ? boroughs : [boroughs];
+            const boroughArray = Array.isArray(boroughs) 
+                ? boroughs 
+                : [boroughs];
             query.borough = { $in: boroughArray };
         }
 
-        // Bedrooms filter
-        if (bedrooms && bedrooms !== 'any') {
-            query.bedrooms = parseInt(bedrooms);
-        }
-
-        // Bathrooms filter
-        if (bathrooms && bathrooms !== 'any') {
-            query.bathrooms = parseFloat(bathrooms);
-        }
-
-        // Price range filter
-        if (minPrice || maxPrice) {
-            query.price = {};
-            if (minPrice) query.price.$gte = parseInt(minPrice);
-            if (maxPrice) query.price.$lte = parseInt(maxPrice);
-        }
-
-        // Building amenities filter
+        // Handle building amenity filters
         if (amenities && amenities.length > 0) {
-            const amenityArray = Array.isArray(amenities) ? amenities : [amenities];
-            // First, find buildings with these amenities
+            const amenityArray = Array.isArray(amenities) 
+                ? amenities 
+                : [amenities];
+            
+            // Find buildings that have all the specified amenities
             const buildingsWithAmenities = await Building.find({
                 amenities: { $all: amenityArray }
             }).select('_id');
-            
+
             // Add building filter to query
             query.building = { 
                 $in: buildingsWithAmenities.map(b => b._id) 
             };
         }
 
-        // Unit features filter
+        // Handle unit feature filters
         if (features && features.length > 0) {
-            const featureArray = Array.isArray(features) ? features : [features];
+            const featureArray = Array.isArray(features) 
+                ? features 
+                : [features];
+            
+            // Find properties that have all the specified features
             query.features = { $all: featureArray };
+        }
+
+        // Handle bedrooms filter
+        if (bedrooms && bedrooms !== 'any') {
+            query.bedrooms = parseInt(bedrooms);
+        }
+
+        // Handle bathrooms filter
+        if (bathrooms && bathrooms !== 'any') {
+            query.bathrooms = parseFloat(bathrooms);
+        }
+
+        // Handle price range filter
+        if (minPrice || maxPrice) {
+            query.price = {};
+            if (minPrice) query.price.$gte = parseInt(minPrice);
+            if (maxPrice) query.price.$lte = parseInt(maxPrice);
+        }
+        
+        // Handle text search if provided
+        if (search) {
+            const searchRegex = new RegExp(search, 'i');
+            
+            // First, find buildings that match the search criteria
+            const matchingBuildings = await Building.find({
+                $or: [
+                    { 'address.street': searchRegex },
+                    { 'address.city': searchRegex }
+                ]
+            }).select('_id');
+
+            const buildingIds = matchingBuildings.map(b => b._id);
+
+            // Combine search criteria with existing query using $and to preserve other filters
+            const searchQuery = {
+                $or: [
+                    { building: { $in: buildingIds } },
+                    { borough: searchRegex },
+                    { neighborhood: searchRegex },
+                    { unitNumber: searchRegex }
+                ]
+            };
+
+            query = query.hasOwnProperty('$and') 
+                ? { ...query, $and: [...query.$and, searchQuery] }
+                : { ...query, ...searchQuery };
         }
 
         console.log('Final query:', JSON.stringify(query, null, 2));
 
+        // Find properties based on query
         const properties = await Property.find(query)
             .populate({
                 path: 'building',
-                select: 'name address amenities',
                 populate: {
-                    path: 'amenities',
-                    model: 'Amenity'
+                    path: 'amenities'
                 }
             })
             .populate('features')
-            .sort('-createdAt');
+            .sort({ createdAt: -1 });
 
-        console.log(`Found ${properties.length} properties`);
-        
         res.json(properties);
     } catch (error) {
-        console.error('Search error:', error);
+        console.error('Property search error:', error);
         res.status(500).json({ message: 'Error searching properties' });
     }
 };

@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Box, Typography, Paper, CircularProgress, Alert, Grid, Button } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { Box, Typography, Paper, CircularProgress, Alert, Grid, Button, Container } from '@mui/material';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { searchProperties } from '../utils/api'; // Import the searchProperties function
+import { searchProperties, saveListing } from '../utils/api';
 import ApartmentCard from '../components/ApartmentCard';
 import '@fontsource/raleway'; // Import Raleway font
 
 const Home = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [apartments, setApartments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,7 +17,7 @@ const Home = () => {
   useEffect(() => {
     const fetchApartments = async () => {
       try {
-        const response = await searchProperties({}); // Fetch all apartments
+        const response = await searchProperties({});
         setApartments(response.data);
         setLoading(false);
       } catch (err) {
@@ -26,10 +27,35 @@ const Home = () => {
     };
 
     fetchApartments();
-  }, []);
+  }, [user]);
 
   const handleRefineSearch = () => {
     navigate('/location-selector');
+  };
+
+  const handleSaveClick = async (apartmentId) => {
+    if (!user) {
+      // Store the apartment ID they tried to save
+      localStorage.setItem('pendingSave', apartmentId);
+      // Store the current path to return to
+      localStorage.setItem('returnPath', location.pathname);
+      // Redirect to register
+      navigate('/register');
+      return;
+    }
+
+    try {
+      await saveListing(apartmentId);
+      // Update the UI to show the apartment as saved
+      setApartments(prevApartments => 
+        prevApartments.map(apt => 
+          apt._id === apartmentId ? { ...apt, isSaved: true } : apt
+        )
+      );
+    } catch (err) {
+      console.error('Failed to save listing:', err);
+      setError('Failed to save listing. Please try again.');
+    }
   };
 
   if (loading) {
@@ -56,70 +82,20 @@ const Home = () => {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundAttachment: 'fixed',
-        py: 5,
-        mt: 0,
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
+        py: 4,
+        mt: 0
       }}
     >
-      <Paper
-        elevation={5}
-        sx={{
-          p: 6,
-          maxWidth: 1200,
-          width: '90%',
-          borderRadius: '25px',
-          background: 'transparent',
-          backdropFilter: 'blur(10px)',
-          boxShadow: '0 12px 24px rgba(0, 0, 0, 0.3), 0 6px 12px rgba(255, 255, 255, 0.2)',
-          transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-          '&:hover': {
-            transform: 'translateY(-4px)',
-            boxShadow: '0 16px 32px rgba(0, 0, 0, 0.4), 0 8px 16px rgba(255, 255, 255, 0.3)',
-          },
-          mt: 6,
-          position: 'relative',
-        }}
-      >
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12}>
-            <Typography
-              variant="h6"
-              sx={{
-                fontWeight: 530,
-                mb: 10,
-                color: '#FFFFFF',
-                textTransform: 'uppercase',
-                fontSize: '1.30rem',
-                textAlign: 'center',
-                fontFamily: 'Raleway, sans-serif', // Apply Raleway font
-                textShadow: '3px 3px 6px rgba(0, 0, 0, 0.7)', // Enhanced text shadow for a stronger 3D effect
-                position: 'relative', // Position relative for pseudo-element
-                '&::after': {
-                  content: '""',
-                  position: 'absolute',
-                  left: '50%',
-                  bottom: '-2px', // Adjust position as needed
-                  width: '80%', // Width of the underline
-                  height: '1px', // Further reduced height for a thinner underline
-                  backgroundColor: 'rgba(255, 255, 255, 0.5)', // Smooth, transparent color
-                  transform: 'translateX(-50%)', // Center the underline
-                  borderRadius: '1px', // Rounded edges for a smoother look
-                },
-              }}
-            >
-              Apartments for Rent
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+      <Container sx={{ mt: 10 }}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }}>
             <Button
               variant="contained"
               onClick={handleRefineSearch}
               sx={{
-                px: 2,
-                py: 0.75,
-                fontSize: '0.875rem',
+                px: 2.5,
+                py: 1.2,
+                fontSize: '0.9rem',
                 fontWeight: 400,
                 color: '#000',
                 textTransform: 'uppercase',
@@ -141,17 +117,21 @@ const Home = () => {
             </Button>
           </Grid>
           <Grid item xs={12}>
-            {error && <Alert severity="error">{error}</Alert>}
+            {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
             <Grid container spacing={3}>
               {apartments.map((apartment) => (
                 <Grid item key={apartment._id} xs={12} sm={6} md={4}>
-                  <ApartmentCard apartment={apartment} />
+                  <ApartmentCard 
+                    apartment={apartment}
+                    showSaveButton={true}
+                    onSaveClick={() => handleSaveClick(apartment._id)}
+                  />
                 </Grid>
               ))}
             </Grid>
           </Grid>
         </Grid>
-      </Paper>
+      </Container>
     </Box>
   );
 };

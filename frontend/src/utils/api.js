@@ -46,8 +46,14 @@ export const checkUnitAvailability = (address, borough, unitNumber) =>
 export const checkEmailAvailability = (email) => 
   api.get('/auth/check-email', { params: { email } });
 export const getBrokerProperties = () => api.get('/properties');
-export const searchProperties = (params) => 
-  api.get('/properties/search', { params });
+export const searchProperties = async (params) => {
+    try {
+        const response = await api.get('/properties/search', { params });
+        return response;
+    } catch (error) {
+        throw error;
+    }
+};
 export const updatePropertyStatus = (propertyId, status) => 
   api.patch(`/properties/${propertyId}/status`, { status });
 export const deleteProperty = async (propertyId) => {
@@ -221,6 +227,34 @@ export const changePassword = async (currentPassword, newPassword) => {
         newPassword
     });
     return response.data;
+};
+
+/*
+  Adding new API function to fetch square footage for a given property
+  This function calls the backend getProperty endpoint and returns the squareFootage field from the property data
+*/
+
+export const getSquareFootage = async (propertyId) => {
+  try {
+    const response = await api.get(`/properties/${propertyId}`);
+    // Assuming the property data includes squareFootage field
+    return response.data.squareFootage;
+  } catch (error) {
+    console.error('Error fetching square footage for property:', error);
+    throw error;
+  }
+};
+
+// Add new function to get broker's public listings
+export const getBrokerPublicListings = (brokerId) => api.get(`/brokers/${brokerId}/listings`);
+
+export const searchBrokerages = async (params) => {
+    try {
+        const response = await api.get('/brokers/search', { params });
+        return response;
+    } catch (error) {
+        throw error;
+    }
 };
 
 export default api; 

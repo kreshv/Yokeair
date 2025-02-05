@@ -20,7 +20,7 @@ import {
     Apartment as ApartmentIcon,
     Home as HomeIcon
 } from '@mui/icons-material';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const formatPrice = (price) => {
     return new Intl.NumberFormat('en-US', {
@@ -46,6 +46,22 @@ const ApartmentDetailModal = ({ open, onClose, apartment }) => {
             prev === 0 ? apartment.images.length - 1 : prev - 1
         );
     };
+
+    // Add keyboard event handler
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (!open || !apartment?.images?.length) return;
+            
+            if (e.key === 'ArrowLeft') {
+                handlePrevImage();
+            } else if (e.key === 'ArrowRight') {
+                handleNextImage();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [open, apartment]);
 
     if (!apartment) return null;
 
@@ -201,30 +217,50 @@ const ApartmentDetailModal = ({ open, onClose, apartment }) => {
                                 </Typography>
                             </Box>
 
-                            <Grid container spacing={1} sx={{ mb: 2 }}>
-                                <Grid item xs={2}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                        <BedOutlined sx={{ mr: 1 }} />
-                                        <Typography>
-                                            {apartment.bedrooms === 1 ? '1 bedroom' : `${apartment.bedrooms} bedrooms`}
-                                        </Typography>
-                                    </Box>
-                                </Grid>
-                                <Grid item xs={2}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                        <BathtubOutlined sx={{ mr: 1 }} />
-                                        <Typography>
-                                            {apartment.bathrooms === 1 ? '1 bathroom' : `${apartment.bathrooms} bathrooms`}
-                                        </Typography>
-                                    </Box>
-                                </Grid>
-                                <Grid item xs={4}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                        <SquareFootOutlined sx={{ mr: 1 }} />
-                                        <Typography>{apartment.squareFootage} ft²</Typography>
-                                    </Box>
-                                </Grid>
-                            </Grid>
+                            <Box 
+                                sx={{ 
+                                    display: 'flex', 
+                                    gap: 3,
+                                    mb: 2,
+                                    flexWrap: 'nowrap',
+                                    minWidth: 0,
+                                    '& > *': {
+                                        flex: '0 0 auto'
+                                    }
+                                }}
+                            >
+                                <Box sx={{ 
+                                    display: 'flex', 
+                                    alignItems: 'center',
+                                    whiteSpace: 'nowrap',
+                                    minWidth: 0
+                                }}>
+                                    <BedOutlined sx={{ mr: 1 }} />
+                                    <Typography noWrap>
+                                        {apartment.bedrooms === 0 ? 'Studio' : apartment.bedrooms === 1 ? '1 bedroom' : `${apartment.bedrooms} bedrooms`}
+                                    </Typography>
+                                </Box>
+                                <Box sx={{ 
+                                    display: 'flex', 
+                                    alignItems: 'center',
+                                    whiteSpace: 'nowrap',
+                                    minWidth: 0
+                                }}>
+                                    <BathtubOutlined sx={{ mr: 1 }} />
+                                    <Typography noWrap>
+                                        {apartment.bathrooms === 1 ? '1 bathroom' : `${apartment.bathrooms} bathrooms`}
+                                    </Typography>
+                                </Box>
+                                <Box sx={{ 
+                                    display: 'flex', 
+                                    alignItems: 'center',
+                                    whiteSpace: 'nowrap',
+                                    minWidth: 0
+                                }}>
+                                    <SquareFootOutlined sx={{ mr: 1 }} />
+                                    <Typography noWrap>{apartment.squareFootage} ft²</Typography>
+                                </Box>
+                            </Box>
                         </Box>
 
                         {/* Building Amenities Section */}

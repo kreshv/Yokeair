@@ -338,36 +338,42 @@ const Register = () => {
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         email: formData.email,
-        phone: phoneDigits, // Send only digits to backend
+        phone: phoneDigits,
         password: formData.password,
         role: formData.isBroker ? 'broker' : 'client'
       };
 
       const response = await register(userData);
       if (response.data.token) {
-        login(response.data.token);
-        // Send verification email
-        await resendVerificationEmail();
-        // Show success message
-        setSnackbar({
-          open: true,
-          message: 'Registration successful! Please check your email for verification.',
-          severity: 'success'
-        });
-        navigate('/');
+        await login(response.data.token);
+        
+        // Get the return path if it exists
+        const returnPath = localStorage.getItem('returnPath');
+        
+        // Get the pending save if it exists
+        const pendingSave = localStorage.getItem('pendingSave');
+        
+        // If there's a pending save, try to save it now
+        if (pendingSave) {
+          try {
+            await saveListing(pendingSave);
+          } catch (err) {
+            console.error('Failed to save listing after registration:', err);
+          }
+        }
+        
+        // Clear the storage
+        localStorage.removeItem('returnPath');
+        localStorage.removeItem('pendingSave');
+        
+        // Redirect to the return path if it exists, otherwise go to home
+        navigate(returnPath || '/');
       }
     } catch (err) {
       console.error('Registration error:', err);
       setError(err.response?.data?.message || 'An error occurred during registration');
     }
-  }, [
-    formData, 
-    emailError, 
-    login, 
-    location.state, 
-    fromShowcasing, 
-    navigate
-  ]);
+  }, [formData, emailError, login, navigate]);
 
   const textFieldStyle = {
     '& .MuiOutlinedInput-root': {

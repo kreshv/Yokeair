@@ -77,10 +77,24 @@ const ImageUpload = ({
     };
 
     const handleDragEnd = (result) => {
-        if (!result.destination) return;
+        const { source, destination } = result;
+        
+        // If dropped outside the list or no change in position
+        if (!destination || 
+            (source.index === destination.index && source.droppableId === destination.droppableId)) {
+            return;
+        }
+
+        // Create a new array from the existing images
         const reorderedImages = Array.from(existingImages);
-        const [removed] = reorderedImages.splice(result.source.index, 1);
-        reorderedImages.splice(result.destination.index, 0, removed);
+        
+        // Remove the dragged item from its original position
+        const [movedImage] = reorderedImages.splice(source.index, 1);
+        
+        // Insert the dragged item at its new position
+        reorderedImages.splice(destination.index, 0, movedImage);
+        
+        // Update parent component with new order
         onUpdateOrder(reorderedImages);
     };
 
@@ -140,16 +154,63 @@ const ImageUpload = ({
             )}
 
             <DragDropContext onDragEnd={handleDragEnd}>
-                <Droppable droppableId="imageUpload" direction="horizontal">
-                    {(provided) => (
+                <Droppable 
+                    droppableId="imageUpload"
+                    renderClone={(provided, snapshot, rubric) => (
+                        <Box
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            sx={{
+                                position: 'relative',
+                                width: 120,
+                                height: 120,
+                                borderRadius: '8px',
+                                overflow: 'hidden',
+                                boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
+                                transform: 'scale(1.05)',
+                                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                                cursor: 'grabbing',
+                                opacity: 0.8,
+                                backgroundColor: '#fff',
+                                zIndex: 1300
+                            }}
+                        >
+                            <img
+                                src={getImageUrl(existingImages[rubric.source.index])}
+                                alt={`Property image ${rubric.source.index + 1}`}
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover',
+                                    pointerEvents: 'none'
+                                }}
+                            />
+                        </Box>
+                    )}
+                >
+                    {(provided, snapshot) => (
                         <Box 
-                            ref={provided.innerRef} 
-                            {...provided.droppableProps} 
+                            ref={provided.innerRef}
+                            {...provided.droppableProps}
                             sx={{ 
-                                display: 'flex', 
-                                flexWrap: 'wrap', 
-                                gap: 2,
-                                mt: 2 
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                gap: '16px',
+                                mt: 2,
+                                minHeight: '300px',
+                                padding: '8px',
+                                backgroundColor: snapshot.isDraggingOver ? 'rgba(0, 0, 0, 0.04)' : 'transparent',
+                                transition: 'all 0.2s ease',
+                                borderRadius: '8px',
+                                width: '100%',
+                                position: 'relative',
+                                alignItems: 'flex-start',
+                                justifyContent: 'flex-start',
+                                '& > *': {  // Add specific styling for direct children
+                                    flex: '0 0 120px',  // Fixed width, no growing or shrinking
+                                    margin: '0 !important',  // Override any margin
+                                }
                             }}
                         >
                             {existingImages.map((image, index) => (
@@ -158,7 +219,7 @@ const ImageUpload = ({
                                     draggableId={`image-${index}`} 
                                     index={index}
                                 >
-                                    {(provided) => (
+                                    {(provided, snapshot) => (
                                         <Box
                                             ref={provided.innerRef}
                                             {...provided.draggableProps}
@@ -169,7 +230,25 @@ const ImageUpload = ({
                                                 height: 120,
                                                 borderRadius: '8px',
                                                 overflow: 'hidden',
-                                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                                boxShadow: snapshot.isDragging 
+                                                    ? '0 8px 16px rgba(0,0,0,0.2)' 
+                                                    : '0 2px 4px rgba(0,0,0,0.1)',
+                                                transform: snapshot.isDragging ? 'scale(1.05)' : 'scale(1)',
+                                                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                                                cursor: snapshot.isDragging ? 'grabbing' : 'grab',
+                                                opacity: snapshot.isDragging ? 0.8 : 1,
+                                                backgroundColor: '#fff',
+                                                zIndex: snapshot.isDragging ? 1300 : 1,
+                                                '&::before': snapshot.isDragging ? {
+                                                    content: '""',
+                                                    position: 'absolute',
+                                                    top: 0,
+                                                    left: 0,
+                                                    right: 0,
+                                                    bottom: 0,
+                                                    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                                                    zIndex: 1
+                                                } : {}
                                             }}
                                         >
                                             <img
@@ -178,7 +257,8 @@ const ImageUpload = ({
                                                 style={{
                                                     width: '100%',
                                                     height: '100%',
-                                                    objectFit: 'cover'
+                                                    objectFit: 'cover',
+                                                    pointerEvents: 'none'
                                                 }}
                                             />
                                             <IconButton
@@ -193,7 +273,8 @@ const ImageUpload = ({
                                                         backgroundColor: 'rgba(255, 255, 255, 0.9)',
                                                         transform: 'scale(1.1)',
                                                         color: '#FF0000'
-                                                    }
+                                                    },
+                                                    zIndex: 2
                                                 }}
                                                 size="small"
                                             >

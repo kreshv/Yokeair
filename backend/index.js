@@ -98,14 +98,16 @@ const propertyRoutes = require('./routes/propertyRoutes');
 const amenityRoutes = require('./routes/amenityRoutes');
 const locationRoutes = require('./routes/locationRoutes');
 const applicationRoutes = require('./routes/applicationRoutes');
+const brokerRoutes = require('./routes/brokers');
 
-// Mount routes with explicit paths
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/properties', propertyRoutes);
 app.use('/api/amenities', amenityRoutes);
 app.use('/api/locations', locationRoutes);
 app.use('/api/applications', applicationRoutes);
+app.use('/api/brokers', brokerRoutes);
 
 // After other route registrations, add:
 app.use('/api/features', require('./routes/features'));
@@ -130,11 +132,8 @@ app.use('*', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error('Error:', err);
-    res.status(500).json({ 
-        message: err.message || 'Something went wrong!',
-        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
-    });
+  console.error(err.stack);
+  res.status(500).json({ message: 'Something went wrong!' });
 });
 
 const PORT = process.env.PORT || 5001;

@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, createRoutesFromElements } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { motion } from 'framer-motion';
 import { ThemeProvider } from '@mui/material/styles';
@@ -30,6 +30,8 @@ const PropertyDetail = lazy(() => import('./pages/PropertyDetail'));
 const EmailVerification = lazy(() => import('./pages/EmailVerification'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const BrokerProfile = lazy(() => import('./pages/BrokerProfile'));
+const SearchResults = lazy(() => import('./pages/SearchResults'));
 
 // Context
 import { AuthProvider } from './context/AuthContext';
@@ -62,7 +64,7 @@ const App = () => {
       <CssBaseline />
       <AuthProvider>
         <SnackbarProvider>
-          <Router>
+          <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <PageTransition>
               <Suspense fallback={<CircularProgress />}>
                 <Routes>
@@ -83,6 +85,8 @@ const App = () => {
                     <Route path="/verify-email/:token" element={<EmailVerification />} />
                     <Route path="/reset-password/:token" element={<ResetPassword />} />
                     <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/broker/:brokerId" element={<BrokerProfile />} />
+                    <Route path="/search" element={<SearchResults />} />
                   </Route>
                   <Route element={<AuthLayout />}>
                     <Route path="/login" element={<Login />} />
