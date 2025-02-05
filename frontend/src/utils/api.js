@@ -49,6 +49,7 @@ export const searchProperties = async (params) => {
         const response = await api.get('/properties/search', { params });
         return response;
     } catch (error) {
+        console.error('Property search error:', error);
         throw error;
     }
 };
@@ -251,6 +252,16 @@ export const searchBrokerages = async (params) => {
         const response = await api.get('/brokers/search', { params });
         return response;
     } catch (error) {
+        throw error;
+    }
+};
+
+export const searchBrokers = async (params) => {
+    try {
+        const response = await api.get('/brokers/search', { params });
+        return response;
+    } catch (error) {
+        console.error('Broker search error:', error);
         throw error;
     }
 };
