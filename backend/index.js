@@ -16,6 +16,32 @@ const mongoose = require('mongoose');
 const securityHeaders = require('./middleware/securityHeaders');
 const app = express();
 
+// CORS configuration
+const corsOptions = {
+    origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+    optionsSuccessStatus: 200
+};
+
+// Apply CORS first, before any other middleware
+app.use(cors(corsOptions));
+
+// Body parser middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Detailed logging middleware
+app.use((req, res, next) => {
+  console.log('Request Details:');
+  console.log('Method:', req.method);
+  console.log('Path:', req.path);
+  console.log('Origin:', req.get('origin'));
+  console.log('Headers:', req.headers);
+  next();
+});
+
 // Import models for seeding
 const Feature = require('./models/Feature');
 
@@ -53,43 +79,6 @@ const connectMongoose = async () => {
 
 // Call the connection function
 connectMongoose();
-
-// Detailed logging middleware
-app.use((req, res, next) => {
-  console.log('Request Details:');
-  console.log('Method:', req.method);
-  console.log('Path:', req.path);
-  console.log('Origin:', req.get('origin'));
-  console.log('Headers:', req.headers);
-  next();
-});
-
-// Update CORS configuration to allow both development and production domains
-const corsOptions = {
-  origin: process.env.NODE_ENV === 'production'
-    ? ['https://yokeair.com', 'https://www.yokeair.com', 'https://jolly-douhua-92a088.netlify.app']
-    : ['http://localhost:3000', 'http://localhost:5173'],
-  credentials: true,
-  optionsSuccessStatus: 200
-};
-
-app.use(cors(corsOptions));
-app.use(securityHeaders);
-
-app.use(express.json());
-
-// Basic route tests
-app.get('/', (req, res) => {
-  res.json({ message: 'Root endpoint working' });
-});
-
-app.get('/api', (req, res) => {
-  res.json({ message: 'API endpoint working' });
-});
-
-app.get('/api/test', (req, res) => {
-  res.json({ message: 'Test endpoint working' });
-});
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
@@ -132,8 +121,12 @@ app.use('*', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
+    console.error('Error:', err);
+    res.status(500).json({
+        message: 'Something went wrong!',
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined,
+        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
 });
 
 const PORT = process.env.PORT || 5001;
@@ -144,4 +137,6 @@ console.log('Connecting to MongoDB...');
 
 app.listen(PORT, () => {
     console.log(`✓ Server running on port ${PORT}`);
-}); 
+});
+
+module.exports = app; 
