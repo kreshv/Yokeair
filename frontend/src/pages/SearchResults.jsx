@@ -7,14 +7,81 @@ import {
     CircularProgress,
     Alert,
     Button,
-    Divider,
-    Paper
 } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
 import ApartmentCard from '../components/ApartmentCard';
-import { searchProperties, searchBrokerages } from '../utils/api';
-import { LocationOnOutlined, Phone, Email } from '@mui/icons-material';
+import { searchService } from '../api/api';
 import SortButton from '../components/SortButton';
+import BrokerageCard from '../components/BrokerageCard';
+import NoResults from '../components/NoResults';
+
+const BrokeragesSection = ({ brokerages, onBrokerageClick }) => {
+    if (!brokerages.length) return null;
+    
+    return (
+        <Box sx={{ mb: 6 }}>
+            <Typography
+                variant="h6"
+                sx={{
+                    color: '#FFFFFF',
+                    mb: 3,
+                    fontWeight: 500,
+                    textTransform: 'uppercase',
+                    fontSize: '1.1rem',
+                    textShadow: '0 0 10px rgba(255, 255, 255, 0.5)'
+                }}
+            >
+                Matching Brokerages
+            </Typography>
+            <Grid container spacing={3}>
+                {brokerages.map((brokerage) => (
+                    <Grid item xs={12} sm={6} md={4} key={brokerage._id}>
+                        <BrokerageCard 
+                            brokerage={brokerage}
+                            onClick={() => onBrokerageClick(brokerage._id)}
+                        />
+                    </Grid>
+                ))}
+            </Grid>
+        </Box>
+    );
+};
+
+const PropertiesSection = ({ apartments, onSort }) => {
+    if (!apartments.length) return null;
+
+    return (
+        <Box>
+            <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                mb: 3 
+            }}>
+                <Typography
+                    variant="h6"
+                    sx={{
+                        color: '#FFFFFF',
+                        fontWeight: 500,
+                        textTransform: 'uppercase',
+                        fontSize: '1.1rem',
+                        textShadow: '0 0 10px rgba(255, 255, 255, 0.15)'
+                    }}
+                >
+                    Matching Properties
+                </Typography>
+                <SortButton onSort={onSort} />
+            </Box>
+            <Grid container spacing={3}>
+                {apartments.map((apartment) => (
+                    <Grid item key={apartment._id} xs={12} sm={6} md={4}>
+                        <ApartmentCard apartment={apartment} />
+                    </Grid>
+                ))}
+            </Grid>
+        </Box>
+    );
+};
 
 const SearchResults = () => {
     const location = useLocation();
@@ -41,22 +108,32 @@ const SearchResults = () => {
 
     useEffect(() => {
         const searchQuery = new URLSearchParams(location.search).get('search');
+        const searchParams = location.state || {};
         
         const fetchResults = async () => {
             setLoading(true);
             setError('');
             try {
-                // Search for both apartments and brokerages in parallel
-                const [apartmentsResponse, brokeragesResponse] = await Promise.all([
-                    searchProperties({ search: searchQuery }),
-                    searchBrokerages({ search: searchQuery })
+                const [propertiesResult, brokeragesResult] = await Promise.all([
+                    searchService.searchProperties({ 
+                        search: searchQuery,
+                        ...searchParams 
+                    }),
+                    searchService.searchBrokerages({ search: searchQuery })
                 ]);
 
-                setApartments(apartmentsResponse.data);
-                setBrokerages(brokeragesResponse.data);
+                if (!propertiesResult.success) {
+                    throw new Error(propertiesResult.error);
+                }
+                if (!brokeragesResult.success) {
+                    throw new Error(brokeragesResult.error);
+                }
+
+                setApartments(propertiesResult.data);
+                setBrokerages(brokeragesResult.data);
             } catch (err) {
                 console.error('Search error:', err);
-                setError('Failed to fetch search results');
+                setError(err.message || 'Failed to fetch search results');
             } finally {
                 setLoading(false);
             }
@@ -65,7 +142,7 @@ const SearchResults = () => {
         if (searchQuery) {
             fetchResults();
         }
-    }, [location.search]);
+    }, [location.search, location.state]);
 
     const handleBrokerageClick = (brokerId) => {
         navigate(`/broker/${brokerId}`);
@@ -99,121 +176,19 @@ const SearchResults = () => {
         >
             <Container sx={{ mt: 10 }}>
                 {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
-
-                {/* Brokerages Section */}
-                {brokerages.length > 0 && (
-                    <Box sx={{ mb: 6 }}>
-                        <Typography
-                            variant="h6"
-                            sx={{
-                                color: '#FFFFFF',
-                                mb: 3,
-                                fontWeight: 500,
-                                textTransform: 'uppercase',
-                                fontSize: '1.1rem',
-                                textShadow: '0 0 10px rgba(255, 255, 255, 0.5)'
-                            }}
-                        >
-                            Matching Brokerages
-                        </Typography>
-                        <Grid container spacing={3}>
-                            {brokerages.map((brokerage) => (
-                                <Grid item xs={12} sm={6} md={4} key={brokerage._id}>
-                                    <Paper
-                                        onClick={() => handleBrokerageClick(brokerage._id)}
-                                        sx={{
-                                            p: 3,
-                                            borderRadius: '15px',
-                                            cursor: 'pointer',
-                                            transition: 'all 0.3s ease',
-                                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                                            '&:hover': {
-                                                transform: 'translateY(-4px)',
-                                                boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
-                                            }
-                                        }}
-                                    >
-                                        <Typography variant="h6" gutterBottom>
-                                            {brokerage.firstName} {brokerage.lastName}
-                                        </Typography>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                            <Email sx={{ mr: 1, fontSize: '0.9rem', color: 'text.secondary' }} />
-                                            <Typography variant="body2" color="text.secondary">
-                                                {brokerage.email}
-                                            </Typography>
-                                        </Box>
-                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                            <Phone sx={{ mr: 1, fontSize: '0.9rem', color: 'text.secondary' }} />
-                                            <Typography variant="body2" color="text.secondary">
-                                                {brokerage.phone}
-                                            </Typography>
-                                        </Box>
-                                    </Paper>
-                                </Grid>
-                            ))}
-                        </Grid>
-                    </Box>
-                )}
-
-                {/* Apartments Section */}
-                {apartments.length > 0 && (
-                    <Box>
-                        <Box sx={{ 
-                            display: 'flex', 
-                            justifyContent: 'space-between', 
-                            alignItems: 'center',
-                            mb: 3 
-                        }}>
-                            <Typography
-                                variant="h6"
-                                sx={{
-                                    color: '#FFFFFF',
-                                    fontWeight: 500,
-                                    textTransform: 'uppercase',
-                                    fontSize: '1.1rem',
-                                    textShadow: '0 0 10px rgba(255, 255, 255, 0.15)'
-                                }}
-                            >
-                                Matching Properties
-                            </Typography>
-                            <SortButton onSort={handleSort} />
-                        </Box>
-                        <Grid container spacing={3}>
-                            {apartments.map((apartment) => (
-                                <Grid item key={apartment._id} xs={12} sm={6} md={4}>
-                                    <ApartmentCard apartment={apartment} />
-                                </Grid>
-                            ))}
-                        </Grid>
-                    </Box>
-                )}
+                
+                <BrokeragesSection 
+                    brokerages={brokerages}
+                    onBrokerageClick={handleBrokerageClick}
+                />
+                
+                <PropertiesSection 
+                    apartments={apartments}
+                    onSort={handleSort}
+                />
 
                 {apartments.length === 0 && brokerages.length === 0 && (
-                    <Box sx={{ 
-                        display: 'flex', 
-                        justifyContent: 'center', 
-                        alignItems: 'center',
-                        minHeight: '50vh',
-                        flexDirection: 'column',
-                        gap: 2
-                    }}>
-                        <Typography variant="h6" sx={{ color: '#FFFFFF' }}>
-                            No results found
-                        </Typography>
-                        <Button
-                            variant="contained"
-                            onClick={() => navigate('/')}
-                            sx={{
-                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                                color: '#000',
-                                '&:hover': {
-                                    backgroundColor: 'rgba(255, 255, 255, 1)',
-                                }
-                            }}
-                        >
-                            Return Home
-                        </Button>
-                    </Box>
+                    <NoResults onReturnHome={() => navigate('/')} />
                 )}
             </Container>
         </Box>
