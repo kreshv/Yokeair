@@ -51,6 +51,7 @@ export const searchProperties = async (params) => {
         const response = await api.get('/properties/search', { params });
         return response;
     } catch (error) {
+        console.error('Search properties error:', error);
         throw error;
     }
 };
@@ -59,6 +60,7 @@ export const searchBrokerages = async (params) => {
         const response = await api.get('/brokers/search', { params });
         return response;
     } catch (error) {
+        console.error('Search brokerages error:', error);
         throw error;
     }
 };

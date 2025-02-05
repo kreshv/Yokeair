@@ -9,6 +9,8 @@ exports.searchBrokers = async (req, res) => {
             return res.status(400).json({ message: 'Search query is required' });
         }
 
+        console.log('Searching brokers with query:', search);
+
         // Create a case-insensitive regex for the search term
         const searchRegex = new RegExp(search, 'i');
 
@@ -24,6 +26,7 @@ exports.searchBrokers = async (req, res) => {
         .select('-password') // Exclude password from results
         .sort({ firstName: 1, lastName: 1 }); // Sort by name
 
+        console.log(`Found ${brokers.length} brokers for search: ${search}`);
         res.json(brokers);
     } catch (error) {
         console.error('Broker search error:', error);
