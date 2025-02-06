@@ -8,7 +8,6 @@ const Building = require('../models/Building');
 // Search properties
 router.get('/search', async (req, res) => {
     try {
-        console.log('Received search request:', req.query);
         const {
             search,
             minPrice,
@@ -22,17 +21,17 @@ router.get('/search', async (req, res) => {
         } = req.query;
 
         // Build the query object
-        const query = { status: 'available' };
+        const query = {};
 
         // Text search conditions
-        if (search && typeof search === 'string') {
-            const searchPattern = search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+        if (search) {
+            const searchRegex = new RegExp(search, 'i');
             query.$or = [
-                { 'building.address.street': { $regex: searchPattern, $options: 'i' } },
-                { 'building.address.city': { $regex: searchPattern, $options: 'i' } },
-                { borough: { $regex: searchPattern, $options: 'i' } },
-                { neighborhood: { $regex: searchPattern, $options: 'i' } },
-                { unitNumber: { $regex: searchPattern, $options: 'i' } }
+                { 'building.address.street': searchRegex },
+                { 'building.address.city': searchRegex },
+                { borough: searchRegex },
+                { neighborhood: searchRegex },
+                { unitNumber: searchRegex }
             ];
         }
 
@@ -65,7 +64,7 @@ router.get('/search', async (req, res) => {
                 'amenities': { $all: amenityList }
             }).select('_id');
             
-            query['building'] = {
+            query.building = {
                 $in: buildingsWithAmenities.map(b => b._id)
             };
         }
@@ -77,27 +76,36 @@ router.get('/search', async (req, res) => {
 
         console.log('Search query:', JSON.stringify(query, null, 2));
 
-        // Execute the query with proper population
+        // Execute the query with proper population and error handling
         const properties = await Property.find(query)
             .populate({
                 path: 'building',
-                select: 'name address amenities broker images',
+                select: 'name address amenities broker',
                 populate: {
-                    path: 'amenities broker',
-                    select: 'name type firstName lastName email phone'
+                    path: 'amenities',
+                    select: 'name type'
                 }
             })
             .populate('features', 'name type')
-            .lean();
+            .sort({ createdAt: -1 })
+            .lean()
+            .exec();
 
-        console.log(`Found ${properties.length} properties matching the search criteria`);
+        // Filter out any properties with null references
+        const validProperties = properties.filter(prop => 
+            prop.building && 
+            prop.building.address
+        );
+
+        console.log(`Found ${validProperties.length} valid properties out of ${properties.length} total`);
         
-        res.json(properties);
+        res.json(validProperties);
     } catch (error) {
         console.error('Property search error:', error);
         res.status(500).json({ 
             message: 'Error searching properties',
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 });

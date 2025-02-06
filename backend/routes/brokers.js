@@ -56,44 +56,7 @@ router.get('/:brokerId/listings', async (req, res) => {
     }
 });
 
-// Search brokers
-router.get('/search', async (req, res) => {
-    try {
-        console.log('Received broker search request:', req.query);
-        const { search } = req.query;
-
-        const query = { role: 'broker' };
-
-        if (search && typeof search === 'string') {
-            const searchPattern = search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
-            query.$or = [
-                { firstName: { $regex: searchPattern, $options: 'i' } },
-                { lastName: { $regex: searchPattern, $options: 'i' } },
-                { email: { $regex: searchPattern, $options: 'i' } },
-                { phone: { $regex: searchPattern, $options: 'i' } },
-                { 'address.street': { $regex: searchPattern, $options: 'i' } },
-                { 'address.city': { $regex: searchPattern, $options: 'i' } },
-                { 'address.state': { $regex: searchPattern, $options: 'i' } },
-                { 'address.zipCode': { $regex: searchPattern, $options: 'i' } }
-            ];
-        }
-
-        console.log('Broker search query:', JSON.stringify(query, null, 2));
-
-        const brokers = await User.find(query)
-            .select('firstName lastName email phone profilePicture address')
-            .lean();
-
-        console.log(`Found ${brokers.length} brokers matching the search criteria`);
-
-        res.json(brokers);
-    } catch (error) {
-        console.error('Broker search error:', error);
-        res.status(500).json({
-            message: 'Error searching brokers',
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined
-        });
-    }
-});
+// Search brokers - Public
+router.get('/search', searchBrokers);
 
 module.exports = router; 
