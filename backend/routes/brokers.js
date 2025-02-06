@@ -56,7 +56,44 @@ router.get('/:brokerId/listings', async (req, res) => {
     }
 });
 
-// Search brokers - Public
-router.get('/search', searchBrokers);
+// Search brokers
+router.get('/search', async (req, res) => {
+    try {
+        console.log('Received broker search request:', req.query);
+        const { search } = req.query;
+
+        const query = { role: 'broker' };
+
+        if (search) {
+            const searchRegex = new RegExp(search, 'i');
+            query.$or = [
+                { firstName: searchRegex },
+                { lastName: searchRegex },
+                { email: searchRegex },
+                { phone: searchRegex },
+                { 'address.street': searchRegex },
+                { 'address.city': searchRegex },
+                { 'address.state': searchRegex },
+                { 'address.zipCode': searchRegex }
+            ];
+        }
+
+        console.log('Broker search query:', JSON.stringify(query, null, 2));
+
+        const brokers = await User.find(query)
+            .select('firstName lastName email phone profilePicture address')
+            .lean();
+
+        console.log(`Found ${brokers.length} brokers matching the search criteria`);
+
+        res.json(brokers);
+    } catch (error) {
+        console.error('Broker search error:', error);
+        res.status(500).json({
+            message: 'Error searching brokers',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+});
 
 module.exports = router; 

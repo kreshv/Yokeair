@@ -22,7 +22,7 @@ router.get('/search', async (req, res) => {
         } = req.query;
 
         // Build the query object
-        const query = {};
+        const query = { status: 'available' };
 
         // Text search conditions
         if (search) {
@@ -65,7 +65,7 @@ router.get('/search', async (req, res) => {
                 'amenities': { $all: amenityList }
             }).select('_id');
             
-            query.building = {
+            query['building'] = {
                 $in: buildingsWithAmenities.map(b => b._id)
             };
         }
@@ -77,36 +77,27 @@ router.get('/search', async (req, res) => {
 
         console.log('Search query:', JSON.stringify(query, null, 2));
 
-        // Execute the query with proper population and error handling
+        // Execute the query with proper population
         const properties = await Property.find(query)
             .populate({
                 path: 'building',
-                select: 'name address amenities broker',
+                select: 'name address amenities broker images',
                 populate: {
-                    path: 'amenities',
-                    select: 'name type'
+                    path: 'amenities broker',
+                    select: 'name type firstName lastName email phone'
                 }
             })
             .populate('features', 'name type')
-            .sort({ createdAt: -1 })
-            .lean()
-            .exec();
+            .lean();
 
-        // Filter out any properties with null references
-        const validProperties = properties.filter(prop => 
-            prop.building && 
-            prop.building.address
-        );
-
-        console.log(`Found ${validProperties.length} valid properties out of ${properties.length} total`);
+        console.log(`Found ${properties.length} properties matching the search criteria`);
         
-        res.json(validProperties);
+        res.json(properties);
     } catch (error) {
         console.error('Property search error:', error);
         res.status(500).json({ 
             message: 'Error searching properties',
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 });
