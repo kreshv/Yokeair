@@ -25,14 +25,14 @@ router.get('/search', async (req, res) => {
         const query = { status: 'available' };
 
         // Text search conditions
-        if (search) {
-            const searchRegex = new RegExp(search, 'i');
+        if (search && typeof search === 'string') {
+            const searchPattern = search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
             query.$or = [
-                { 'building.address.street': searchRegex },
-                { 'building.address.city': searchRegex },
-                { borough: searchRegex },
-                { neighborhood: searchRegex },
-                { unitNumber: searchRegex }
+                { 'building.address.street': { $regex: searchPattern, $options: 'i' } },
+                { 'building.address.city': { $regex: searchPattern, $options: 'i' } },
+                { borough: { $regex: searchPattern, $options: 'i' } },
+                { neighborhood: { $regex: searchPattern, $options: 'i' } },
+                { unitNumber: { $regex: searchPattern, $options: 'i' } }
             ];
         }
 

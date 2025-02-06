@@ -64,17 +64,17 @@ router.get('/search', async (req, res) => {
 
         const query = { role: 'broker' };
 
-        if (search) {
-            const searchRegex = new RegExp(search, 'i');
+        if (search && typeof search === 'string') {
+            const searchPattern = search.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
             query.$or = [
-                { firstName: searchRegex },
-                { lastName: searchRegex },
-                { email: searchRegex },
-                { phone: searchRegex },
-                { 'address.street': searchRegex },
-                { 'address.city': searchRegex },
-                { 'address.state': searchRegex },
-                { 'address.zipCode': searchRegex }
+                { firstName: { $regex: searchPattern, $options: 'i' } },
+                { lastName: { $regex: searchPattern, $options: 'i' } },
+                { email: { $regex: searchPattern, $options: 'i' } },
+                { phone: { $regex: searchPattern, $options: 'i' } },
+                { 'address.street': { $regex: searchPattern, $options: 'i' } },
+                { 'address.city': { $regex: searchPattern, $options: 'i' } },
+                { 'address.state': { $regex: searchPattern, $options: 'i' } },
+                { 'address.zipCode': { $regex: searchPattern, $options: 'i' } }
             ];
         }
 

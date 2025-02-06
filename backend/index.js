@@ -19,7 +19,7 @@ const app = express();
 // CORS configuration
 const corsOptions = {
     origin: process.env.NODE_ENV === 'production'
-        ? ['https://jolly-douhua-92a088.netlify.app', 'https://yokeair.onrender.com']
+        ? ['https://jolly-douhua-92a088.netlify.app', 'https://yokeair.onrender.com', 'https://yokeair.com', 'https://www.yokeair.com']
         : ['http://localhost:5173', 'http://127.0.0.1:5173'],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token'],
