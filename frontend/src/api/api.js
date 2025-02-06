@@ -5,6 +5,36 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 // Configure axios defaults
 axios.defaults.withCredentials = true;
 
+// Add request interceptor for debugging
+axios.interceptors.request.use(request => {
+  console.log('Starting Request:', {
+    url: request.url,
+    method: request.method,
+    headers: request.headers
+  });
+  return request;
+});
+
+// Add response interceptor for debugging
+axios.interceptors.response.use(
+  response => {
+    console.log('Response:', {
+      status: response.status,
+      data: response.data,
+      headers: response.headers
+    });
+    return response;
+  },
+  error => {
+    console.error('Response Error:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status
+    });
+    return Promise.reject(error);
+  }
+);
+
 export const getBrokerPublicListings = async (brokerId) => {
   try {
     const response = await axios.get(`${API_URL}/api/brokers/${brokerId}/listings`);
@@ -35,8 +65,10 @@ const searchService = {
       if (params.neighborhoods?.length) queryParams.append('neighborhoods', params.neighborhoods.join(','));
       if (params.boroughs?.length) queryParams.append('boroughs', params.boroughs.join(','));
 
-      console.log('Making request to:', `${API_URL}/api/properties/search?${queryParams.toString()}`);
-      const response = await axios.get(`${API_URL}/api/properties/search?${queryParams.toString()}`);
+      const url = `${API_URL}/api/properties/search?${queryParams.toString()}`;
+      console.log('Making request to:', url);
+      
+      const response = await axios.get(url);
       return {
         data: response.data,
         success: true
@@ -57,8 +89,10 @@ const searchService = {
       const queryParams = new URLSearchParams();
       if (params.search) queryParams.append('search', params.search);
       
-      console.log('Making request to:', `${API_URL}/api/brokers/search?${queryParams.toString()}`);
-      const response = await axios.get(`${API_URL}/api/brokers/search?${queryParams.toString()}`);
+      const url = `${API_URL}/api/brokers/search?${queryParams.toString()}`;
+      console.log('Making request to:', url);
+      
+      const response = await axios.get(url);
       return {
         data: response.data,
         success: true

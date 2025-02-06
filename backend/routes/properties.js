@@ -8,6 +8,7 @@ const Building = require('../models/Building');
 // Search properties
 router.get('/search', async (req, res) => {
     try {
+        console.log('Received search request:', req.query);
         const {
             search,
             minPrice,
