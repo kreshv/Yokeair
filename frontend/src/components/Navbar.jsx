@@ -15,6 +15,7 @@ const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const hideSearchBarRoutes = ['/location-selector', '/search-filters', '/profile', '/dashboard', '/property-listing', '/edit-property', '/saved-listings', '/my-applications'];
   const [anchorEl, setAnchorEl] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -169,61 +170,63 @@ const Navbar = () => {
           </RouterLink>
 
           {/* Search Field */}
-          <Box sx={{ 
-            flexGrow: 1, 
-            display: 'flex', 
-            justifyContent: 'center', 
-            maxWidth: '600px',
-            mx: 'auto',
-            transition: 'all 0.3s ease-in-out',
-            transform: isSearchFocused ? 'translateY(20px) scale(1.05)' : 'none',
-            zIndex: 1001
-          }}>
-            <TextField
-              ref={searchInputRef}
-              placeholder="Search addresses, neighborhoods, brokerages..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={handleSearch}
-              onFocus={() => setIsSearchFocused(true)}
-              onBlur={() => setIsSearchFocused(false)}
-              variant="outlined"
-              fullWidth
-              autoComplete="off"
-              sx={{
-                backgroundColor: isSearchFocused ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.9)',
-                borderRadius: '12px',
-                transform: isSearchFocused ? 'translateZ(50px)' : 'none',
-                transition: 'all 0.3s ease-in-out',
-                boxShadow: isSearchFocused ? '0 8px 32px rgba(0, 0, 0, 0.2)' : 'none',
-                '& .MuiOutlinedInput-root': {
+          {!hideSearchBarRoutes.some(route => location.pathname.startsWith(route)) && (
+            <Box sx={{ 
+              flexGrow: 1, 
+              display: 'flex', 
+              justifyContent: 'center', 
+              maxWidth: '600px',
+              mx: 'auto',
+              transition: 'all 0.3s ease-in-out',
+              transform: isSearchFocused ? 'translateY(20px) scale(1.05)' : 'none',
+              zIndex: 1001
+            }}>
+              <TextField
+                ref={searchInputRef}
+                placeholder="Search addresses, neighborhoods, brokerages..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={handleSearch}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setIsSearchFocused(false)}
+                variant="outlined"
+                fullWidth
+                autoComplete="off"
+                sx={{
+                  backgroundColor: isSearchFocused ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.9)',
                   borderRadius: '12px',
+                  transform: isSearchFocused ? 'translateZ(50px)' : 'none',
                   transition: 'all 0.3s ease-in-out',
-                  '&:hover': {
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#4169E1',
-                    }
-                  },
-                  '&.Mui-focused': {
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#4169E1',
-                      borderWidth: '2px'
+                  boxShadow: isSearchFocused ? '0 8px 32px rgba(0, 0, 0, 0.2)' : 'none',
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '12px',
+                    transition: 'all 0.3s ease-in-out',
+                    '&:hover': {
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#4169E1',
+                      }
+                    },
+                    '&.Mui-focused': {
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: '#4169E1',
+                        borderWidth: '2px'
+                      }
                     }
                   }
-                }
-              }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon sx={{ 
-                      color: isSearchFocused ? '#4169E1' : 'text.secondary',
-                      transition: 'all 0.3s ease-in-out'
-                    }} />
-                  </InputAdornment>
-                )
-              }}
-            />
-          </Box>
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ 
+                        color: isSearchFocused ? '#4169E1' : 'text.secondary',
+                        transition: 'all 0.3s ease-in-out'
+                      }} />
+                    </InputAdornment>
+                  )
+                }}
+              />
+            </Box>
+          )}
 
           <Box sx={{ display: 'flex', gap: 2 }}>
             {user ? (
