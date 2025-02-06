@@ -26,12 +26,11 @@ const BrokeragesSection = ({ brokerages, onBrokerageClick }) => {
                     color: '#FFFFFF',
                     mb: 3,
                     fontWeight: 500,
-                    textTransform: 'uppercase',
                     fontSize: '1.1rem',
                     textShadow: '0 0 10px rgba(255, 255, 255, 0.5)'
                 }}
             >
-                Matching Brokerages
+                Matching Brokerages ({brokerages.length})
             </Typography>
             <Grid container spacing={3}>
                 {brokerages.map((brokerage) => (
@@ -63,12 +62,11 @@ const PropertiesSection = ({ apartments, onSort }) => {
                     sx={{
                         color: '#FFFFFF',
                         fontWeight: 500,
-                        textTransform: 'uppercase',
                         fontSize: '1.1rem',
                         textShadow: '0 0 10px rgba(255, 255, 255, 0.15)'
                     }}
                 >
-                    Matching Properties
+                    Matching Properties ({apartments.length})
                 </Typography>
                 <SortButton onSort={onSort} />
             </Box>
