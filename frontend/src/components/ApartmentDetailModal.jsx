@@ -7,7 +7,8 @@ import {
     Grid,
     Chip,
     useTheme,
-    useMediaQuery
+    useMediaQuery,
+    Button
 } from '@mui/material';
 import {
     Close as CloseIcon,
@@ -18,9 +19,13 @@ import {
     SquareFootOutlined,
     LocationOnOutlined,
     Apartment as ApartmentIcon,
-    Home as HomeIcon
+    Home as HomeIcon,
+    CalendarMonth as CalendarIcon,
+    Assignment as AssignmentIcon
 } from '@mui/icons-material';
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const formatPrice = (price) => {
     return new Intl.NumberFormat('en-US', {
@@ -34,6 +39,8 @@ const ApartmentDetailModal = ({ open, onClose, apartment }) => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const theme = useTheme();
     const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
+    const { user } = useAuth();
+    const navigate = useNavigate();
 
     const handleNextImage = () => {
         setCurrentImageIndex((prev) => 
@@ -62,6 +69,24 @@ const ApartmentDetailModal = ({ open, onClose, apartment }) => {
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [open, apartment]);
+
+    const handleScheduleViewing = () => {
+        if (!user) {
+            navigate('/login', { state: { from: `/apartments/${apartment._id}`, action: 'schedule' } });
+            return;
+        }
+        // TODO: Implement scheduling functionality
+        console.log('Schedule viewing for apartment:', apartment._id);
+    };
+
+    const handleApply = () => {
+        if (!user) {
+            navigate('/login', { state: { from: `/apartments/${apartment._id}`, action: 'apply' } });
+            return;
+        }
+        // TODO: Implement application functionality
+        console.log('Apply for apartment:', apartment._id);
+    };
 
     if (!apartment) return null;
 
@@ -373,6 +398,87 @@ const ApartmentDetailModal = ({ open, onClose, apartment }) => {
                             </Box>
                         )}
                     </Box>
+                </Box>
+                {/* Action Buttons */}
+                <Box
+                    sx={{
+                        position: 'fixed',
+                        bottom: { xs: 16, md: 42 },
+                        right: { xs: 16, md: 30 },
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 2,
+                        zIndex: theme.zIndex.modal + 1,
+                        transformOrigin: 'left',
+                        animation: 'rollInFromLeft 0.7s ease-out',
+                        '@keyframes rollInFromLeft': {
+                            '0%': {
+                                transform: 'translateX(-50px) rotateY(-90deg)',
+                                opacity: 0
+                            },
+                            '60%': {
+                                transform: 'translateX(10px) rotateY(20deg)',
+                                opacity: 1
+                            },
+                            '100%': {
+                                transform: 'translateX(0) rotateY(0deg)',
+                                opacity: 1
+                            }
+                        }
+                    }}
+                >
+                    <Button
+                        variant="contained"
+                        onClick={handleScheduleViewing}
+                        sx={{
+                            background: 'linear-gradient(145deg, #F5E6E8, #E8D8D9)',
+                            color: '#6B4F4F',
+                            borderRadius: '12px',
+                            px: 2.5,
+                            py: 1.2,
+                            minWidth: '160px',
+                            textTransform: 'uppercase',
+                            fontSize: '0.85rem',
+                            letterSpacing: '0.5px',
+                            fontWeight: 570,
+                            border: '1px solid rgba(107, 79, 79, 0.1)',
+                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                            '&:hover': {
+                                background: 'linear-gradient(145deg, #E8D8D9, #F5E6E8)',
+                                transform: 'translateY(-1px)',
+                                boxShadow: '0 4px 8px rgba(107, 79, 79, 0.15)',
+                                transition: 'all 0.3s ease-in-out'
+                            }
+                        }}
+                    >
+                        Schedule a viewing
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={handleApply}
+                        sx={{
+                            background: 'linear-gradient(145deg, #F5E6E8, #E8D8D9)',
+                            color: '#6B4F4F',
+                            borderRadius: '12px',
+                            px: 2.5,
+                            py: 1.2,
+                            minWidth: '160px',
+                            textTransform: 'uppercase',
+                            fontSize: '0.85rem',
+                            letterSpacing: '0.5px',
+                            fontWeight: 570,
+                            border: '1px solid rgba(107, 79, 79, 0.1)',
+                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                            '&:hover': {
+                                background: 'linear-gradient(145deg, #E8D8D9, #F5E6E8)',
+                                transform: 'translateY(-1px)',
+                                boxShadow: '0 4px 8px rgba(107, 79, 79, 0.15)',
+                                transition: 'all 0.3s ease-in-out'
+                            }
+                        }}
+                    >
+                        Apply here
+                    </Button>
                 </Box>
             </DialogContent>
         </Dialog>

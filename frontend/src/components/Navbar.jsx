@@ -147,26 +147,8 @@ const Navbar = () => {
         }}
       >
         <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 2, sm: 4 } }}>
-          <RouterLink to="/">
-            <img 
-              src="/logo.png" 
-              alt="Yoke Logo" 
-              style={{ 
-                height: '45px',
-                objectFit: 'contain',
-                borderRadius: '15px',
-                boxShadow: '0 2px 12px rgba(75, 0, 130, 0.15)',
-                transition: 'all 0.2s ease-in-out'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = 'scale(1.05)';
-                e.currentTarget.style.boxShadow = '0 4px 15px rgba(75, 0, 130, 0.25)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.boxShadow = '0 2px 12px rgba(75, 0, 130, 0.15)';
-              }}
-            />
+          <RouterLink to="/" style={{ textDecoration: 'none' }}>
+            <Typography variant="h6" component="div" sx={{ fontWeight: 'bold', fontFamily: 'Didot, serif', color: '#FAF8F3', cursor: 'pointer', fontSize: '1.5rem' }}>home</Typography>
           </RouterLink>
 
           {/* Search Field */}
