@@ -39,88 +39,10 @@ const formatPrice = (price) => {
     }).format(price);
 };
 
-const ModalActionButtons = ({ onScheduleViewing, onApply, theme }) => (
-    <Box
-        sx={{
-            position: 'fixed',
-            bottom: { xs: 26, md: 52 },
-            right: { xs: 26, md: 55 },
-            display: 'none',
-            flexDirection: 'column',
-            gap: 2,
-            zIndex: theme.zIndex.modal + 1,
-            transformOrigin: 'left',
-            animation: 'rollInFromLeft 1.5s ease-out',
-            '@keyframes rollInFromLeft': {
-                '0%': {
-                    transform: 'translateX(-50px) rotateY(-90deg)',
-                    opacity: 0
-                },
-                '60%': {
-                    transform: 'translateX(10px) rotateY(20deg)',
-                    opacity: 1
-                },
-                '100%': {
-                    transform: 'translateX(0) rotateY(0deg)',
-                    opacity: 1
-                }
-            }
-        }}
-    >
-        <Button
-            variant="contained"
-            onClick={onScheduleViewing}
-            sx={{
-                background: '#D0E6FA',
-                color: '#000000',
-                borderRadius: '12px',
-                px: 2.5,
-                py: 1.2,
-                minWidth: '160px',
-                textTransform: 'uppercase',
-                fontSize: '0.85rem',
-                letterSpacing: '0.5px',
-                fontWeight: 500,
-                border: '1px solid rgba(107, 79, 79, 0.1)',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
-                '&:hover': {
-                    background: '#BBDEFB',
-                    transform: 'translateY(-1px)',
-                    boxShadow: '0 4px 8px rgba(107, 79, 79, 0.15)',
-                    transition: 'all 0.3s ease-in-out'
-                }
-            }}
-        >
-            Viewing
-        </Button>
-        <Button
-            variant="contained"
-            onClick={onApply}
-            sx={{
-                background: '#D0E6FA',
-                color: '#000000',
-                borderRadius: '12px',
-                px: 2.5,
-                py: 1.2,
-                minWidth: '160px',
-                textTransform: 'uppercase',
-                fontSize: '0.85rem',
-                letterSpacing: '0.5px',
-                fontWeight: 500,
-                border: '1px solid rgba(107, 79, 79, 0.1)',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
-                '&:hover': {
-                    background: '#BBDEFB',
-                    transform: 'translateY(-1px)',
-                    boxShadow: '0 4px 8px rgba(107, 79, 79, 0.15)',
-                    transition: 'all 0.3s ease-in-out'
-                }
-            }}
-        >
-            Applying
-        </Button>
-    </Box>
-);
+const ModalActionButtons = ({ onScheduleViewing, onApply, theme }) => {
+    // Temporarily hide the buttons
+    return null;
+};
 
 const ApartmentDetailModal = ({ open, onClose, apartment }) => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
