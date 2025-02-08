@@ -38,6 +38,16 @@ router.get('/:brokerId/listings', async (req, res) => {
             formattedProperty.buildingAmenities = property.building.amenities.map(amenity => amenity.name);
             formattedProperty.propertyFeatures = property.features.map(feature => feature.name);
 
+            // Add broker information to each property
+            formattedProperty.broker = {
+                _id: broker._id,
+                firstName: broker.firstName,
+                lastName: broker.lastName,
+                email: broker.email,
+                phone: broker.phone,
+                profilePicture: broker.profilePicture
+            };
+
             return formattedProperty;
         });
 

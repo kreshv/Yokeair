@@ -15,7 +15,7 @@ const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const hideSearchBarRoutes = ['/location-selector', '/search-filters', '/profile', '/dashboard', '/property-listing', '/edit-property', '/saved-listings', '/my-applications'];
+  const hideSearchBarRoutes = ['/location-selector', '/search-filters', '/profile', '/dashboard', '/property-listing', '/edit-property', '/saved-listings', '/my-applications', '/login', '/register'];
   const [anchorEl, setAnchorEl] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);

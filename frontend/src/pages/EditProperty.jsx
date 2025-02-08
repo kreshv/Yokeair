@@ -281,7 +281,8 @@ const EditProperty = () => {
                 background: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("/design2.png")`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
-                py: 4
+                pt: 12,
+                pb: 4,
             }}
         >
             <Container>
@@ -290,7 +291,7 @@ const EditProperty = () => {
                         p: 4,
                         mt: 12,
                         borderRadius: '25px',
-                        width: '600px',
+                        width: '615px',
                         margin: '0 auto',
                         background: 'linear-gradient(145deg, rgba(245, 241, 237, 0.9), rgba(236, 229, 221, 0.8))',
                         backdropFilter: 'blur(10px)',

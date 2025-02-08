@@ -61,7 +61,11 @@ const AmenityButton = ({ name, selected, onClick }) => (
 const SearchFilters = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { neighborhoods, boroughs } = location.state || {};
+    
+    // Parse locations from URL parameters instead of location.state
+    const searchParams = new URLSearchParams(location.search);
+    const neighborhoods = searchParams.get('neighborhoods')?.split(',') || [];
+    const boroughs = searchParams.get('boroughs')?.split(',') || [];
 
     const [priceRange, setPriceRange] = useState([0, 10000]);
     const [bedrooms, setBedrooms] = useState('');
@@ -99,28 +103,67 @@ const SearchFilters = () => {
         fetchUnitFeatures();
     }, []);
 
+    // Add function to handle search with all parameters
     const handleSearch = () => {
-        console.log('Sending search params:', {
-            neighborhoods,
-            boroughs,
-            bedrooms,
-            bathrooms,
-            minPrice: priceRange[0],
-            maxPrice: priceRange[1],
-            amenities: selectedAmenities,
-            features: selectedFeatures
-        });
+        const params = new URLSearchParams();
 
-        navigate('/apartments', {
+        // Add locations (exact match)
+        if (neighborhoods.length > 0) {
+            params.set('neighborhoods', neighborhoods.join(','));
+        }
+        if (boroughs.length > 0) {
+            params.set('boroughs', boroughs.join(','));
+        }
+
+        // Add price range (exact match)
+        params.set('minPrice', priceRange[0].toString());
+        params.set('maxPrice', priceRange[1].toString());
+        
+        // Add rooms (exact match)
+        if (bedrooms !== '') {
+            params.set('bedrooms', bedrooms.toString());
+        }
+        if (bathrooms !== '') {
+            params.set('bathrooms', bathrooms.toString());
+        }
+        
+        // Add amenities and features (at least match)
+        if (selectedAmenities.length > 0) {
+            params.set('amenities', selectedAmenities.join(','));
+            params.set('amenitiesMatchType', 'atLeast');
+        }
+        
+        if (selectedFeatures.length > 0) {
+            params.set('features', selectedFeatures.join(','));
+            params.set('featuresMatchType', 'atLeast');
+        }
+
+        // Update URL without causing a reload
+        window.history.replaceState(
+            { 
+                neighborhoods,
+                boroughs,
+                priceRange,
+                bedrooms,
+                bathrooms,
+                selectedAmenities,
+                selectedFeatures
+            },
+            '',
+            `/apartments?${params.toString()}`
+        );
+
+        // Navigate programmatically
+        navigate(`/apartments?${params.toString()}`, {
+            replace: true,
             state: {
                 neighborhoods,
                 boroughs,
-                minPrice: priceRange[0],
-                maxPrice: priceRange[1],
+                priceRange,
                 bedrooms,
                 bathrooms,
-                amenities: selectedAmenities,
-                features: selectedFeatures
+                selectedAmenities,
+                selectedFeatures
             }
         });
     };
@@ -292,7 +335,7 @@ const SearchFilters = () => {
                     }
                 }}
             >
-                Search
+                Show Results
             </Button>
         </Box>
     );

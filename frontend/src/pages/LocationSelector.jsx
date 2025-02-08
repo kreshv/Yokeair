@@ -9,15 +9,18 @@ const BoroughButton = ({ borough, selected, onClick }) => (
     variant="text"
     onClick={onClick}
     sx={{
-      px: 4,
-      py: 1.5,
-      fontSize: '1.3rem',
+      px: '2vw',  // Responsive padding based on viewport width
+      py: '0.8vh', // Responsive padding based on viewport height
+      fontSize: 'clamp(0.8rem, 1.5vw, 1.3rem)', // Responsive font size that scales between 0.8rem and 1.3rem
       fontWeight: 500,
       color: 'white',
       textTransform: 'uppercase',
-      letterSpacing: '1px',
+      letterSpacing: 'clamp(0.5px, 0.2vw, 1px)',
       borderRadius: '20px',
       position: 'relative',
+      whiteSpace: 'nowrap',
+      minWidth: 'unset',
+      width: '100%', // Take full width of parent
       '&::after': {
         content: '""',
         position: 'absolute',
@@ -47,28 +50,29 @@ const NeighborhoodButton = ({ neighborhood, selected, onClick }) => (
     variant="text"
     onClick={onClick}
     sx={{
-      py: 1,
-      px: 4,
-      minWidth: '250px',
-      fontSize: '1.1rem',
+      py: 'clamp(0.3rem, 0.6vh, 1rem)',
+      px: 'clamp(0.8rem, 1.5vw, 3rem)',
+      fontSize: 'clamp(0.7rem, 1.2vw, 1.1rem)',
       color: selected ? 'white' : 'rgba(255, 255, 255, 0.8)',
       textTransform: 'uppercase',
-      letterSpacing: '0.5px',
+      letterSpacing: 'clamp(0.3px, 0.15vw, 0.5px)',
       borderRadius: '20px',
       position: 'relative',
       justifyContent: 'flex-start',
       textAlign: 'left',
       whiteSpace: 'nowrap',
+      width: '100%',
       '&::after': {
         content: '""',
         position: 'absolute',
         bottom: 0,
-        left: '10%',
-        right: '10%',
+        left: '7%',
+        right: '40%',
         height: '1px',
         backgroundColor: 'white',
         transform: selected ? 'scaleX(1)' : 'scaleX(0)',
         transition: 'transform 0.3s ease-in-out',
+        transformOrigin: 'left',
       },
       '&:hover': {
         backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -94,7 +98,11 @@ const LocationSelector = () => {
     const fetchLocations = async () => {
       try {
         const response = await getLocations();
-        setLocations(response.data);
+        const boroughOrder = ['Manhattan', 'Brooklyn', 'Queens', 'Bronx', 'Staten Island'];
+        const sortedLocations = response.data.sort((a, b) => {
+          return boroughOrder.indexOf(a.borough) - boroughOrder.indexOf(b.borough);
+        });
+        setLocations(sortedLocations);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching locations:', error.response || error);
@@ -123,11 +131,35 @@ const LocationSelector = () => {
     });
   };
 
-  const handleNext = () => {
-    navigate('/search-filters', {
+  const handleContinue = () => {
+    const params = new URLSearchParams();
+    
+    if (selectedBoroughs.length > 0) {
+      params.set('boroughs', selectedBoroughs.join(','));
+    }
+    
+    if (selectedNeighborhoods.length > 0) {
+      params.set('neighborhoods', selectedNeighborhoods.join(','));
+    }
+
+    // Update URL without causing a reload
+    window.history.replaceState(
+      {
+        selectedBoroughs,
+        selectedNeighborhoods,
+        scrollPosition: window.scrollY
+      },
+      '',
+      `/search-filters?${params.toString()}`
+    );
+    
+    // Navigate programmatically
+    navigate(`/search-filters?${params.toString()}`, {
+      replace: true,
       state: {
-        neighborhoods: selectedNeighborhoods,
-        boroughs: selectedBoroughs
+        selectedBoroughs,
+        selectedNeighborhoods,
+        scrollPosition: window.scrollY
       }
     });
   };
@@ -177,10 +209,11 @@ const LocationSelector = () => {
           sx={{
             display: 'flex',
             justifyContent: 'center',
-            gap: 3,
-            flexWrap: 'wrap',
-            mb: 4,
-            width: '100%'
+            gap: 'clamp(0.5rem, 1vw, 2rem)', // Responsive gap that scales with viewport width
+            width: '90%', // Take 90% of container width
+            maxWidth: '1200px',
+            mx: 'auto',
+            flexWrap: 'nowrap'
           }}
         >
           {locations.map((location) => (
@@ -190,7 +223,8 @@ const LocationSelector = () => {
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                position: 'relative'
+                position: 'relative',
+                width: `${100 / locations.length}%`, // Divide space equally based on number of boroughs
               }}
             >
               <BoroughButton
@@ -205,21 +239,30 @@ const LocationSelector = () => {
                 sx={{
                   position: 'absolute',
                   top: '100%',
-                  width: 'auto',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: location.borough === 'Brooklyn' ? 'clamp(150px, 30vw, 320px)' : 'clamp(150px, 25vw, 300px)',
                   zIndex: 1
                 }}
               >
                 <Box
                   sx={{
-                    mt: 1,
+                    mt: 'clamp(0.3rem, 0.8vh, 1rem)',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: 0.5,
+                    gap: 'clamp(0.2rem, 0.4vh, 0.5rem)',
                     backgroundColor: 'rgba(255, 255, 255, 0.1)',
                     backdropFilter: 'blur(8px)',
-                    borderRadius: '4px',
-                    py: 1,
-                    minWidth: '250px'
+                    borderRadius: 'clamp(4px, 0.5vw, 8px)',
+                    py: 'clamp(0.3rem, 0.8vh, 1rem)',
+                    px: 'clamp(0.3rem, 0.5vw, 1rem)',
+                    maxHeight: location.borough === 'Brooklyn' ? 'none' : '60vh',
+                    overflowY: location.borough === 'Brooklyn' ? 'visible' : 'auto',
+                    msOverflowStyle: 'none',
+                    scrollbarWidth: 'none',
+                    '&::-webkit-scrollbar': {
+                      display: 'none'
+                    }
                   }}
                 >
                   {location.neighborhoods.map((neighborhood) => (
@@ -278,7 +321,7 @@ const LocationSelector = () => {
         transform: 'translateY(50%)' // Adjust for exact centering
       }}>
         <IconButton 
-          onClick={handleNext}
+          onClick={handleContinue}
           sx={{
             backgroundColor: 'transparent',
             color: 'white',

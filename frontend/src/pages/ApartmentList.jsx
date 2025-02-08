@@ -17,29 +17,91 @@ import SortButton from '../components/SortButton';
 const ApartmentList = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const searchParams = location.state || {};
     const [apartments, setApartments] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         const fetchApartments = async () => {
             try {
                 setLoading(true);
-                const response = await searchProperties(searchParams);
+                const searchParams = new URLSearchParams(location.search);
+                const filters = {};
+                
+                // Add neighborhoods
+                const neighborhoods = searchParams.getAll('neighborhoods[]');
+                if (neighborhoods.length > 0) {
+                    filters.neighborhoods = neighborhoods.join(',');
+                } else {
+                    const neighborhoodsStr = searchParams.get('neighborhoods');
+                    if (neighborhoodsStr) {
+                        filters.neighborhoods = neighborhoodsStr;
+                    }
+                }
+                
+                // Add boroughs
+                const boroughs = searchParams.getAll('boroughs[]');
+                if (boroughs.length > 0) {
+                    filters.boroughs = boroughs.join(',');
+                } else {
+                    const boroughsStr = searchParams.get('boroughs');
+                    if (boroughsStr) {
+                        filters.boroughs = boroughsStr;
+                    }
+                }
+                
+                // Add price range
+                const minPrice = searchParams.get('minPrice');
+                const maxPrice = searchParams.get('maxPrice');
+                if (minPrice) filters.minPrice = minPrice;
+                if (maxPrice) filters.maxPrice = maxPrice;
+                
+                // Add rooms
+                const bedrooms = searchParams.get('bedrooms');
+                const bathrooms = searchParams.get('bathrooms');
+                if (bedrooms) filters.bedrooms = bedrooms;
+                if (bathrooms) filters.bathrooms = bathrooms;
+                
+                // Add amenities and features with match types
+                const amenities = searchParams.getAll('amenities[]');
+                if (amenities.length > 0) {
+                    filters.amenities = amenities.join(',');
+                    filters.amenitiesMatchType = searchParams.get('amenitiesMatchType') || 'exact';
+                } else {
+                    const amenitiesStr = searchParams.get('amenities');
+                    if (amenitiesStr) {
+                        filters.amenities = amenitiesStr;
+                        filters.amenitiesMatchType = searchParams.get('amenitiesMatchType') || 'exact';
+                    }
+                }
+                
+                const features = searchParams.getAll('features[]');
+                if (features.length > 0) {
+                    filters.features = features.join(',');
+                    filters.featuresMatchType = searchParams.get('featuresMatchType') || 'exact';
+                } else {
+                    const featuresStr = searchParams.get('features');
+                    if (featuresStr) {
+                        filters.features = featuresStr;
+                        filters.featuresMatchType = searchParams.get('featuresMatchType') || 'exact';
+                    }
+                }
+
+                const response = await searchProperties(filters);
                 setApartments(response.data);
                 setLoading(false);
-            } catch (err) {
-                setError('Failed to load apartments');
+            } catch (error) {
+                console.error('Error fetching apartments:', error);
+                setError('Failed to fetch apartments');
                 setLoading(false);
             }
         };
 
         fetchApartments();
-    }, [searchParams]);
+    }, [location.search]); // Re-fetch when URL parameters change
 
     const handleRefineSearch = () => {
-        navigate('/location-selector', { state: searchParams });
+        navigate('/location-selector', { state: { neighborhoods: [], boroughs: [], minPrice: 0, maxPrice: 100000, bedrooms: null, bathrooms: null, amenities: [], features: [] } });
     };
 
     const handleSort = (sortType) => {

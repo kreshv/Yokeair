@@ -8,7 +8,8 @@ import {
     Chip,
     useTheme,
     useMediaQuery,
-    Button
+    Button,
+    Avatar
 } from '@mui/material';
 import {
     Close as CloseIcon,
@@ -21,11 +22,14 @@ import {
     Apartment as ApartmentIcon,
     Home as HomeIcon,
     CalendarMonth as CalendarIcon,
-    Assignment as AssignmentIcon
+    Assignment as AssignmentIcon,
+    Email,
+    Phone
 } from '@mui/icons-material';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import BrokerageInfo from './BrokerageInfo';
 
 const formatPrice = (price) => {
     return new Intl.NumberFormat('en-US', {
@@ -35,12 +39,98 @@ const formatPrice = (price) => {
     }).format(price);
 };
 
+const ModalActionButtons = ({ onScheduleViewing, onApply, theme }) => (
+    <Box
+        sx={{
+            position: 'fixed',
+            bottom: { xs: 26, md: 52 },
+            right: { xs: 26, md: 55 },
+            display: 'none',
+            flexDirection: 'column',
+            gap: 2,
+            zIndex: theme.zIndex.modal + 1,
+            transformOrigin: 'left',
+            animation: 'rollInFromLeft 1.5s ease-out',
+            '@keyframes rollInFromLeft': {
+                '0%': {
+                    transform: 'translateX(-50px) rotateY(-90deg)',
+                    opacity: 0
+                },
+                '60%': {
+                    transform: 'translateX(10px) rotateY(20deg)',
+                    opacity: 1
+                },
+                '100%': {
+                    transform: 'translateX(0) rotateY(0deg)',
+                    opacity: 1
+                }
+            }
+        }}
+    >
+        <Button
+            variant="contained"
+            onClick={onScheduleViewing}
+            sx={{
+                background: '#D0E6FA',
+                color: '#000000',
+                borderRadius: '12px',
+                px: 2.5,
+                py: 1.2,
+                minWidth: '160px',
+                textTransform: 'uppercase',
+                fontSize: '0.85rem',
+                letterSpacing: '0.5px',
+                fontWeight: 500,
+                border: '1px solid rgba(107, 79, 79, 0.1)',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                '&:hover': {
+                    background: '#BBDEFB',
+                    transform: 'translateY(-1px)',
+                    boxShadow: '0 4px 8px rgba(107, 79, 79, 0.15)',
+                    transition: 'all 0.3s ease-in-out'
+                }
+            }}
+        >
+            Viewing
+        </Button>
+        <Button
+            variant="contained"
+            onClick={onApply}
+            sx={{
+                background: '#D0E6FA',
+                color: '#000000',
+                borderRadius: '12px',
+                px: 2.5,
+                py: 1.2,
+                minWidth: '160px',
+                textTransform: 'uppercase',
+                fontSize: '0.85rem',
+                letterSpacing: '0.5px',
+                fontWeight: 500,
+                border: '1px solid rgba(107, 79, 79, 0.1)',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                '&:hover': {
+                    background: '#BBDEFB',
+                    transform: 'translateY(-1px)',
+                    boxShadow: '0 4px 8px rgba(107, 79, 79, 0.15)',
+                    transition: 'all 0.3s ease-in-out'
+                }
+            }}
+        >
+            Applying
+        </Button>
+    </Box>
+);
+
 const ApartmentDetailModal = ({ open, onClose, apartment }) => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const theme = useTheme();
     const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
     const { user } = useAuth();
     const navigate = useNavigate();
+
+    // Create a ref for the DialogContent
+    const contentRef = useRef(null);
 
     const handleNextImage = () => {
         setCurrentImageIndex((prev) => 
@@ -58,14 +148,12 @@ const ApartmentDetailModal = ({ open, onClose, apartment }) => {
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (!open || !apartment?.images?.length) return;
-            
             if (e.key === 'ArrowLeft') {
                 handlePrevImage();
             } else if (e.key === 'ArrowRight') {
                 handleNextImage();
             }
         };
-
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [open, apartment]);
@@ -75,7 +163,6 @@ const ApartmentDetailModal = ({ open, onClose, apartment }) => {
             navigate('/login', { state: { from: `/apartments/${apartment._id}`, action: 'schedule' } });
             return;
         }
-        // TODO: Implement scheduling functionality
         console.log('Schedule viewing for apartment:', apartment._id);
     };
 
@@ -84,9 +171,27 @@ const ApartmentDetailModal = ({ open, onClose, apartment }) => {
             navigate('/login', { state: { from: `/apartments/${apartment._id}`, action: 'apply' } });
             return;
         }
-        // TODO: Implement application functionality
         console.log('Apply for apartment:', apartment._id);
     };
+
+    // New: Add global wheel event listener when modal is open
+    useEffect(() => {
+        const handleWheel = (e) => {
+            if (contentRef.current && !contentRef.current.contains(e.target)) {
+                // Prevent default behavior
+                e.preventDefault();
+                // Scroll the content by the wheel delta
+                contentRef.current.scrollTop += e.deltaY;
+            }
+        };
+
+        if (open) {
+            window.addEventListener('wheel', handleWheel, { passive: false });
+        }
+        return () => {
+            window.removeEventListener('wheel', handleWheel);
+        };
+    }, [open]);
 
     if (!apartment) return null;
 
@@ -108,6 +213,7 @@ const ApartmentDetailModal = ({ open, onClose, apartment }) => {
             }}
         >
             <DialogContent 
+                ref={contentRef}
                 sx={{ 
                     p: 0, 
                     '&::-webkit-scrollbar': { display: 'none' }, 
@@ -225,261 +331,195 @@ const ApartmentDetailModal = ({ open, onClose, apartment }) => {
                         </IconButton>
                     </Box>
 
-                    {/* Content Section - Removed separate scrolling */}
-                    <Box sx={{ 
-                        p: 3,
-                    }}>
-                        {/* Price and basic info */}
-                        <Box sx={{ width: '100%', mb: 2 }}>
-                            <Typography variant="h4" component="h2" gutterBottom>
-                                {formatPrice(apartment.price)}/month
-                            </Typography>
-
-                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                <LocationOnOutlined sx={{ mr: 1 }} />
-                                <Typography>
-                                    {apartment.building?.address?.street} #{apartment.unitNumber} in {apartment.neighborhood}, {apartment.borough}
+                    {/* Content Section - Unified container for all content below image */}
+                    <Box 
+                        sx={{ 
+                            backgroundColor: 'rgba(0, 0, 139, 0.03)',
+                            borderRadius: '0 16px 16px 0',
+                            border: '1px solid rgba(0, 0, 139, 0.1)',
+                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+                            ml: 0,
+                            minHeight: '30vh',
+                            p: 3,
+                            pb: 6
+                        }}
+                    >
+                        <Box sx={{ width: '100%', mb: 2, display: 'flex', gap: 3 }}>
+                            {/* Left side - Price and details with increased flex */}
+                            <Box sx={{ flex: 2 }}>
+                                <Typography variant="h4" component="h2" gutterBottom>
+                                    {formatPrice(apartment.price)}/month
                                 </Typography>
+
+                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                    <LocationOnOutlined sx={{ mr: 1 }} />
+                                    <Typography>
+                                        {apartment.building?.address?.street} #{apartment.unitNumber} in {apartment.neighborhood}, {apartment.borough}
+                                    </Typography>
+                                </Box>
+
+                                <Box 
+                                    sx={{ 
+                                        display: 'flex', 
+                                        gap: 3,
+                                        mb: 2,
+                                        flexWrap: 'nowrap',
+                                        minWidth: 0,
+                                        '& > *': {
+                                            flex: '0 0 auto'
+                                        }
+                                    }}
+                                >
+                                    <Box sx={{ 
+                                        display: 'flex', 
+                                        alignItems: 'center',
+                                        whiteSpace: 'nowrap',
+                                        minWidth: 0
+                                    }}>
+                                        <BedOutlined sx={{ mr: 1 }} />
+                                        <Typography noWrap>
+                                            {apartment.bedrooms === 0 ? 'Studio' : apartment.bedrooms === 1 ? '1 bedroom' : `${apartment.bedrooms} bedrooms`}
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ 
+                                        display: 'flex', 
+                                        alignItems: 'center',
+                                        whiteSpace: 'nowrap',
+                                        minWidth: 0
+                                    }}>
+                                        <BathtubOutlined sx={{ mr: 1 }} />
+                                        <Typography noWrap>
+                                            {apartment.bathrooms === 1 ? '1 bathroom' : `${apartment.bathrooms} bathrooms`}
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ 
+                                        display: 'flex', 
+                                        alignItems: 'center',
+                                        whiteSpace: 'nowrap',
+                                        minWidth: 0
+                                    }}>
+                                        <SquareFootOutlined sx={{ mr: 1 }} />
+                                        <Typography noWrap>{apartment.squareFootage} ft²</Typography>
+                                    </Box>
+                                </Box>
                             </Box>
 
-                            <Box 
-                                sx={{ 
-                                    display: 'flex', 
-                                    gap: 3,
-                                    mb: 2,
-                                    flexWrap: 'nowrap',
-                                    minWidth: 0,
-                                    '& > *': {
-                                        flex: '0 0 auto'
-                                    }
-                                }}
-                            >
-                                <Box sx={{ 
-                                    display: 'flex', 
-                                    alignItems: 'center',
-                                    whiteSpace: 'nowrap',
-                                    minWidth: 0
-                                }}>
-                                    <BedOutlined sx={{ mr: 1 }} />
-                                    <Typography noWrap>
-                                        {apartment.bedrooms === 0 ? 'Studio' : apartment.bedrooms === 1 ? '1 bedroom' : `${apartment.bedrooms} bedrooms`}
-                                    </Typography>
-                                </Box>
-                                <Box sx={{ 
-                                    display: 'flex', 
-                                    alignItems: 'center',
-                                    whiteSpace: 'nowrap',
-                                    minWidth: 0
-                                }}>
-                                    <BathtubOutlined sx={{ mr: 1 }} />
-                                    <Typography noWrap>
-                                        {apartment.bathrooms === 1 ? '1 bathroom' : `${apartment.bathrooms} bathrooms`}
-                                    </Typography>
-                                </Box>
-                                <Box sx={{ 
-                                    display: 'flex', 
-                                    alignItems: 'center',
-                                    whiteSpace: 'nowrap',
-                                    minWidth: 0
-                                }}>
-                                    <SquareFootOutlined sx={{ mr: 1 }} />
-                                    <Typography noWrap>{apartment.squareFootage} ft²</Typography>
-                                </Box>
+                            {/* Right side - Broker info */}
+                            <Box sx={{ flex: 1, display: 'flex', justifyContent: 'flex-end', pr: 3 }}>
+                                <BrokerageInfo brokerage={apartment.broker} />
                             </Box>
                         </Box>
 
-                        {/* Building Amenities Section */}
-                        {apartment.building?.amenities?.length > 0 && (
-                            <Box 
-                                sx={{ 
-                                    mt: 0.5,
-                                    p: 3,
-                                    width: '70%',
-                                    backgroundColor: 'rgba(0, 0, 139, 0.03)',
-                                    borderRadius: '16px',
-                                    border: '1px solid rgba(0, 0, 139, 0.1)',
-                                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
-                                    alignSelf: 'flex-start'
-                                }}
-                            >
-                                <Typography 
-                                    variant="h6" 
-                                    gutterBottom 
-                                    sx={{ 
-                                        color: '#00008B',
-                                        fontWeight: 300,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 1,
-                                        mb: 2
-                                    }}
-                                >
-                                    <ApartmentIcon />
-                                    Building Amenities
-                                </Typography>
-                                <Box sx={{ 
-                                    display: 'flex', 
-                                    flexWrap: 'wrap', 
-                                    gap: 1.5
-                                }}>
-                                    {apartment.building.amenities.map((amenity) => (
-                                        <Chip
-                                            key={amenity._id}
-                                            label={amenity.name}
-                                            variant="outlined"
-                                            size="medium"
-                                            sx={{ 
-                                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                                                borderColor: 'rgba(0, 0, 139, 0.2)',
-                                                borderRadius: '12px',
-                                                px: 1,
-                                                '&:hover': {
-                                                    backgroundColor: 'rgba(0, 0, 139, 0.05)',
-                                                }
-                                            }}
-                                        />
-                                    ))}
-                                </Box>
-                            </Box>
-                        )}
+                        {/* Divider between sections */}
+                        <Box sx={{ borderTop: '1px solid rgba(0, 0, 0, 0.12)', my: 2 }} />
 
-                        {/* Unit Features Section */}
-                        {apartment.features?.length > 0 && (
-                            <Box 
-                                sx={{ 
-                                    mt: 2,
-                                    p: 3,
-                                    width: '70%',
-                                    backgroundColor: 'rgba(0, 0, 139, 0.03)',
-                                    borderRadius: '16px',
-                                    border: '1px solid rgba(0, 0, 139, 0.1)',
-                                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
-                                    alignSelf: 'flex-start'
-                                }}
-                            >
-                                <Typography 
-                                    variant="h6" 
-                                    gutterBottom 
-                                    sx={{ 
-                                        color: '#00008B',
-                                        fontWeight: 300,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 1,
-                                        mb: 2
-                                    }}
-                                >
-                                    <HomeIcon />
-                                    Unit Features
-                                </Typography>
-                                <Box sx={{ 
-                                    display: 'flex', 
-                                    flexWrap: 'wrap', 
-                                    gap: 1.5
-                                }}>
-                                    {apartment.features.map((feature) => (
-                                        <Chip
-                                            key={feature._id}
-                                            label={feature.name}
-                                            variant="outlined"
-                                            size="medium"
-                                            sx={{ 
-                                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                                                borderColor: 'rgba(0, 0, 139, 0.2)',
-                                                borderRadius: '12px',
-                                                px: 1,
-                                                '&:hover': {
-                                                    backgroundColor: 'rgba(0, 0, 139, 0.05)',
-                                                }
-                                            }}
-                                        />
-                                    ))}
-                                </Box>
+                        {/* Split content section */}
+                        <Box sx={{ 
+                            display: 'flex', 
+                            gap: 3,
+                            position: 'relative'
+                        }}>
+                            {/* Left column - Building Amenities and Features */}
+                            <Box sx={{ 
+                                flex: 1,
+                                borderRight: '1px solid rgba(0, 0, 0, 0.12)',
+                                pr: 3
+                            }}>
+                                {(apartment.building?.amenities?.length > 0 || apartment.features?.length > 0) && (
+                                    <>
+                                        {apartment.building?.amenities?.length > 0 && (
+                                            <Box>
+                                                <Typography 
+                                                    variant="h6" 
+                                                    gutterBottom 
+                                                    sx={{ 
+                                                        color: '#00008B',
+                                                        fontWeight: 300,
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: 1,
+                                                        mb: 2
+                                                    }}
+                                                >
+                                                    <ApartmentIcon />
+                                                    Building Amenities
+                                                </Typography>
+                                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+                                                    {apartment.building.amenities.map((amenity) => (
+                                                        <Chip
+                                                            key={amenity._id}
+                                                            label={amenity.name}
+                                                            variant="outlined"
+                                                            size="medium"
+                                                            sx={{ 
+                                                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                                                borderColor: 'rgba(0, 0, 139, 0.2)',
+                                                                borderRadius: '12px',
+                                                                px: 1,
+                                                                '&:hover': {
+                                                                    backgroundColor: 'rgba(0, 0, 139, 0.05)',
+                                                                }
+                                                            }}
+                                                        />
+                                                    ))}
+                                                </Box>
+                                            </Box>
+                                        )}
+                                        {apartment.features?.length > 0 && (
+                                            <Box sx={{ mt: 3 }}>
+                                                <Typography 
+                                                    variant="h6" 
+                                                    gutterBottom 
+                                                    sx={{ 
+                                                        color: '#00008B',
+                                                        fontWeight: 300,
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: 1,
+                                                        mb: 2
+                                                    }}
+                                                >
+                                                    <HomeIcon />
+                                                    Unit Features
+                                                </Typography>
+                                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+                                                    {apartment.features.map((feature) => (
+                                                        <Chip
+                                                            key={feature._id}
+                                                            label={feature.name}
+                                                            variant="outlined"
+                                                            size="medium"
+                                                            sx={{ 
+                                                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                                                borderColor: 'rgba(0, 0, 139, 0.2)',
+                                                                borderRadius: '12px',
+                                                                px: 1,
+                                                                '&:hover': {
+                                                                    backgroundColor: 'rgba(0, 0, 139, 0.05)',
+                                                                }
+                                                            }}
+                                                        />
+                                                    ))}
+                                                </Box>
+                                            </Box>
+                                        )}
+                                    </>
+                                )}
                             </Box>
-                        )}
+
+                            {/* Right column - Additional content */}
+                            <Box sx={{ flex: 1, pl: 3 }}>
+                                {/* Add your right column content here */}
+                            </Box>
+                        </Box>
                     </Box>
                 </Box>
-                {/* Action Buttons */}
-                <Box
-                    sx={{
-                        position: 'fixed',
-                        bottom: { xs: 16, md: 42 },
-                        right: { xs: 16, md: 30 },
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 2,
-                        zIndex: theme.zIndex.modal + 1,
-                        transformOrigin: 'left',
-                        animation: 'rollInFromLeft 0.7s ease-out',
-                        '@keyframes rollInFromLeft': {
-                            '0%': {
-                                transform: 'translateX(-50px) rotateY(-90deg)',
-                                opacity: 0
-                            },
-                            '60%': {
-                                transform: 'translateX(10px) rotateY(20deg)',
-                                opacity: 1
-                            },
-                            '100%': {
-                                transform: 'translateX(0) rotateY(0deg)',
-                                opacity: 1
-                            }
-                        }
-                    }}
-                >
-                    <Button
-                        variant="contained"
-                        onClick={handleScheduleViewing}
-                        sx={{
-                            background: 'linear-gradient(145deg, #F5E6E8, #E8D8D9)',
-                            color: '#6B4F4F',
-                            borderRadius: '12px',
-                            px: 2.5,
-                            py: 1.2,
-                            minWidth: '160px',
-                            textTransform: 'uppercase',
-                            fontSize: '0.85rem',
-                            letterSpacing: '0.5px',
-                            fontWeight: 570,
-                            border: '1px solid rgba(107, 79, 79, 0.1)',
-                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
-                            '&:hover': {
-                                background: 'linear-gradient(145deg, #E8D8D9, #F5E6E8)',
-                                transform: 'translateY(-1px)',
-                                boxShadow: '0 4px 8px rgba(107, 79, 79, 0.15)',
-                                transition: 'all 0.3s ease-in-out'
-                            }
-                        }}
-                    >
-                        Schedule a viewing
-                    </Button>
-                    <Button
-                        variant="contained"
-                        onClick={handleApply}
-                        sx={{
-                            background: 'linear-gradient(145deg, #F5E6E8, #E8D8D9)',
-                            color: '#6B4F4F',
-                            borderRadius: '12px',
-                            px: 2.5,
-                            py: 1.2,
-                            minWidth: '160px',
-                            textTransform: 'uppercase',
-                            fontSize: '0.85rem',
-                            letterSpacing: '0.5px',
-                            fontWeight: 570,
-                            border: '1px solid rgba(107, 79, 79, 0.1)',
-                            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
-                            '&:hover': {
-                                background: 'linear-gradient(145deg, #E8D8D9, #F5E6E8)',
-                                transform: 'translateY(-1px)',
-                                boxShadow: '0 4px 8px rgba(107, 79, 79, 0.15)',
-                                transition: 'all 0.3s ease-in-out'
-                            }
-                        }}
-                    >
-                        Apply here
-                    </Button>
-                </Box>
+                {/* Replace the old buttons Box with the new component */}
+                <ModalActionButtons 
+                    onScheduleViewing={handleScheduleViewing}
+                    onApply={handleApply}
+                    theme={theme}
+                />
             </DialogContent>
         </Dialog>
     );

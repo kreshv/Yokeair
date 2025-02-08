@@ -51,46 +51,50 @@ const ApartmentCard = ({ apartment = {}, isSaved: initialSaved = false, showSave
 
   // Check if this apartment should show modal based on URL
   useEffect(() => {
-    const apartmentIdFromUrl = location.pathname.match(/\/apartments\/([^/]+)/)?.[1];
+    const apartmentIdFromUrl = new URLSearchParams(location.search).get('apartment');
     if (apartmentIdFromUrl === apartment._id) {
       setModalOpen(true);
     }
-  }, [location.pathname, apartment._id]);
+  }, [location.search, apartment._id]);
 
   const handleCardClick = () => {
-    // Always update the URL to show the apartment ID
-    const currentState = location.state;  // Preserve any existing state (like search filters)
-    navigate(`/apartments/${apartment._id}`, { 
-      replace: true,
-      state: {
-        ...currentState,
-        previousPath: location.pathname,  // Store the previous path
-        scrollPosition: window.scrollY    // Store the scroll position
-      }
-    });
+    // Open modal first for immediate visual feedback
     setModalOpen(true);
+    
+    // Then update URL without causing a reload
+    const searchParams = new URLSearchParams(location.search);
+    searchParams.set('apartment', apartment._id);
+    
+    // Use replace to avoid adding to history stack
+    window.history.replaceState(
+      null,
+      '',
+      `${location.pathname}?${searchParams.toString()}`
+    );
   };
 
   const handleModalClose = () => {
-    const previousPath = location.state?.previousPath || '/';
-    const scrollPosition = location.state?.scrollPosition || 0;
-    
-    // Remove the apartment ID from URL but preserve any search state
-    const currentState = { ...location.state };
-    delete currentState.previousPath;
-    delete currentState.scrollPosition;
-    
-    navigate(previousPath, { 
-      replace: true,
-      state: currentState
-    });
-    
+    // Close modal first for immediate visual feedback
     setModalOpen(false);
     
-    // Restore scroll position after a short delay to allow for render
-    setTimeout(() => {
-      window.scrollTo(0, scrollPosition);
-    }, 100);
+    // Then update URL without causing a reload
+    const searchParams = new URLSearchParams(location.search);
+    searchParams.delete('apartment');
+    
+    // Use replace to avoid adding to history stack
+    const newUrl = searchParams.toString() 
+      ? `${location.pathname}?${searchParams.toString()}`
+      : location.pathname;
+    
+    window.history.replaceState(
+      null,
+      '',
+      newUrl
+    );
+    
+    // Restore scroll position
+    const scrollPosition = location.state?.scrollPosition || 0;
+    window.scrollTo(0, scrollPosition);
   };
 
   // Determine if edit button should be shown

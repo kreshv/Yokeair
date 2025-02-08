@@ -270,51 +270,62 @@ exports.searchProperties = async (req, res) => {
             bedrooms,
             bathrooms,
             minPrice,
-            maxPrice
+            maxPrice,
+            amenitiesMatchType,
+            featuresMatchType
         } = req.query;
         
         let query = {};
         
         // Handle location-based filters
-        if (neighborhoods && neighborhoods.length > 0) {
+        if (neighborhoods) {
             const neighborhoodArray = Array.isArray(neighborhoods) 
                 ? neighborhoods 
-                : [neighborhoods];
-            query.neighborhood = { $in: neighborhoodArray };
+                : neighborhoods.split(',').filter(Boolean);
+            if (neighborhoodArray.length > 0) {
+                query.neighborhood = { $in: neighborhoodArray };
+            }
         }
 
-        if (boroughs && boroughs.length > 0) {
+        if (boroughs) {
             const boroughArray = Array.isArray(boroughs) 
                 ? boroughs 
-                : [boroughs];
-            query.borough = { $in: boroughArray };
+                : boroughs.split(',').filter(Boolean);
+            if (boroughArray.length > 0) {
+                query.borough = { $in: boroughArray };
+            }
         }
 
         // Handle building amenity filters
-        if (amenities && amenities.length > 0) {
+        if (amenities) {
             const amenityArray = Array.isArray(amenities) 
                 ? amenities 
-                : [amenities];
+                : amenities.split(',').filter(Boolean);
             
-            // Find buildings that have all the specified amenities
-            const buildingsWithAmenities = await Building.find({
-                amenities: { $all: amenityArray }
-            }).select('_id');
+            if (amenityArray.length > 0) {
+                const buildingsWithAmenities = await Building.find({
+                    amenities: amenitiesMatchType === 'atLeast' 
+                        ? { $all: amenityArray }  // Must have all specified amenities
+                        : { $in: amenityArray }   // Must have any of the specified amenities
+                }).select('_id');
 
-            // Add building filter to query
-            query.building = { 
-                $in: buildingsWithAmenities.map(b => b._id) 
-            };
+                query.building = { 
+                    $in: buildingsWithAmenities.map(b => b._id) 
+                };
+            }
         }
 
         // Handle unit feature filters
-        if (features && features.length > 0) {
+        if (features) {
             const featureArray = Array.isArray(features) 
                 ? features 
-                : [features];
+                : features.split(',').filter(Boolean);
             
-            // Find properties that have all the specified features
-            query.features = { $all: featureArray };
+            if (featureArray.length > 0) {
+                query.features = featuresMatchType === 'atLeast'
+                    ? { $all: featureArray }  // Must have all specified features
+                    : { $in: featureArray };  // Must have any of the specified features
+            }
         }
 
         // Handle bedrooms filter
@@ -337,8 +348,6 @@ exports.searchProperties = async (req, res) => {
         // Handle text search if provided
         if (search) {
             const searchRegex = new RegExp(search, 'i');
-            
-            // First, find buildings that match the search criteria
             const matchingBuildings = await Building.find({
                 $or: [
                     { 'address.street': searchRegex },
@@ -347,8 +356,6 @@ exports.searchProperties = async (req, res) => {
             }).select('_id');
 
             const buildingIds = matchingBuildings.map(b => b._id);
-
-            // Combine search criteria with existing query using $and to preserve other filters
             const searchQuery = {
                 $or: [
                     { building: { $in: buildingIds } },
@@ -358,14 +365,12 @@ exports.searchProperties = async (req, res) => {
                 ]
             };
 
-            query = query.hasOwnProperty('$and') 
-                ? { ...query, $and: [...query.$and, searchQuery] }
-                : { ...query, ...searchQuery };
+            query = { $and: [query, searchQuery] };
         }
 
         console.log('Final query:', JSON.stringify(query, null, 2));
 
-        // Find properties based on query
+        // Find properties based on query, now populating broker details
         const properties = await Property.find(query)
             .populate({
                 path: 'building',
@@ -374,6 +379,7 @@ exports.searchProperties = async (req, res) => {
                 }
             })
             .populate('features')
+            .populate('broker', 'firstName lastName email phone profilePicture')
             .sort({ createdAt: -1 });
 
         res.json(properties);
@@ -590,6 +596,7 @@ exports.getProperty = async (req, res) => {
                     select: 'name type'
                 }
             })
+            .populate('broker', 'firstName lastName email phone profilePicture')
             .lean();
 
         if (!property) {

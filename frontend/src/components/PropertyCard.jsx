@@ -16,23 +16,50 @@ const PropertyCard = ({ property }) => {
     const location = useLocation();
 
     const handleClick = () => {
-        // If we're on the homepage, show the modal
-        if (location.pathname === '/') {
-            setModalOpen(true);
-            // Update the URL without triggering a page reload
-            window.history.pushState({}, '', `/properties/${property._id}`);
-        } else {
-            // Otherwise, navigate to the property detail page
-            navigate(`/properties/${property._id}`);
-        }
+        // Set modal state first for immediate feedback
+        setModalOpen(true);
+
+        // Preserve existing search parameters
+        const searchParams = new URLSearchParams(location.search);
+        searchParams.set('property', property._id);
+
+        // Update URL without causing a reload
+        window.history.replaceState(
+            { 
+                property,
+                previousPath: location.pathname,
+                previousSearch: location.search,
+                scrollPosition: window.scrollY
+            },
+            '',
+            `${location.pathname}?${searchParams.toString()}`
+        );
     };
 
     const handleCloseModal = () => {
+        // Close modal first for immediate feedback
         setModalOpen(false);
-        // Restore the original URL when closing the modal
-        if (location.pathname === `/properties/${property._id}`) {
-            window.history.pushState({}, '', '/');
-        }
+
+        // Get the previous search parameters
+        const searchParams = new URLSearchParams(location.search);
+        searchParams.delete('property');
+
+        // Restore the URL without causing a reload
+        const newUrl = searchParams.toString() 
+            ? `${location.pathname}?${searchParams.toString()}`
+            : location.pathname;
+
+        window.history.replaceState(
+            {
+                scrollPosition: window.scrollY
+            },
+            '',
+            newUrl
+        );
+
+        // Restore scroll position
+        const scrollPosition = location.state?.scrollPosition || 0;
+        window.scrollTo(0, scrollPosition);
     };
 
     return (
